@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+<link rel="stylesheet" href="/_assets/main.css" />
+
+    <title>K8s Code-Generator工具概览 - 博客</title>
+  </head>
+  <body>
+    <div class="main">
+      <nav class="navigation">
+        <a href="/">博客</a>
+      </nav>
+      <article>
+        <header>
+          <h1 class="article-title">K8s Code-Generator工具概览</h1>
+          <div class="article-info">
+            <div>
+              <span
+                >Created At：<time datetime="1671176317472"
+                  >2022-12-16 15:38</time
+                ></span
+              >
+              <span
+                >Updated At：<time datetime="1671413044108"
+                  >2022-12-19 09:24</time
+                ></span
+              >
+            </div>
+            
+            <div>
+              Keywords: 
+              <span class="keyword">k8s</span>
+              
+            </div>
+            
+          </div>
+        </header>
+        <div class="article-content markdown-body"><blockquote>
+<p><a title="https://github.com/kubernetes/code-generator" href="https://github.com/kubernetes/code-generator">Code-Generator工具</a> 生成Kubernets风格的API类型</p>
+</blockquote>
+<p><code>k8s.io/client-go</code>提供了对k8s原生资源的informer和clientset等等，但对于自定义资源的操作则相对低效，需要使用 rest api 和 dynamic client 来操作，并自己实现反序列化等功能。</p>
+<p><code>code-generator</code> 提供了以下工具用于为k8s中的资源生成相关代码，可以更加方便的操作自定义资源：</p>
+<ul>
+<li><code>deepcopy-gen</code>: 生成深度拷贝对象方法
+<ul>
+<li>在文件中添加注释<code>// +k8s:deepcopy-gen=package</code></li>
+<li>为单个类型添加自动生成<code>// +k8s:deepcopy-gen=true</code></li>
+<li>为单个类型关闭自动生成<code>// +k8s:deepcopy-gen=false</code></li>
+</ul>
+</li>
+<li><code>client-gen</code>: 为资源生成标准的操作方法(get;list;watch;create;update;patch;delete) 在<code>pkg/apis/${GROUP}/${VERSION}/types.go</code>中使用，使用<code>// +genclient</code>标记对应类型生成的客户端，如果与该类型相关联的资源不是命名空间范围的(例如PersistentVolume), 则还需要附加<code>// + genclient：nonNamespaced</code>标记
+<ul>
+<li><code>// +genclient</code>:  生成默认的客户端动作函数（create, update, delete, get, list, update, patch, watch以及 是否生成updateStatus取决于.Status字段是否存在）</li>
+<li><code>// +genclient:nonNamespaced</code>: 所有动作函数都是在没有名称空间的情况下生成</li>
+<li><code>// +genclient:onlyVerbs=create,get</code>: 指定的动作函数被生成</li>
+<li><code>// +genclient:skipVerbs=watch</code>: 生成watch以外所有的动作函数</li>
+<li><code>// +genclient:noStatus</code>: 即使.Status字段存在也不生成updateStatus动作函数</li>
+</ul>
+</li>
+<li><code>informer-gen</code>: 生成informer，提供事件机制(AddFunc,UpdateFunc,DeleteFunc)来响应kubernetes的event</li>
+<li><code>lister-gen</code>: 为get和list方法提供只读缓存层</li>
+<li><code>conversion-gen</code>: 是用于自动生成在内部和外部类型之间转换的函数的工具<br />
+一般的转换代码生成任务涉及三套程序包：
+<ul>
+<li>一套包含内部类型的程序包</li>
+<li>一套包含外部类型的程序包</li>
+<li>单个目标程序包（即，生成的转换函数所在的位置，以及开发人员授权的转换功能所在的位置）, 包含内部类型的包在Kubernetes的常规代码生成框架中扮演着称为<code>peer package</code>的角色<br />
+使用方法</li>
+<li><code>// +k8s:conversion-gen=&lt;import-path-of-internal-package&gt;</code>: 标记转换内部软件包</li>
+<li><code>// +k8s:conversion-gen-external-types=&lt;import-path-of-external-package&gt;</code>: 标记转换外部软件包</li>
+<li><code>// +k8s:conversion-gen=false</code>: 标记不转换对应注释或结构</li>
+</ul>
+</li>
+<li><code>defaulter-gen</code>: 用于生产Defaulter函数
+<ul>
+<li><code>// +k8s:defaulter-gen=&lt;field-name-to-flag&gt;</code>: 为包含字段的所有类型创建defaulters</li>
+<li><code>// +k8s:defaulter-gen=true|false</code>: 所有都生成</li>
+</ul>
+</li>
+<li><code>go-to-protobuf</code>: 通过go struct生成pb idl</li>
+<li><code>import-boss</code>: 在给定存储库中强制执行导入限制</li>
+<li><code>openapi-gen</code>: 生成openAPI定义<br />
+使用方法：
+<ul>
+<li><code>+k8s:openapi-gen=true</code>: 为指定包或方法开启</li>
+<li><code>+k8s:openapi-gen=false</code>: 指定包关闭</li>
+</ul>
+</li>
+<li><code>register-gen</code>: 生成register</li>
+<li><code>set-gen</code><br />
+code-generator整合了这些gen，使用脚本<a title="https://github.com/kubernetes/code-generator/blob/master/generate-groups.sh" href="https://github.com/kubernetes/code-generator/blob/master/generate-groups.sh">generate-groups.sh</a>和<a title="https://github.com/kubernetes/code-generator/blob/master/generate-internal-groups.sh" href="https://github.com/kubernetes/code-generator/blob/master/generate-internal-groups.sh">generate-internal-groups.sh</a>可以为自定义资源生产相关代码。</li>
+</ul>
+</div>
+      </article>
+    </div>
+  </body>
+</html>
