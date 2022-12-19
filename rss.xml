@@ -4,7 +4,7 @@
         <title></title>
         <link>undefined</link>
         <description>undefined</description>
-        <lastBuildDate>Mon, 19 Dec 2022 02:21:34 GMT</lastBuildDate>
+        <lastBuildDate>Mon, 19 Dec 2022 02:23:27 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>Joplin Pages Publisher</generator>
         <item>
@@ -69,7 +69,7 @@ code-generator整合了这些gen，使用脚本<a title="https://github.com/kube
 ]]></content:encoded>
         </item>
         <item>
-            <title><![CDATA[生成crd的clientset、informer、listers]]></title>
+            <title><![CDATA[Code-Generator 生成crd的clientset、informer、listers]]></title>
             <guid>be1a77beec5a4d11a3a886d59e7cea33</guid>
             <pubDate>Fri, 16 Dec 2022 07:35:50 GMT</pubDate>
             <content:encoded><![CDATA[<blockquote>
