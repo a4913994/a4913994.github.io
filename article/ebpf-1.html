@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+<link rel="stylesheet" href="/_assets/main.css" />
+
+    <title>eBPF复杂性 - 刘宪东的笔记</title>
+  </head>
+  <body>
+    <div class="main">
+      <nav class="navigation">
+        <a href="/">刘宪东的笔记</a>
+      </nav>
+      <article>
+        <header>
+          <h1 class="article-title">eBPF复杂性</h1>
+          <div class="article-info">
+            <div>
+              <span>创建时间：<time datetime="1671593808977">2022-12-21 11:36</time></span>
+              <span>更新时间：<time datetime="1671594856819">2022-12-21 11:54</time></span>
+              
+              <span>标签: <span class="keyword">ebpf</span><span class="keyword">linux</span></span>
+              
+            </div>
+          </div>
+        </header>
+        <div class="article-content markdown-body"><h3 id="跨内核版本的可移植性">跨内核版本的可移植性</h3>
+<p>eBPF 程序可以访问内核数据结构，这些数据结构可能会随着不同的内核版本而改变。结构本身是在构成 Linux 源代码一部分的头文件中定义的。过往，你必须针对与要运行这些程序的内核兼容的正确头文件集来编译 eBPF 程序。</p>
+<h3 id="bcc-可移植性方法">BCC 可移植性方法</h3>
+<p>为了解决跨内核的可移植性，BCC1（BPF Compiler Collection）项目采用了在运行时在目标机器上编译 eBPF 代码的方法。 这意味着编译工具链需要安装到代码运行的每台目标机器上2，并且你必须等待编译完成才能启动工具。你还必须保证内核头文件存在于文件系统上（但并非总是如此）。接着我们进入 BPF CO-RE。</p>
+<h3 id="co-re">CO-RE</h3>
+<p>CO-RE（一次编译，到处运行）方法包含几个元素：</p>
+<h4 id="btf-bpf-type-format">BTF (BPF Type Format)</h4>
+<p>这是一种表达数据结构和函数签名布局的格式。现代 Linux 内核支持 BTF，因此你可以从正在运行的系统生成一个名为 vmlinux.h 的头文件，其中包含 BPF 程序可能需要的有关内核的所有数据结构信息。</p>
+<h4 id="libbpf-bpf-库">libbpf, BPF 库</h4>
+<p>一方面，libbpf 提供了加载 eBPF 程序和 map 到内核的函数。但它在可移植性方面也起着重要作用：依据 BTF 信息来调整 eBPF 代码，以补偿编译时存在的数据结构与目标机器上的数据结构之间的任何差异。</p>
+<h4 id="编译器支持">编译器支持</h4>
+<p>clang 编译器得到了增强，因此当它编译 eBPF 程序时，它包括所谓的 BTF 重定向（relocations），这是 libbpf 在加载 BPF 程序和 map 到内核时用来知道要调整哪些内容。</p>
+<h4 id="可选的-bpf-脚手架">可选的 BPF 脚手架</h4>
+<p>可以使用 bpftool gen skeleton 从编译的 BPF 目标文件中自动生成脚手架，其中包含辅助函数，用户空间代码可以调用这些辅助函数来管理 BPF 程序的生命周期——将其加载到内核中，附加到事件等等。这些函数是更高级别的抽象，对开发人员来说比直接使用 libbpf 更方便。</p>
+<p>有关 CO-RE 的更详细说明，请阅读 Andrii Nakryiko 详细的<a title="https://nakryiko.com/posts/bpf-portability-and-co-re/" href="https://nakryiko.com/posts/bpf-portability-and-co-re/">讲解</a>。</p>
+<p>vmlinux 文件形式的 BTF 信息自 5.4 版起已包含在 Linux 内核中，但也可以为较旧的内核生成 libbpf 可以使用的原始 BTF 数据。<a title="https://github.com/aquasecurity/btfhub" href="https://github.com/aquasecurity/btfhub">BTF Hub</a> 上有关于如何生成 BTF 文件的信息，以及用于各种 Linux 发行版的文件存档。</p>
+<p>BPF CO-RE 方法使 eBPF 程序员比过去更容易让他们的代码在任何 Linux 发行版上运行——或者至少在任何新的 Linux 发行版上运行，以支持程序使用的任何 eBPF 功能集。但这并不能使 eBPF 编程轻松自如：其本质上仍然是内核编程。</p>
+<h3 id="linux-内核知识">Linux 内核知识</h3>
+<p>很快你会认识到，你仍然需要关于 Linux 内核的领域知识才能编写更高级的工具。你需要了解可以访问的数据结构，这取决于调用 eBPF 代码的上下文。并非每个应用程序开发人员都有解析网络数据包、访问套接字缓冲区或处理系统调用参数的经验。</p>
+<p>内核将如何响应 eBPF 代码的行为？正如你在第 2 章中所了解的，内核由数百万行代码组成。它的文档可能很少，因此你可能会发现自己必须阅读内核源代码才能弄清楚某些东西是如何工作的。</p>
+<p>你还需要弄清楚 <strong>eBPF 代码应该附加到哪些事件上</strong>。如果可以选择将 kprobe 附加到整个内核中的任何函数入口点，这可能不是一个容易的决定。在某些情况下，这很简单，例如如果你想访问传入的网络数据包，那么在合适的网络接口进行 XDP 挂钩是一个明显的选择。如果你想提供对特定内核事件的可观察性，在内核代码中找到适当的附加点可能并不难。</p>
+<p>但在其他情况下，选择可能并不带明确。例如，仅使用 kprobes 挂钩构成内核系统调用接口的函数的工具可能会受到称为 time-of-check to time-of-use (TOCTTOU) 的安全漏洞的影响。攻击者有一个很小的机会窗口，他们可以在 eBPF 代码读取参数之后，但在被复制到内核内存之前更改系统调用的参数。Rex Guo 和 Junyuan Zeng 在 DEF CON 29 上对此进行了精彩的<a title="https://www.youtube.com/watch?v=yaAdM8pWKG8" href="https://www.youtube.com/watch?v=yaAdM8pWKG8">演示</a>。一些最广泛使用的 eBPF 工具是以非常初级的方式编写的，并且容易受到这种攻击。这并不是一个容易的利用，并且有一些方法可以减轻这些攻击，但是如果你要保护高度敏感的数据免受老练的对手的攻击，请深入了解你使用的工具是否会受到影响。</p>
+<p>你已经看到了 BPF CO-RE 如何使 eBPF 程序在不同的内核版本上工作，但它只考虑了数据结构布局的变化，而不考虑内核行为的更广泛的变化。例如，如果想将 eBPF 程序附加到内核中的特定函数或跟踪点，你可能需要一个计划 B，如果该函数或跟踪点不存在于不同的内核版本中该怎么办。</p>
+<h3 id="多-ebpf-程序协调">多 eBPF 程序协调</h3>
+<p>现在可用的许多基于 eBPF 的工具都提供了一套可观察性功能，通过将 eBPF 程序挂钩到一组内核事件来实现。其中大部分是由 Brendan Gregg 和其他人在 BCC 和 bpftrace 工具中所研发。当前这代（通常是商业的）工具可能会提供更漂亮的图形和 UI，但他们利用的 eBPF 程序高度基于这些原来的工具。</p>
+<p>当你想要编写协调不同类型事件之间交互的代码时，事情会变得相当复杂。例如，Cilium 通过内核的网络栈在多个点查看网络数据包，并根据来自 Kubernetes CNI（容器网络接口）的有关 Kubernetes Pod 的信息来处理流量。构建这个系统需要 Cilium 开发人员深入了解内核如何处理网络流量，以及 “Pod” 和 “Container” 的用户空间概念如何映射到 cgroup 和 namespace 等内核概念。在实践中，几个 Cilium 维护者也是内核开发人员，致力于增强 eBPF 和网络支持；因此，他们拥有这些知识。</p>
+<p>底线是，尽管 eBPF 提供了一个非常高效和强大的平台来连接内核，但对于没有丰富内核经验的普通开发人员来说，这不是一件容易的事。如果你有兴趣亲身体验 eBPF 编程，我强烈建议你将其作为练习学习；在这一领域积累经验可能非常有价值，因为它必将在未来几年继续成为广受欢迎的专业技能。但实际上，大多数组织不太可能在内部构建大量定制的 eBPF 工具，而是会利用来自专业 eBPF 社区的项目和产品。</p>
+<blockquote>
+<ol>
+<li>Cilium 文档 描述了附加到不同网络钩子的 eBPF 程序如何组合以实现复杂的网络功能 .</li>
+<li>有关更多信息，请参阅 Andrii Nakryiko 的 IO Visor <a title="https://lists.iovisor.org/g/iovisor-dev/message/1966" href="https://lists.iovisor.org/g/iovisor-dev/message/1966">帖子</a></li>
+</ol>
+</blockquote>
+</div>
+      </article>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+<link rel="stylesheet" href="/_assets/main.css" />
+
+    <title>eBPF程序 - 刘宪东的笔记</title>
+  <link rel="stylesheet" href="/_markdown_plugin_assets/highlight.js/atom-one-light.css" /></head>
+  <body>
+    <div class="main">
+      <nav class="navigation">
+        <a href="/">刘宪东的笔记</a>
+      </nav>
+      <article>
+        <header>
+          <h1 class="article-title">eBPF程序</h1>
+          <div class="article-info">
+            <div>
+              <span>创建时间：<time datetime="1671589477994">2022-12-21 10:24</time></span>
+              <span>更新时间：<time datetime="1671594901395">2022-12-21 11:55</time></span>
+              
+              <span>标签: <span class="keyword">ebpf</span><span class="keyword">linux</span></span>
+              
+            </div>
+          </div>
+        </header>
+        <div class="article-content markdown-body"><h3 id="定制程序附加到事件">定制程序附加到事件</h3>
+<p>eBPF程序本身通常用C或Rust编写并编译成目标文件。目标文件是一个标准的 ELF（可执行和可链接格式）文件，可以使用 <code>readelf</code> 等工具进行检查，它包含程序字节码和<code> map</code> 的定义。</p>
+<p><img src="/_resources/0b877c2c038c4686badaade0eaddcde1.png" /></p>
+<p>一旦你将 eBPF 程序加载到内核中，它就必须附加到一个事件上。每当事件发生时，相关的 eBPF 程序就会被触发执行。</p>
+<h3 id="进入或退出函数">进入或退出函数</h3>
+<p>你可以附加一个 eBPF 程序，在进入或退出内核函数时触发。当前许多 eBPF 示例都使用 kprobes（附加到内核函数入口点）和 kretprobes（函数退出）的机制。在最近的内核版本中，有一个更有效的替代方案，称为 fentry/fexit</p>
+<p>你还可以使用 uprobes 和 uretprobes 将 eBPF 程序附加到用户空间函数</p>
+<h3 id="tracepoint">Tracepoint</h3>
+<p>你也可以将eBPF程序附加到内核内定义的 tracepoints4。通过在 /sys/kernel/debug/tracing/events 下查找机器上的事件</p>
+<h3 id="perf-事件">Perf 事件</h3>
+<p>Perf 是一个用于收集性能数据的子系统。你可以将 eBPF 程序挂接到所有收集 perf 数据的地方，这可以通过在机器上运行 perf list 来确定。</p>
+<h3 id="linux安全模块接口linux-security-module-interface">Linux安全模块接口（Linux Security Module Interface）</h3>
+<p>LSM 接口允许在内核允许某些操作之前检查安全策略。你可能遇到过使用此接口的 AppArmor 或 SELinux。使用 eBPF，你可以将自定义程序附加到相同的检查点，从而实现灵活、动态的安全策略和运行时安全工具的一些新方法</p>
+<h3 id="网络接口-xdpexpress-data-path">网络接口 XDP（eXpress Data Path）</h3>
+<p><code>XDP（eXpress Data Path)</code> 允许将 eBPF 程序附加到网络接口，每当收到数据包就会触发 eBPF 执行。XDP 可以检查甚至修改数据包，eBPF 程序的退出代码用于通知内核如何处理该数据包：传递、丢弃或重定向。 这可以构成一些非常有效的网络功能的基础。</p>
+<h3 id="套接字和其他网络-hook">套接字和其他网络 Hook</h3>
+<p>你可以附加 eBPF 程序以在应用程序打开在网络套接字上执行操作、以及在发送或接收消息时运行 eBPF 程序。 在内核的网络栈中还有称为 traffic control 或 tc 的 Hook，eBPF 程序可以在初始数据包处理后运行</p>
+<p>有些功能可以单独使用 eBPF 程序来实现，但在许多情况下，我们希望 eBPF 代码从用户空间应用程序接收信息或将数据传递给用户空间应用程序。 允许数据在 eBPF 程序和用户空间之间或不同 eBPF 程序之间传递的机制称为<code> maps</code></p>
+<h3 id="ebpf-map">eBPF Map</h3>
+<p>Map 功能的添加是 eBPF 首字母缩写词中 e 代表 扩展 的显着标志之一。</p>
+<p>Map 是与 eBPF 程序一起定义的数据结构。Map 有多种不同类型的，但它们本质上都是键值存储。eBPF 程序及用户空间代码可以读取和写入数据。Map 的常见用途包括：</p>
+<ul>
+<li>一个 eBPF 程序编写有关事件的指标和其他数据，供用户空间代码稍后查询；</li>
+<li>用户空间代码编写配置信息，以便 eBPF 程序读取并相应地执行；</li>
+<li>一个 eBPF 将数据写入 map，供另一个 eBPF 程序读取，这种方式允许跨多个内核事件同步信息；</li>
+</ul>
+<p>如果内核和用户空间代码都将访问同一个 map，他们将需要对存储在 mmap 中的数据结构达成共识。这可以通过在用户空间和内核代码中包含定义这些数据结构的头文件来完成，但如果两者是通过不相同的语言编写，你将需要仔细创建字节结构定义字节对齐兼容。</p>
+<p>我们已经讨论了 eBPF 工具的主要组成部分：在内核中运行的 eBPF 程序、加载程序并与之交互的用户空间代码，以及允许程序共享数据的 map。为了更好理解，我们通过一个例子演示。</p>
+<h3 id="opensnoop-样例">Opensnoop 样例</h3>
+<p>对于 eBPF 程序示例，我选择了实用的工具 opensnoop，其可用于显示任何进程打开了哪些文件。该实用程序的原始版本是 Brendan Gregg 最初在 BCC 项目中编写的众多 BPF 工具之一，你可以在 GitHub 上找到该项目。后来该工具使用 libbpf 重写（你将在下一章中看到），在这个例子中，我使用的是 libbpf-tools 目录下的较新版本。</p>
+<p>当运行 opensnoop 时，你将看到的输出很大程度上取决于当时虚拟机上发生的情况，但它应该看起来像这样：</p>
+<div><pre class="hljs"><code>PID    COMM FD ERR PATH
+93965  cat     3   0 /etc/ld.so.cache
+93965  cat     3   0 /lib/x86_64-linux-gnu/libc.so.6
+93965  cat     3   0 /usr/lib/locale/locale-archive
+93965  cat     3   0 /usr/share/locale/locale.alias
+...</code></pre></div>
+<p>每一行输出表示一个进程打开（或试图打开）一个文件。这些列显示了进程 ID、正在运行的命令、文件描述符、任何错误代码的指示以及被打开文件的路径。</p>
+<p>Opensnoop 的工作方式是将 eBPF 程序附加到 open() 和 openat() 系统调用上，任何应用程序都必须通过这些调用来要求内核打开一个文件。让我们深入了解一下这一点是如何实现的。为了简洁起见，我们并不看每一行代码，但我希望这足以让你了解它是如何工作的。(如果你对这么深的内容不感兴趣的话，请跳到下一章！）。</p>
+<p>每行输出表明一个进程打开（或试图打开）一个文件。 这些列显示进程 ID、正在运行的命令、文件描述符、任何错误代码以及正在打开的文件的路径。</p>
+<p>Opensnoop 通过将 eBPF 程序附加到 open() 和 openat() 系统调用上工作，任何应用程序都必须进行这些调用以请求内核打开文件。 接着，我们将深入了解其实现。为简洁起见，我们不会查看代码的每一行，但我希望它足以让你了解其工作原理。（如果你对深入研究不感兴趣，请随意跳到下一章！）</p>
+<h3 id="opensnoop-ebpf-代码">Opensnoop eBPF 代码</h3>
+<p>eBPF 代码是用 C 语言编写的，位于文件 opensnoop.bpf.c 中。在该文件的头部附近，你可以看到两个 eBPF map 的定义 start 和 event：</p>
+<div><pre class="hljs"><code>    <span class="hljs-class"><span class="hljs-keyword">struct</span> {</span>
+        __uint(type, BPF_MAP_TYPE_HASH);
+        __uint(max_entries, <span class="hljs-number">10240</span>);
+        __type(key, u32);
+        __type(value, <span class="hljs-keyword">struct</span> <span class="hljs-type">args_t</span>);
+    } start <span class="hljs-title function_">SEC</span><span class="hljs-params">(<span class="hljs-string">".maps"</span>)</span>;
+    <span class="hljs-class"><span class="hljs-keyword">struct</span> {</span>
+        __uint(type, BPF_MAP_TYPE_PERF_EVENT_ARRAY);
+        __uint(key_size, <span class="hljs-keyword">sizeof</span>(u32));
+        __uint(value_size, <span class="hljs-keyword">sizeof</span>(u32));
+    } events <span class="hljs-title function_">SEC</span><span class="hljs-params">(<span class="hljs-string">".maps"</span>)</span>;</code></pre></div>
+<p>当创建 ELF 目标文件时，它包含每个 map 和要加载到内核中的每个程序的区块（section），通过 SEC() 宏定义。</p>
+<p>当我们查看程序时，你将看到，start map 用于在处理系统调用时临时存储系统调用的参数（包括正在打开的文件的名称）。events map 7 用于将事件信息从内核中的 eBPF 代码传递到用户空间可执行文件。 如图 3-2 所示。<br />
+<img src="/_resources/b933858157824a2fb9af347c7d5608bf.png" /></p>
+<p>在 opensnoop.bpf.c 文件的后面，你会发现两个非常相似的函数：</p>
+<div><pre class="hljs"><code>SEC(<span class="hljs-string">"tracepoint/syscalls/sys_enter_open"</span>)
+    <span class="hljs-type">int</span> <span class="hljs-title function_">tracepoint__syscalls__sys_enter_open</span><span class="hljs-params">(<span class="hljs-keyword">struct</span>
+        trace_event_raw_sys_enter* ctx)</span></code></pre></div>
+<p>和</p>
+<div><pre class="hljs"><code>    SEC(<span class="hljs-string">"tracepoint/syscalls/sys_enter_openat"</span>)
+    <span class="hljs-type">int</span> <span class="hljs-title function_">tracepoint__syscalls__sys_enter_openat</span><span class="hljs-params">(<span class="hljs-keyword">struct</span>
+    trace_event_raw_sys_enter* ctx)</span></code></pre></div>
+<p>打开文件有两种不同的系统调用：8 openat() 和 open()。两者功能相同，只是 openat() 有一个额外的目录文件描述符参数，并且要打开的文件的路径名是相对于该目录的。同样，除了处理参数中的差异外，opensnoop 中对应的两个处理函数是相同。</p>
+<p>如你所见，它们都采用指向 trace_event_raw_sys_enter 的结构的指针参数。你可以在运行的特定内核生成的 vmlinux 头文件中找到此结构的定义。 编写 eBPF 程序的包括计算程序接收到的结构作为其上下文，以及如何访问其中的信息。</p>
+<p>这两个函数使用 BPF 辅助函数来获取到请求系统调用的进程的 ID：</p>
+<div><pre class="hljs"><code>u64 id = bpf_get_current_pid_tgid();</code></pre></div>
+<p>后续代码得到了文件名和传递给系统调用的标志，并把它们放在一个叫做 args 的结构中：</p>
+<div><pre class="hljs"><code>args.fname = (<span class="hljs-keyword">const</span> <span class="hljs-type">char</span> *)ctx-&gt;args[<span class="hljs-number">0</span>];
+             args.flags = (<span class="hljs-type">int</span>)ctx-&gt;args[<span class="hljs-number">1</span>];</code></pre></div>
+<p>该结构使用当前程序 ID 作为 key 保存到 start map 中。</p>
+<div><pre class="hljs"><code>bpf_map_update_elem(&amp;start, &amp;pid, &amp;args, <span class="hljs-number">0</span>);</code></pre></div>
+<p>这就是 eBPF 程序在进入系统调用时所做的全部。但是在 opensnoop.bpf.c 中定义的另一对 eBPF 程序会在系统调用退出时触发：</p>
+<div><pre class="hljs"><code>SEC(<span class="hljs-string">"tracepoint/syscalls/sys_exit_open"</span>)
+<span class="hljs-type">int</span> tracepoint__syscalls__sys_exit_open</code></pre></div>
+<p>该程序及其函数 openat() 共享函数 trace_exit() 中的公共代码。你有没有注意到 eBPF 程序调用的所有函数都以静态 __always_inline 为前缀？这指示编译器将函数的指令内联，这是因为在旧版本内核中，不允许 BPF 程序跳转到单独的函数。较新的内核和 LLVM 版本中已经可以支持非内联函数调用，但是设置 <code>__always_inline</code> 可确保 BPF 验证器保能够更好工作。（现在还有 BPF 尾调用的概念，即执行从一个 BPF 程序跳转到另一个。你可以在 eBPF 文档中阅读有关 BPF 函数调用和尾部调用的更多信息。）</p>
+<p>在 trace_exit() 函数中创建一个空的事件结构：</p>
+<div><pre class="hljs"><code>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">event</span> <span class="hljs-title">event</span> =</span> {};</code></pre></div>
+<p>这将填充有关即将结束的 open/openat 系统调用的信息，并通过 event map 发送到用户空间。</p>
+<p>在开始的 start hash_map 中应该有一个对应于当前进程 ID 的条目：</p>
+<div><pre class="hljs"><code>ap = bpf_map_lookup_elem(&amp;start, &amp;pid);</code></pre></div>
+<p>这包含有关在 sys_enter_open(at) 调用期间先前写入的文件名和 flags 的信息。 flags 字段是一个直接存储在结构体中的整数，所以直接从结构体中读取就可以了：</p>
+<div><pre class="hljs"><code>    event.flags = ap-&gt;flags;</code></pre></div>
+<p>相反，文件名被写入用户空间内存中的一些字节数，验证器需要确保此 eBPF 程序从内存中的该位置读取该字节数是安全的。这是使用另一个辅助函数 bpf_probe_read_user_str() 完成的：</p>
+<div><pre class="hljs"><code>    bpf_probe_read_user_str(&amp;event.fname, <span class="hljs-keyword">sizeof</span>(event.fname), ap-&gt;fname);</code></pre></div>
+<p>当前的命令行名称（即进行 open(at) 系统调用的可执行文件的名称）也被复制到事件结构中，使用另一个 BPF 辅助函数：</p>
+<div><pre class="hljs"><code>bpf_get_current_comm(&amp;event.comm, <span class="hljs-keyword">sizeof</span>(event.comm));</code></pre></div>
+<p>event 结构被写入事件 perf 缓冲区 map ：</p>
+<div><pre class="hljs"><code>bpf_perf_event_output(ctx, &amp;events, BPF_F_CURRENT_CPU, &amp;event, <span class="hljs-keyword">sizeof</span>(event));</code></pre></div>
+<p>用户空间代码从该 map 中读取事件信息。在我们讨论这个问题之前，让我们简要地看一下 Makefile。</p>
+<h3 id="libbpf-tools-makefile">libbpf-tools Makefile</h3>
+<p>当构建 eBPF 代码时，你会得到一个包含 eBPF 程序和 map 的二进制定义的目标文件。你还需要额外的一个用户空间可执行文件，它将这些程序和 map 加载到内核中，并充当用户接口。 让我们看看构建 opensnoop 的 Makefile，是如何创建 eBPF 目标文件和可执行文件的。</p>
+<p>Makefiles 由一组规则组成，这些规则的语法可能有点不透明（opaque），所以如果你不熟悉 Makefiles 并且不是特别关心细节，请随意跳过本节！</p>
+<p>我们正在查看的 opensnoop 示例是诸多样例工具之一，这些样例工具共同使用一个 Makefile 构建，你可以在 libbpf-tools 目录中找到该 Makefile。 此文件中的所有内容并非都特别令人感兴趣，但我想强调一些规则。第一个是使用 bpf.c 文件并使用 clang 编译器创建 BPF 目标对象文件的规则：</p>
+<div><pre class="hljs"><code>**$(OUTPUT)/%.bpf.o**: **%.bpf.c** $(LIBBPF_OBJ) $(wildcard %.h) $(AR.. $(call msg,BPF,$@)
+$(Q)$(**CLANG**) $(CFLAGS) **-target bpf** -D__TARGET_ARCH_$(ARCH) \
+-I$(ARCH)/ $(INCLUDES) -c $(filter %.c,$^) -o $@ &amp;&amp; \
+    $(LLVM_STRIP) -g $@</code></pre></div>
+<p>因此，opensnoop.bpf.c 被编译成 $(OUTPUT)/open snoop.bpf.o。这个对象文件包含将被载入内核的 eBPF 程序和 map。</p>
+<p>另一条规则使用 bpftool gen skeleton 从 bpf.o 对象文件中包含的映射和程序定义创建一个脚手架头文件。</p>
+<p>因此，opensnoop.bpf.c 被编译成 $(OUTPUT)/open snoop.bpf.o。该目标文件包含将加载到内核中的 eBPF 程序和 map。</p>
+<p>另一个规则使用 bpftool gen 脚手架从该 bpf.o 目标文件中包含的 map 和程序定义创建脚手架头文件：</p>
+<div><pre class="hljs"><code>**$(OUTPUT)/%.skel.h: $(OUTPUT)/%.bpf.o** | $(OUTPUT) $(call msg,GEN-SKEL,$@)
+$(Q)$(**BPFTOOL**) **gen skeleton** $&lt; &gt; $@</code></pre></div>
+<p>opensnoop.c 用户空间代码包含这个 opensnoop.skel.h 头文件，以获取它与内核中的 eBPF 程序共享的 map 的定义。这允许用户空间和内核代码了解存储在这些 map 中的数据结构的布局。</p>
+<p>以下规则将用户空间代码从 opensnoop.c 编译成一个名为 $(OUTPUT)/opensnoop.o 的二进制对象：</p>
+<div><pre class="hljs"><code>**$(OUTPUT)/%.o**: %.c $(wildcard %.h) $(LIBBPF_OBJ) | $(OUTPUT) $(call msg,CC,$@)
+$(Q)$(**CC**) $(CFLAGS) $(INCLUDES) -c $(filter %.c,$^) -o $@</code></pre></div>
+<p>最后，有一个规则使用 cc 将用户空间应用程序对象（在我们的例子中，opensnoop.o）链接到一组可执行文件中：</p>
+<div><pre class="hljs"><code>$(APPS): %: $(OUTPUT)/%.o $(LIBBPF_OBJ) $(COMMON_OBJ) | $(OUT... $(call msg,BINARY,$@)
+$(Q)$ (**CC**) $(CFLAGS) $^ $(LDFLAGS) -lelf -lz -o $@</code></pre></div>
+<p>现在你已经了解了如何分别生成 eBPF 和用户空间程序，接着让我们看看对应的用户空间代码。</p>
+<h3 id="opensnoop-用户空间代码">Opensnoop 用户空间代码</h3>
+<p>正如我所提到的，与 eBPF 代码交互的用户空间代码几乎可以用任何编程语言编写。我们将在本节讨论的示例是用 C 编写的，但如果你有兴趣，可以将其与用 Python 编写的原始 BCC 版本进行比较，你可以在 bcc/tools 中找到它。</p>
+<p>用户空间代码在 opensnoop.c 文件中。文件的前半部分有 #include 指令（其中一个是自动生成的 opensnoop.skel.h 文件）、各种定义以及处理不同命令行选项的代码，我们不会在这里详述。让我们也略过诸如 print_event() 之类的函数，它将有关事件的信息写入屏幕。从 eBPF 的角度来看，所有有趣的代码都在 main() 函数中。</p>
+<p>你将看到诸如 <code>opensnoop_bpf__open()</code>、<code>open snoop_bpf__load()</code> 和 <code>opensnoop_bpf__attach()</code> 之类的函数。这些都是在<code> bpftool gen</code> 脚手架创建的自动生成代码中定义的。10 自动生成的代码处理在 eBPF 目标文件中定义的所有单独的 eBPF 程序、map 和附加点。</p>
+<p>一旦 opensnoop 启动并运行，其工作就是监听事件 perf 缓冲区并将事件中包含的信息写入屏幕。首先，它打开与 perf 缓冲区关联的文件描述符，并将 handle_event() 设置为新事件到达时的调用的函数：</p>
+<div><pre class="hljs"><code>     pb = perf_buffer__new(bpf_map__fd(obj-&gt;maps.events),
+         PERF_BUFFER_PAGES, handle_event, handle_lost_events,
+         <span class="hljs-literal">NULL</span>, <span class="hljs-literal">NULL</span>);</code></pre></div>
+<p>然后程序轮询缓冲区事件，直到达到时间限制，或者用户中断程序：</p>
+<div><pre class="hljs"><code>     <span class="hljs-keyword">while</span> (!exiting) {
+              err = perf_buffer__poll(pb, PERF_POLL_TIMEOUT_MS);
+       ... 
+     }</code></pre></div>
+<p>传递给 handle_event() 的数据参数指向 eBPF 程序为该事件写入 map 的事件结构。用户空间代码可以获取此信息，对其进行格式化并将供用户查看。</p>
+<p>正如你所见，opensnoop 注册了 eBPF 程序，每次任何应用程序调用 open() 或 openat() 系统调用时都会调用 eBPF 程序。这些在内核中运行的 eBPF 程序收集有关该系统调用的上下文的信息——可执行文件名称和进程 ID——以及有关正在打开的文件的信息。此信息被写入 map，用户空间可以从中读取它并将其显示给用户。</p>
+<p>你可以在 libbpf-tools 目录中找到数十个类似的 eBPF 工具示例，每个示例通常检测一个系统调用或一系列相关的系统调用，如 open() 和 openat()。</p>
+<p>系统调用是一个稳定的内核接口，它们提供了一种非常强大的方式来观察（虚拟）机器上发生的事情。但不要误以为 eBPF 编程开始和结束于拦截系统调用。除此之外，还有很多其他稳定的接口用于附加 eBPF 程序，包括 LSM 和网络栈中的各个挂载点。如果愿意冒险或解决内核版本之间的更改，那么你可以附加 eBPF 程序的地方范围将会非常广泛。</p>
+<blockquote>
+<ol>
+<li>请参阅 <a title="https://docs.cilium.io/en/stable/bpf/#instruction-set" href="https://docs.cilium.io/en/stable/bpf/#instruction-set">BPF 指令集文档</a>。</li>
+<li>Brendan Gregg 的网站是一个很好的关于<a title="https://www.brendangregg.com/perf.html" href="https://www.brendangregg.com/perf.html">perf event</a>的信息来源。<br />
+如果你有兴趣看到一个具体的例子，你可能想看我在 <a title="https://oreil.ly/K6jLs" href="https://oreil.ly/K6jLs">2021 年 eBPF 峰会</a>上的演讲，我在几分钟内实现了一个非常基本的负载均衡器，作为我们如何使用的说明 eBPF 改变内核处理网络数据包的方式<br />
+在撰写本文时，此代码为事件 map 使用 perf 缓冲区。如果今天为最近的内核编写此代码，你将从 <a title="https://nakryiko.com/posts/bpf-ringbuf/#bpf-ringbuf-vs-bpf-perfbuf" href="https://nakryiko.com/posts/bpf-ringbuf/#bpf-ringbuf-vs-bpf-perfbuf">ring buffer</a> 缓冲区获得更好的性能，这是一种较新的替代方案<br />
+参见 Andrii Nakryiko 描述 BPF 脚手架代码生成的<a title="https://lwn.net/Articles/806328/" href="https://lwn.net/Articles/806328/">帖子</a></li>
+</ol>
+</blockquote>
+</div>
+      </article>
+    </div>
+  </body>
+</html>
