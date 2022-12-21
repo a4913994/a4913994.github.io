@@ -4,9 +4,110 @@
         <title></title>
         <link>undefined</link>
         <description>undefined</description>
-        <lastBuildDate>Wed, 21 Dec 2022 03:55:30 GMT</lastBuildDate>
+        <lastBuildDate>Wed, 21 Dec 2022 06:12:53 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>Joplin Pages Publisher</generator>
+        <item>
+            <title><![CDATA[eBPF总结]]></title>
+            <guid>6659d0caaa3a4ab6a39850daca737519</guid>
+            <pubDate>Wed, 21 Dec 2022 05:54:20 GMT</pubDate>
+            <content:encoded><![CDATA[<p>我希望这篇简短的报告能让你了解 eBPF 以及它为何如此强大。我真正希望的是你已经准备好自己尝试一些基于 eBPF 的工具了！</p>
+<p>如果你想更深入地了解技术方面，一个不错的起点是 <a title="https://ebpf.io/" href="https://ebpf.io/">ebpf.io</a>，你可以在其中找到更多有关该技术和 eBPF 基金会的信息。对于编程示例，<a title="https://github.com/lizrice/ebpf-beginners" href="https://github.com/lizrice/ebpf-beginners">我的 GitHub 上的 ebpf-beginners 存储库</a> 中有一些资源。</p>
+<p>要了解其他人如何利用 eBPF 工具，可以参加 <a title="https://twitter.com/ebpfsummit" href="https://twitter.com/ebpfsummit">eBPF 峰会</a> 和 <a title="https://events.linuxfoundation.org/cloud-native-ebpf-day-europe/" href="https://events.linuxfoundation.org/cloud-native-ebpf-day-europe/">云原生 eBPF Day</a> 等活动 ，用户在这里分享他们的成功案例和学习经验。你可以从 <a title="https://ebpf.io/slack" href="https://ebpf.io/slack">ebpf.io/slack</a> 访问一个活动的 Slack 频道。 我希望能在那里看到你！</p>
+]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[eBPF 工具集]]></title>
+            <guid>05fb5135e88749908c4725eced4486be</guid>
+            <pubDate>Wed, 21 Dec 2022 05:32:32 GMT</pubDate>
+            <content:encoded><![CDATA[<blockquote>
+<p>既然你已经了解了 eBPF 是什么，以及 eBPF 程序是如何工作的，那么让我们转向探索一些基于该技术构建的工具，你可能会在生产部署中使用这些工具。我们将考虑一些基于 eBPF 的开源项目示例，这些项目在三个重要领域提供功能：网络、可观察性和安全性。</p>
+</blockquote>
+<h3 id="网络">网络</h3>
+<p>eBPF 程序可以附加到网络接口和内核网络栈中的各个附加点。在每个附加点，eBPF 程序都可以丢弃数据包、将它们发送到不同的目的地，甚至修改内容。这就实现了一些非常强大的功能。让我们看看现在通常使用 eBPF 实现的一些网络功能。</p>
+<h4 id="负载均衡">负载均衡</h4>
+<p>如果你对网络 eBPF 的可扩展性有任何疑问，要知道它正在 Facebook 大规模使用。他们是 BPF 的早期采用者并在 2018 年引入了 <a title="https://engineering.fb.com/2018/05/22/open-source%E3%80%81open-sourcing-katran-a-scalable-network-load-balancer/" href="https://engineering.fb.com/2018/05/22/open-source%E3%80%81open-sourcing-katran-a-scalable-network-load-balancer/">Katran</a> ，其是一个开源的第 4 层负载均衡器。</p>
+<p>另一个高度扩展的负载均衡器示例来自 Cloudflare 的 <a title="https://blog.cloudflare.com/unimog-cloudflares-edge-load-balancer/" href="https://blog.cloudflare.com/unimog-cloudflares-edge-load-balancer/">Unimog</a> 边缘负载均衡器。通过在内核中运行，eBPF 程序可以操作网络数据包并将它们转发到适当的目的地，而无需每个数据包都必须通过网络栈并到达用户空间。</p>
+<p>Cilium 项目以 eBPF Kubernetes 网络插件而闻名（稍后我将讨论），但它作为独立的负载均衡器用于大型电信和企业内部署中。同样，在早期阶段处理数据包而不必转换到用户空间的能力使其具有高性能。</p>
+<h4 id="kubernetes-网络">Kubernetes 网络</h4>
+<p>CNCF 项目 <a title="https://cilium.io/" href="https://cilium.io/">Cilium</a> 是最初的基于 eBPF 的 CNI 实现。它最初是由一群致力于 eBPF 的内核维护者发起的，他们很早认识到其在云原生网络中的应用潜力。Cilium 现在被用作 Google Kubernetes Engine、Amazon EKS Anywhere 和阿里云的默认数据平面。</p>
+<p>在云原生世界中，Pod 一直在停止和启动，每个 Pod 都被分配一个 IP 地址。在启用 eBPF 的网络之前，每个节点都必须不断更新一组 iptables 规则，以便在 pod 之间进行路由；而管理这些 iptables 规则在规模上会变得非常不方便。如图 6-1 所示，Cilium 极大地简化了路由，因此它本质上是 eBPF 中的一个简单的表查找，从而使得[显著的性能改进](<a title="https://cilium.io/blog/2021/05/11/cni-benchmark%EF%BC%89%E3%80%82" href="https://cilium.io/blog/2021/05/11/cni-benchmark%EF%BC%89%E3%80%82">https://cilium.io/blog/2021/05/11/cni-benchmark）。</a></p>
+<p>除了传统的 iptables 版本之外，另一个添加了 eBPF 实现的 Kubernetes CNI 是 Project <a title="https://github.com/projectcalico/calico" href="https://github.com/projectcalico/calico">Calico</a>。</p>
+<p><img src="/_resources/98da9dfc81f14178b40df0080b6200c3.png" /></p>
+<h4 id="服务网格-service-mesh">服务网格 Service Mesh</h4>
+<p>eBPF 作为更高效的服务网格数据平面的基础也非常有意义。许多服务网格功能在第 7 层即应用程序层运行，并使用 Envoy 等代理组件代表应用程序执行操作。在 Kubernetes 中，这些代理通常部署在 sidecar 模型中，每个 pod 有一个代理容器，以便代理可以访问 pod 的网络命名空间。正如你在第 5 章中所看到的，eBPF 提供了一种比 sidecar 模型更有效的方法。由于内核可以访问所有 pod 命名空间，我们可以使用 eBPF 在 pod 中的应用程序和主机上的单个代理之间建立连接，如图 6-2 所示。</p>
+<p><img src="/_resources/f3e6858a87294719b3da17740d59b4ea.png" /></p>
+<p>我还有另一篇关于使用 eBPF 实现更高效的服务网格数据平面的文章，<a title="https://www.youtube.com/watch?v=VV3MzbPXyTM" href="https://www.youtube.com/watch?v=VV3MzbPXyTM">Solo.io</a> 也是如此。在撰写本文时，Cilium Service Mesh 处于测试阶段，与传统的 Sidecar 代理方法相比，显示出早期的<a title="https://isovalent.com/blog/post/2021-12-08-ebpf-servicemesh" href="https://isovalent.com/blog/post/2021-12-08-ebpf-servicemesh">性能提升</a> .</p>
+<h3 id="可观测">可观测</h3>
+<p>正如你在本报告前面所见，eBPF 程序可以了解机器上发生的一切。通过收集有关事件的数据并将它们传递到用户空间，eBPF 启用了一系列强大的可观察性工具，可以向你展示应用程序是执行和表现如何，而无需对这些应用程序进行任何更改。eBPF 还支持整个系统的可观察性，而不仅仅是单个应用程序，因此你可以了解主机的行为。</p>
+<p>你在本报告的前面部分已经接触过了 BCC 项目，多年来，Brendan Gregg 在 Netflix 开展了开创性工作，并展示了如何使用这些 eBPF 工具在大规模和高性能常见下观察你感兴趣的<a title="https://www.brendangregg.com/" href="https://www.brendangregg.com/">几乎任何指标</a>。</p>
+<p>Kinvolk 的 <a title="https://github.com/inspektor-gadget/inspektor-gadget" href="https://github.com/inspektor-gadget/inspektor-gadget">Inspektor Gadget</a> 将其中一些源自 BCC 的工具引入了 Kubernetes 的世界，这样你就可以轻松地在命令行上观察特定的工作负载。</p>
+<p>新一代项目和工具正在这项工作的基础上提供基于 GUI 的可观察性。CNCF 项目 Pixie 允许你运行预先编写或自定义的脚本，并通过强大且具有视觉吸引力的 UI 查看指标和日志。因为其基于 eBPF，这意味着你可以自动检测所有应用程序并获取性能数据，而无需进行任何代码更改或配置。图 6-3 仅显示了 <a title="https://px.dev/" href="https://px.dev/">Pixie</a> 中可用的许多可视化的一个示例。</p>
+<p>另一个名为 <a title="https://github.com/parca-dev/parca" href="https://github.com/parca-dev/parca">Parca</a> 的可观察性项目专注于持续分析，使用 eBPF 来有效地采样 CPU 使用率等指标，你可以使用这些指标来检测性能瓶颈。</p>
+<p><img src="/_resources/19f8441cc108462fbd4620423198f863.png" /></p>
+<p>Cilium 的 Hubble 组件是一个具有命令行界面和 UI（如图 6-4 所示）的可观察性工具，专注于 Kubernetes 集群中的网络流。<br />
+<img src="/_resources/9127b2763c794b699e5f4408e819c179.png" /></p>
+<p>在云原生环境中，IP 地址不断被动态分配和重新分配，基于 IP 地址的传统网络可观察性工具的用途非常有限。作为 CNI，Cilium 可以访问工作负载身份信息，这意味着 Hubble 可以显示由 Kubernetes pod、服务和命名空间标识的服务地图和流数据。这对于诊断网络问题非常宝贵。</p>
+<p>如果可以观察活动，（这是安全工具的基础），你就可以将正在发生的事情与策略或规则进行比较，以了解该活动是预期的还是可疑的。让我们转向一些使用 eBPF 提供云原生安全功能的工具。</p>
+<h3 id="安全">安全</h3>
+<p>有强大的云原生工具可用，通过使用 eBPF 来检测甚至阻止恶意活动来增强安全性。我将这些分为两类：保护网络活动和保护应用程序在运行时的预期行为。</p>
+<h4 id="网络安全">网络安全</h4>
+<p>因为 eBPF 允许检查和操作网络数据包，所以它在网络安全方面有很多用途。基本原则是，如果一个网络数据包被认为是恶意的或有问题的，如不符合某些安全验证标准，它可以简单地被丢弃。eBPF 是一种高效的实现方式，因为它可以挂接到内核中网络栈的相关部分，甚至可以挂接到网络接口卡上。这意味着可以丢弃不符合策略或恶意的数据包在产生由网络堆栈处理并传递给用户空间的处理成本之前。</p>
+<p>eBPF 在大规模生产中的早期用途之一是用于 [Cloudflare] (<a title="https://blog.cloudflare.com/how-to-drop-10-million-packets/" href="https://blog.cloudflare.com/how-to-drop-10-million-packets/">https://blog.cloudflare.com/how-to-drop-10-million-packets/</a>) 的 DDoS（分布式拒绝服务）保护。 DDoS 攻击者用许多网络消息淹没目标机器，希望目标无法足够快地处理它们，并忙于处理这些消息，以至于它无法做有用的工作。 Cloudflare 工程师使用 eBPF 程序在数据包到达后立即对其进行检查，并快速确定数据包是否是此类攻击的一部分，如果是则将其丢弃。数据包不必通过内核的网络栈，因此处理所需的资源要少得多，并且目标可以应对更高速率的恶意流量。</p>
+<p>eBPF 程序还被用作针对“死亡数据包”内核漏洞的动态缓解措施。2攻击者制作网络数据包的方式是利用内核中的一个错误，该错误会阻止它正确处理该数据包。无需等待内核补丁推出，可以通过加载 eBPF 程序来缓解攻击，该程序会查找这些特制数据包并丢弃它们。这样做的真正美妙之处在于，可以动态加载 eBPF 程序，而无需更改机器上的任何内容。</p>
+<p>在 Kubernetes 中，<a title="http://networkpolicy.io/" href="http://networkpolicy.io/">网络策略</a> 是一等公民，但它留给网络插件来执行。一些 CNI，包括 Cilium 和 Calico，为更强大的规则提供扩展的网络策略功能，例如允许或禁止流量到由完全限定域名而不是 IP 地址指定的目的地。 <a title="https://app.networkpolicy.io/" href="https://app.networkpolicy.io/">app.networkpolicy.io</a> 有一个很好的工具可以探索网络策略及其影响，如图 6-5 所示。</p>
+<p>标准 Kubernetes 网络策略规则适用于进出应用程序 pod 的流量，但由于 eBPF 对所有网络流量具有可见性，它也可用于主机防火墙功能，限制进出主机（虚拟）机器的流量。3</p>
+<p>eBPF 也可以用来提供透明加密，无论是通过 WireGuard 还是 IPsec。4这里，透明意味着应用程序不需要任何修改——事实上，应用程序可以完全不知道它的网络流量是加密的.</p>
+<p><img src="/_resources/8adbe19aaed640278d890fe558796448.png" /></p>
+<h3 id="运行时安全">运行时安全</h3>
+<p>eBPF 还被用于构建检测应用程序何时以非预期或恶意方式运行的工具，其中一些工具还可用于防止不良行为。一些可疑行为的示例可能包括意外访问文件、运行可执行程序或试图获得额外权限。</p>
+<p>事实上，你可能已经以 seccomp 的形式使用了基于 BPF 的安全实施，这是一种用于限制任何应用程序可以调用的系统调用集的 Linux 特性。</p>
+<p>CNCF 项目 <a title="https://falco.org/" href="https://falco.org/">Falco</a> 扩展了限制应用程序可以进行的系统调用的想法。Falco 的规则定义是在 YAML 中创建的，这比 seccomp 配置文件更易于人类阅读和解释。默认的 Falco 驱动程序是一个内核模块，但也有一个附加到“原始系统调用”事件的 eBPF 探针驱动程序。它不会阻止这些系统调用完成，但它可以生成日志或其他通知，以提醒运维人员注意潜在的恶意事件。</p>
+<p>正如我们在第 3 章中看到的，可以将 eBPF 程序附加到 LSM 接口以防止恶意行为或缓解已知漏洞。例如，Denis Efremov 编写了一个 <a title="https://github.com/evdenis/lsm_bpf_check_argc0" href="https://github.com/evdenis/lsm_bpf_check_argc0">eBPF 程序</a> 来防止 exec() 系统调用在没有传递任何参数的情况下运行，以减轻 PwnKit* 5 高危漏洞。eBPF 也可用于缓解投机执行 “Spectre” 攻击。</p>
+<p><a title="https://github.com/aquasecurity/tracee" href="https://github.com/aquasecurity/tracee">Tracee</a> 是另一个使用 eBPF 实现运行时安全的开源项目。除了基于系统调用的检查外，它还使用了 LSM 接口。这有助于避免在仅检查系统调用时容易受到 <a title="https://lwn.net/Articles/245630/" href="https://lwn.net/Articles/245630/">TOCTTOU</a> 条件竞争的影响。 Tracee 支持 Open Policy Agent 的 Rego 语言中定义的规则，也允许使用 Go 中定义的插件规则。</p>
+<p>Cilium 的 <a title="https://github.com/cilium/tetragon" href="https://github.com/cilium/tetragon">Tetragon</a> 组件提供了另一种强大的方法，使用 eBPF 来监控容器安全可观察性的四个黄金信号：进程执行、网络套接字、文件访问和 7 层网络身份。这使得运维可以准确地查看导致任何恶意或可疑事件的原因，直至特定 pod 中的可执行名称和用户身份。例如，如果受到挖矿攻击，你可以准确地看到哪个可执行文件打开了与矿池的网络连接，从哪个 pod 以及何时打开。这些取证对于了解危害是如何发生的以及使构建安全策略以防止将来发生类似攻击变得非常宝贵。</p>
+<p>如果你想更深入地研究 eBPF 的安全可观察性主题，请查看 Natália Ivánkó 和 Jed Salazar 的报告7。密切关注云原生 eBPF 空间，因为不久我们就会看到利用 BPF LSM 和其他 eBPF 定制来提供安全实施和可观察性的工具。</p>
+<p>我们介绍了几个在网络、可观察性和安全性方面的云原生工具。与此前工具相比，他们使用 eBPF 为他们带来了两个关键优势：</p>
+<ol>
+<li>
+<p>从内核中的优势来看，eBPF 程序对所有进程都有可见性。</p>
+</li>
+<li>
+<p>通过避免内核和用户空间执行之间的转换，eBPF 程序提供了一种非常高效的方式来收集事件数据或处理网络数据包。</p>
+</li>
+</ol>
+<p>这并不意味着我们应该对所有事情都使用 eBPF！在 eBPF 中编写特定于业务的应用程序不太可能有意义，就像我们通常将应用程序编写为内核模块一样。这条规则可能有一些例外，可能是针对高频交易等极高的性能要求。正如我们在本章中所看到的，eBPF 主要是作为工具来检测其他应用程序的。</p>
+<blockquote>
+<p>请参阅 Cilium 的主机<a title="https://docs.cilium.io/en/stable/gettingstarted/host-firewall/" href="https://docs.cilium.io/en/stable/gettingstarted/host-firewall/">防火墙文档</a>。<br />
+Tailscale 有这两种加密协议的<a title="https://tailscale.com/kb/1173/ipsec-vs-wireguard/" href="https://tailscale.com/kb/1173/ipsec-vs-wireguard/">比较</a></p>
+</blockquote>
+]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[eBPF 在云原生环境中的应用]]></title>
+            <guid>cc36bf9f073844cc89955cf2819ae38f</guid>
+            <pubDate>Wed, 21 Dec 2022 04:15:42 GMT</pubDate>
+            <content:encoded><![CDATA[<h3 id="每台主机一个内核">每台主机一个内核</h3>
+<p>要理解为什么 eBPF 在云原生世界中如此强大，你需要非常清楚一个概念：每台机器（或虚拟机）只有一个内核，并且该机器上运行的所有容器共享同一个内核 ,1 如图 5-1 所示。同一个内核参与并知道在任何给定主机上运行的所有应用程序代码。</p>
+<p>通过检测内核，就像在使用 eBPF 时所做的那样，我们可以同时检测在该机器上运行的所有应用程序代码。当我们将 eBPF 程序加载到内核中并将其附加到事件时，无论事件涉及哪个进程，eBPF 程序都会被触发</p>
+<p><img src="/_resources/284144fa07954bc0a04ba97697db2143.png" /></p>
+<h3 id="ebpf-vs-sidecar-模型">eBPF vs Sidecar 模型</h3>
+<p>在 eBPF 之前，大多数 Kubernetes 的可观察性和安全工具都使用 sidecar 模型。此模型允许将检测部署在单独的容器中，但与应用程序位于同一 pod 中。当这种方法被采用时，已经前迈进了一步，因为这意味着你不再需要直接在应用程序中编写检测代码。只需部署 sidecar，它就可以看到同一个 pod 中的其他容器。 注入 sidecar 的过程通常是自动化的，因此这提供了一种机制来确保所有应用程序都被检测。</p>
+<p>每个 sidecar 容器都会消耗资源，总量需要乘以注入 sidecar 的 pod 数量。这可能非常重要——例如，如果每个 sidecar 都需要自己的路由信息或策略规则副本，那么这是一种浪费。（关于这方面的更多信息，Thomas Graf 写了一篇 [sidecars 与 eBPF 用于服务网格的比较](<a title="https://isovalent.com/blog/post/2021-12-08-ebpf-servicemesh%EF%BC%89%E3%80%82%EF%BC%89" href="https://isovalent.com/blog/post/2021-12-08-ebpf-servicemesh%EF%BC%89%E3%80%82%EF%BC%89">https://isovalent.com/blog/post/2021-12-08-ebpf-servicemesh）。）</a></p>
+<p>Sidecar 的另一个问题是，你不能保证机器上的每个应用程序都已正确检测。想象一下，攻击者设法破坏了一个主机并启动了一个单独的 pod 来运行，例如进行挖矿。他们不太可能礼貌地使用 sidecar 可观察性或安全工具来检测他们的挖矿程序。这时，你需要一个单独的系统来了解相关活动。</p>
+<p>但是同一个挖矿 pod 与在该主机上运行的合法 pod 共享内核。 如果你使用基于 eBPF 的工具，如图 5-2 所示，挖矿者会被发现。</p>
+<p><img src="/_resources/e0727e9746f34257b0a2179111a5f3c6.png" /></p>
+<h3 id="ebpf-和进程隔离">eBPF 和进程隔离</h3>
+<p>我主张将功能整合到单个每个节点的基于 eBPF 的代理中，而不是每个 pod 的 sidecar。如果该代理可以访问机器上运行的所有 Pod，这不是安全风险吗？我们是否已经失去了应用程序之间可能会阻止它们相互干扰的隔离？</p>
+<p>作为一个花了很多时间在容器安全方面工作的人，我可以理解这些担忧，但重要的是要深入研究底层机制，以真正理解为什么它不是最初可能出现的缺陷。</p>
+<p>需要记住的重要一点是，这些 pod 都共享一个内核，并且内核对 pod 或容器没有天生的理解。相反，内核对进程进行操作，并使用 cgroup 和命名空间将进程彼此隔离。这些结构阻止用户空间中的进程能够看到或相互干扰，这是由内核控制的。一旦在内核中处理数据（例如，从磁盘读取或发送到网络），你就依赖于内核的正确行为。例如，只有内核代码说应该尊重文件权限。没有额外的魔法权威层可以阻止内核忽略文件权限，并从它想要访问的任何文件中读取数据 —— 只是内核本身没有被编码为不这样做。</p>
+<p>Linux 系统上存在的安全控制假定内核本身是可以信任的。它们可以防止在用户空间中运行的代码出现不良行为。</p>
+<p>我们在第 2 章中看到，eBPF 验证器确保任何 eBPF 程序只尝试访问它应该有权访问的内存。验证程序检查程序是否不可能超出其权限，包括确保内存由当前进程拥有或者是当前网络数据包的一部分。这意味着 eBPF 代码比周围的内核代码受到更严格的控制，无需通过任何类型的验证步骤。</p>
+<p>如果攻击者将容器化应用程序逃逸到节点上，并且能够提升权限，则该攻击者可以破坏同一节点上的其他应用程序。由于这些逃逸并不为人所知，因此作为容器安全专家，我不建议在没有某种级别的额外安全工具的情况下与不受信任的应用程序或用户一起在共享机器上运行敏感应用程序。对于高度敏感的数据，你甚至可能不想与不受信任的用户在同一裸机上的虚拟机中运行。但是，如果你准备在同一个虚拟机上并行运行应用程序（这在许多不是特别敏感的应用程序中是完全合理的），那么 eBPF 不会通过共享内核增加已经存在的风险。</p>
+<p>当然，恶意的 eBPF 程序可能会造成各种破坏，编写恶意 eBPF 代码当然很容易——例如，复制每个网络数据包并将其发送给窃听者。默认情况下，非 root 用户不能加载 eBPF 程序的权限，2 你应该只授予信任用户或软件系统这个权限，就像 root 权限一样。所以，你必须小心运行的代码的出处（并且有一个[倡议]（<a title="https://lwn.net/Articles/853489/%EF%BC%89%E6%AD%A3%E5%9C%A8%E5%8F%91%E6%8C%A5%E4%BD%9C%E7%94%A8%EF%BC%8C%E4%BB%A5%E6%94%AF%E6%8C%81%E5%AF%B9" href="https://lwn.net/Articles/853489/%EF%BC%89%E6%AD%A3%E5%9C%A8%E5%8F%91%E6%8C%A5%E4%BD%9C%E7%94%A8%EF%BC%8C%E4%BB%A5%E6%94%AF%E6%8C%81%E5%AF%B9">https://lwn.net/Articles/853489/）正在发挥作用，以支持对</a> eBPF 程序的签名检查，以帮助解决这种问题）。你还可以使用 eBPF 程序来密切关注其他 eBPF 程序！</p>
+<p>现在你已经大致了解了为什么 eBPF 是云原生工具的强大基础，下一章将为你提供一些来自云原生生态系统的 eBPF 工具的具体示例。</p>
+]]></content:encoded>
+        </item>
         <item>
             <title><![CDATA[eBPF复杂性]]></title>
             <guid>006498407dcc4a5e90998ae265d7c1cd</guid>
