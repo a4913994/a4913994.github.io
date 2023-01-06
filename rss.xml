@@ -4,9 +4,327 @@
         <title></title>
         <link>undefined</link>
         <description>undefined</description>
-        <lastBuildDate>Wed, 21 Dec 2022 06:12:53 GMT</lastBuildDate>
+        <lastBuildDate>Fri, 06 Jan 2023 02:52:01 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>Joplin Pages Publisher</generator>
+        <item>
+            <title><![CDATA[BTFGen: 让 eBPF 程序可移植发布更近一步]]></title>
+            <guid>f14b5b38df1f4a5d8ad1745dbfde1eb1</guid>
+            <pubDate>Fri, 06 Jan 2023 02:28:46 GMT</pubDate>
+            <content:encoded><![CDATA[<nav class="table-of-contents"><ul><li><a href="#1-问题所在">1. 问题所在</a></li><li><a href="#2-co-re-一次编译-到处运行">2. CO-RE (一次编译 - 到处运行)</a></li><li><a href="#3-btfhub">3. BTFHub</a></li><li><a href="#4-btfgen">4. BTFGen</a><ul><li><a href="#41-内部实现细节">4.1 内部实现细节</a></li></ul></li><li><a href="#42-如何使用">4.2 如何使用?</a><ul><li><a href="#安装-bpftool-工具">安装 bpftool 工具</a></li><li><a href="#从-bfthub-获取内核对应的-btf-文件">从 BFThub 获取内核对应的 BTF 文件</a></li><li><a href="#下载-修改和编译-bcc-libbpf-工具">下载、修改和编译 BCC libbpf 工具</a></li><li><a href="#生成-精简版-btf-文件">生成 “精简版” BTF 文件</a></li><li><a href="#验证">验证</a></li><li><a href="#43-集成样例">4.3 集成样例</a><ul><li><a href="#inspektor-gadget">Inspektor Gadget</a></li><li><a href="#tracee">Tracee</a></li></ul></li><li><a href="#44-限制">4.4 限制</a></li><li><a href="#45-未来发展">4.5 未来发展</a><ul><li><a href="#与其他项目的整合">与其他项目的整合</a></li><li><a href="#删除重复的文件">删除重复的文件</a></li><li><a href="#在线-api">在线 API</a></li></ul></li></ul></li><li><a href="#5-更多信息">5. 更多信息</a></li><li><a href="#6-致谢">6. 致谢</a></li></ul></nav><p>eBPF 是一项广为人知的技术，已经在可观测、网络和安全领域领域得到广泛应用。Linux 操作系统提供了虚拟机，可用于安全和高效的方式运行 eBPF 程序【译者注：如果是 JIT 模式则会直接翻译成本地 CPU 指令，则不需要虚拟机】。eBPF 程序挂载在操作系统提供的钩子上，使其能够在内核中发生特定事件时过滤和提取感兴趣的信息。</p>
+<p>在本文中，我们将介绍助力 eBPF 程序移植的工具 BTFGen，以及其如何被集成到其他项目中，主要的内容如下：</p>
+<ul>
+<li>在不同的目标机器上运行 eBPF 程序的挑战；</li>
+<li>传统上如何通过在加载程序之前通过编译解决的；</li>
+<li>解决挑战对应的的机制/工具（如 CO-RE 一次编译 - 到处运行）；</li>
+<li>BTFHub 工具如何尝试解决这些挑战。</li>
+</ul>
+<h2 id="1-问题所在">1. 问题所在</h2>
+<p>eBPF 程序需要访问内核结构来获取需要的数据，因此依赖于内核结构的布局。为特定内核版本编译的 eBPF 程序通常不能在另一个内核版本上工作，这是因为相关的内核数据结构布局可能会发生了变化：比如字段添加、删除，或类型被改变，甚至内核编译配置的改变也会改变整个结构布局。例如，禁用 <code>CONFIG_THREAD_INFO_IN_TASK</code> 会改变 <a title="https://github.com/torvalds/linux/blob/v5.16/include/linux/sched.h#L723" href="https://github.com/torvalds/linux/blob/v5.16/include/linux/sched.h#L723">task_struct</a> 的所有成员变量的偏移：</p>
+<div><pre class="hljs"><code><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">task_struct</span> {</span>
+<span class="hljs-meta">#<span class="hljs-keyword">ifdef</span> CONFIG_THREAD_INFO_IN_TASK</span>
+    <span class="hljs-comment">/*
+     * For reasons of header soup (see current_thread_info()), this
+     * must be the first element of task_struct.
+     */</span>
+    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">thread_info</span>		<span class="hljs-title">thread_info</span>;</span>
+<span class="hljs-meta">#<span class="hljs-keyword">endif</span></span>
+    <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span>			__state;
+
+<span class="hljs-meta">#<span class="hljs-keyword">ifdef</span> CONFIG_PREEMPT_RT</span>
+    <span class="hljs-comment">/* saved state for "spinlock sleepers" */</span>
+    <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span>			saved_state;
+<span class="hljs-meta">#<span class="hljs-keyword">endif</span></span>
+...</code></pre></div>
+<p>该问题的解决通常是在目标机器使用内核头文件编译 eBPF 程序并进行加载，<a title="https://github.com/iovisor/bcc/" href="https://github.com/iovisor/bcc/">BCC</a> 项目所使用的正是这种方式。但该方法存在以下问题：</p>
+<ol>
+<li>必须在目标机器上安装占用大量空间的编译器；</li>
+<li>编译程序时需要资源，在某些情况下可能会影响工作负载的调度；</li>
+<li>编译需要相当长的时间，因此事件采集会存在一些延迟；</li>
+<li>依赖于目标机器上安装内核头文件包。</li>
+</ol>
+<h2 id="2-co-re-一次编译-到处运行">2. CO-RE (一次编译 - 到处运行)</h2>
+<p>CO-RE 机制正是为解决上述问题提出的方案。在该方案中，eBPF 程序一次编译，然后在运行时进行更新（patched）：基于运行的机器的内核结构布局更新运行指令。<a title="https://nakryiko.com/posts/bpf-portability-and-co-re" href="https://nakryiko.com/posts/bpf-portability-and-co-re">BPF CO-RE (Compile Once - Run Everywhere)</a> 介绍了该技术背后的所有细节。对于本文，需要理解的是 CO-RE 需要有目标内核的 BTF 信息（BPF Type Format 类型格式）。BTF 信息由内核本身提供的，这需要在内核编译时设置 <code>CONFIG_DEBUG_INFO_BTF=y</code> 选项 。该选项在<a title="https://github.com/torvalds/linux/commit/e83b9f55448afce3fe1abcd1d10db9584f8042a6" href="https://github.com/torvalds/linux/commit/e83b9f55448afce3fe1abcd1d10db9584f8042a6">Linux 内核 5.2</a> 中引入的，许多流行的 Linux 发行版在其后的部分内核版本才默认启用。这意味着有很多用户运行的内核并没有导出 BTF 信息，因此不能使用基于 CO-RE 的工具。</p>
+<h2 id="3-btfhub">3. BTFHub</h2>
+<p><a title="https://github.com/aquasecurity/btfhub" href="https://github.com/aquasecurity/btfhub">BTFHub</a> 是 Aqua Security 公司的一个项目，其可为不导出 BTF 信息的流行发行版内核提供BTF 信息补充。目标内核的 BTF 文件可以在运行时下载，然后与加载库（libbpf、cilium/ebpf 或其他）配合，加载库基于 BTF 文件对程序进行相应的更新（patch）。</p>
+<p>尽管 BTFHub 做了很大的改进，但是它仍然面临着一些挑战：每个 BTF 文件有数 MB 大小，因此不可能把所有内核的 BTF 文件和应用程序一起打包，因为这可能需要数 GB 的空间占用。另一种方法是在运行时下载当前内核的所需 BTF，但这也带来了一些问题：延迟 eBPF 程序启动，而且在某些情况下，连接到外部主机下载文件也不可行。</p>
+<h2 id="4-btfgen">4. BTFGen</h2>
+<p>其实，通常我们并不需要提供描述所有内核类型的完整 BTF 文件，因为 eBPF 程序通常只需要访问其中的少数类型。一个 “精简版” 的 BTF 文件，只需要提供程序使用类型的信息就足够了。这就是工具 BTFGen 发挥作用：其可以生成一组 eBPF 程序所需的精简的 BTF ，通过该方式生成的 BTF 文件只有数 KB 大小，将其与应用程序打包交付变成了可能。</p>
+<p>BTFGen 并不是单独提供能力的。它需要具有不同 Linux 发行版的所有内核类型的源 BTF 文件（由 BTFHub 提供），并且 CO-RE 机制（在libbpf、Linux内核或另一个加载库中）在加载程序时通过打补丁方式更新 eBPF 程序。</p>
+<p>使用 BTFGen 的主要流程如下：</p>
+<ol>
+<li>开发人员编写<a title="https://nakryiko.com/posts/bpf-core-reference-guide/" href="https://nakryiko.com/posts/bpf-core-reference-guide/">基于 CO-RE</a> 的 eBPF 程序，并通过 llvm/clang 编译成对象文件；</li>
+<li>从 BTFHub 或其他来源收集不同 Linux 内核发行版的 BTF 源文件；</li>
+<li>使用 BTFGen 生成精简版的 BTF 文件；</li>
+<li>将精简版的 BTF 文件与应用程序打包分发。</li>
+</ol>
+<p><img src="/_resources/74c0a8490488473eaa2b1495f5cb1bf7.png" /></p>
+<h3 id="41-内部实现细节">4.1 内部实现细节</h3>
+<p>BTFGen 在 bpftool 工具中实现，其使用 libbpf CO-RE 逻辑来解决重定位问题。有了这些信息，它就能挑选出重新定位所涉及的类型来生成 “精简版” 的 BTF 文件。这篇文章的目的不是要解释所有的内部实现细节。如果你想知道更多，你可以查看 BTFHub 仓库中的<a title="https://github.com/aquasecurity/btfhub/blob/main/docs/btfgen-internals.md" href="https://github.com/aquasecurity/btfhub/blob/main/docs/btfgen-internals.md">这个文档</a>或实现它的<a title="https://lore.kernel.org/bpf/164503621150.2935.6634904664671748900.git-patchwork-notify@kernel.org/T/#mdd100ccbc95947c8fe6be74db66002e273a29abd" href="https://lore.kernel.org/bpf/164503621150.2935.6634904664671748900.git-patchwork-notify@kernel.org/T/#mdd100ccbc95947c8fe6be74db66002e273a29abd">补丁</a>。</p>
+<h2 id="42-如何使用">4.2 如何使用?</h2>
+<p>本节提供了 BTFGen 工具使用的更多细节。在本例中，我们将使用 BTFGen 来实现内核未启用 CONFIG_DEBUG_INFO_BTF 选项的机器上运行特定的 <a title="https://github.com/iovisor/bcc/tree/v0.24.0/libbpf-tools" href="https://github.com/iovisor/bcc/tree/v0.24.0/libbpf-tools">BCC libbpf-tools</a> 工具。其他 eBPF 应用程序集成的方式也是类似。</p>
+<p>为了实现上述的目的，我们需要以下流程：</p>
+<ol>
+<li>下载、编译和安装支持 BTFGen 的 bpftool 版本；</li>
+<li>从 BTFHub 下载所需的 BTF 文件；</li>
+<li>下载和编译 BCC 工具；</li>
+<li>使用 BTFGen 为特定的 BCC 工具生成 “精简版” BTF 文件；</li>
+<li>调整 BCC 工具代码，使其可以从自定义路径加载 BTF 文件；</li>
+<li>最后进行验证。</li>
+</ol>
+<p>首先，我们为该演示创建一个临时目录：</p>
+<div><pre class="hljs"><code>$ mkdir /tmp/btfgendemo</code></pre></div>
+<h4 id="安装-bpftool-工具">安装 bpftool 工具</h4>
+<p>BTFGen 刚刚被合入 bpftool。在 BTFGen 未被包含在不同发行版的软件包之前，我们需要从源代码进行编译：</p>
+<div><pre class="hljs"><code>$ <span class="hljs-built_in">cd</span> /tmp/btfgendemo
+$ git <span class="hljs-built_in">clone</span> --recurse-submodules https://github.com/libbpf/bpftool.git
+$ <span class="hljs-built_in">cd</span> bpftool/src
+$ make
+$ sudo make install</code></pre></div>
+<h4 id="从-bfthub-获取内核对应的-btf-文件">从 BFThub 获取内核对应的 BTF 文件</h4>
+<p>这里为简洁起见，我们只考虑 Ubuntu Focal 系统中使用的场景，该方式也完全适用于 BTFHub 支持的其他发行版本。</p>
+<div><pre class="hljs"><code>$ <span class="hljs-built_in">cd</span> /tmp/btfgendemo
+$ git <span class="hljs-built_in">clone</span> https://github.com/aquasecurity/btfhub-archive
+$ <span class="hljs-built_in">cd</span> btfhub-archive/ubuntu/focal/x86_64/
+$ <span class="hljs-keyword">for</span> f <span class="hljs-keyword">in</span> *.tar.xz; <span class="hljs-keyword">do</span> tar -xf <span class="hljs-string">"<span class="hljs-variable">$f</span>"</span>; <span class="hljs-keyword">done</span>
+$ ls -lhn *.btf | head
+-rw-r----- 1 1000 1000 4,5M Sep 29 13:36 5.11.0-1007-azure.btf
+-rw-r----- 1 1000 1000 4,8M Aug 10 23:33 5.11.0-1009-aws.btf
+-rw-r----- 1 1000 1000 4,8M Jan 22 12:29 5.11.0-1009-gcp.btf
+-rw-r----- 1 1000 1000 4,5M Sep 29 13:38 5.11.0-1012-azure.btf
+-rw-r----- 1 1000 1000 4,5M Sep 29 13:40 5.11.0-1013-azure.btf
+-rw-r----- 1 1000 1000 4,8M Aug 10 23:39 5.11.0-1014-aws.btf
+-rw-r----- 1 1000 1000 4,8M Jan 22 12:32 5.11.0-1014-gcp.btf
+-rw-r----- 1 1000 1000 4,5M Sep 29 13:43 5.11.0-1015-azure.btf
+-rw-r----- 1 1000 1000 4,8M Sep 7 22:52 5.11.0-1016-aws.btf
+-rw-r----- 1 1000 1000 4,8M Sep 7 22:57 5.11.0-1017-aws.btf</code></pre></div>
+<p>如上述显示，我们可以看到每个内核对应的 BTF 文件的大小约为 4MB。</p>
+<div><pre class="hljs"><code>$ find . -name <span class="hljs-string">"*.btf"</span> | xargs du -ch | tail -n 1
+944M	total</code></pre></div>
+<p>但是汇总起来看，仅 Ubuntu Focal 就有~944MB 的大小，将其与应用程序一起打包显然不太可行。</p>
+<h4 id="下载-修改和编译-bcc-libbpf-工具">下载、修改和编译 BCC libbpf 工具</h4>
+<p>我们从 BCC v0.24.0 标签上克隆仓库代码：</p>
+<div><pre class="hljs"><code>$ <span class="hljs-built_in">cd</span> /tmp/btfgendemo
+$ git <span class="hljs-built_in">clone</span> https://github.com/iovisor/bcc -b v0.24.0 --recursive</code></pre></div>
+<p>默认情况下，不同的 BCC 工具会尝试从<a title="https://github.com/libbpf/libbpf/blob/22411acc4b2c846868fd570b2d9f3b016d2af2cb/src/btf.c#L4631-L4639" href="https://github.com/libbpf/libbpf/blob/22411acc4b2c846868fd570b2d9f3b016d2af2cb/src/btf.c#L4631-L4639">约定目录</a>中加载 BTF 信息。正常情况下，我们不能直接覆盖对应的文件，因为它们极有可能也会被其他工具所依赖。相反，我们可以修改 BCC 工具源码，让其从一个自定义的路径加载 BTF 文件。我们可以使用 LIBBPF_OPTS() 来声明一个 bpf_object_open_opts 结构，将其中的 btf_custom_path 字段设置为自定义 BTF 所在的路径，并将其传递给 TOOL_bpf__open_opts()函数。我们尝试使用如下的补丁来修改 opennoop、execsnoop 和 bindsnoop 工具。</p>
+<p>译者注，约定的加载 BTF 目录如下：</p>
+<div><pre class="hljs"><code>    { <span class="hljs-string">"/sys/kernel/btf/vmlinux"</span>, <span class="hljs-literal">true</span> /* raw BTF */ },
+    { <span class="hljs-string">"/boot/vmlinux-%1<span class="hljs-variable">$s</span>"</span> },
+    { <span class="hljs-string">"/lib/modules/%1<span class="hljs-variable">$s</span>/vmlinux-%1<span class="hljs-variable">$s</span>"</span> },
+    { <span class="hljs-string">"/lib/modules/%1<span class="hljs-variable">$s</span>/build/vmlinux"</span> },
+    { <span class="hljs-string">"/usr/lib/modules/%1<span class="hljs-variable">$s</span>/kernel/vmlinux"</span> },
+    { <span class="hljs-string">"/usr/lib/debug/boot/vmlinux-%1<span class="hljs-variable">$s</span>"</span> },
+    { <span class="hljs-string">"/usr/lib/debug/boot/vmlinux-%1<span class="hljs-variable">$s</span>.debug"</span> },
+    { <span class="hljs-string">"/usr/lib/debug/lib/modules/%1<span class="hljs-variable">$s</span>/vmlinux"</span> },</code></pre></div>
+<div><pre class="hljs"><code><span class="hljs-comment"># /tmp/btfgendemo/bcc.patch</span>
+diff --git a/libbpf-tools/bindsnoop.c b/libbpf-tools/bindsnoop.c
+index 5d87d484..a336747e 100644
+--- a/libbpf-tools/bindsnoop.c
++++ b/libbpf-tools/bindsnoop.c
+@@ -187,7 +187,8 @@ int main(int argc, char **argv)
+ 	libbpf_set_strict_mode(LIBBPF_STRICT_ALL);
+ 	libbpf_set_print(libbpf_print_fn);
+
+-	obj = bindsnoop_bpf__open();
++	LIBBPF_OPTS(bpf_object_open_opts, opts, .btf_custom_path = <span class="hljs-string">"/tmp/vmlinux.btf"</span>);
++	obj = bindsnoop_bpf__open_opts(&amp;opts);
+ 	<span class="hljs-keyword">if</span> (!obj) {
+ 		warn(<span class="hljs-string">"failed to open BPF object\n"</span>);
+ 		<span class="hljs-built_in">return</span> 1;
+diff --git a/libbpf-tools/execsnoop.c b/libbpf-tools/execsnoop.c
+index 38294816..9bd0d077 100644
+--- a/libbpf-tools/execsnoop.c
++++ b/libbpf-tools/execsnoop.c
+@@ -274,7 +274,8 @@ int main(int argc, char **argv)
+ 	libbpf_set_strict_mode(LIBBPF_STRICT_ALL);
+ 	libbpf_set_print(libbpf_print_fn);
+
+-	obj = execsnoop_bpf__open();
++	LIBBPF_OPTS(bpf_object_open_opts, opts, .btf_custom_path = <span class="hljs-string">"/tmp/vmlinux.btf"</span>);
++	obj = execsnoop_bpf__open_opts(&amp;opts);
+ 	<span class="hljs-keyword">if</span> (!obj) {
+ 		fprintf(stderr, <span class="hljs-string">"failed to open BPF object\n"</span>);
+ 		<span class="hljs-built_in">return</span> 1;
+diff --git a/libbpf-tools/opensnoop.c b/libbpf-tools/opensnoop.c
+index 557a63cd..cf2c5db6 100644
+--- a/libbpf-tools/opensnoop.c
++++ b/libbpf-tools/opensnoop.c
+@@ -231,7 +231,8 @@ int main(int argc, char **argv)
+ 	libbpf_set_strict_mode(LIBBPF_STRICT_ALL);
+ 	libbpf_set_print(libbpf_print_fn);
+
+-	obj = opensnoop_bpf__open();
++	LIBBPF_OPTS(bpf_object_open_opts, opts, .btf_custom_path = <span class="hljs-string">"/tmp/vmlinux.btf"</span>);
++	obj = opensnoop_bpf__open_opts(&amp;opts);
+ 	<span class="hljs-keyword">if</span> (!obj) {
+ 		fprintf(stderr, <span class="hljs-string">"failed to open BPF object\n"</span>);
+ 		<span class="hljs-built_in">return</span> 1;
+$ <span class="hljs-built_in">cd</span> bcc
+$ git apply /tmp/btfgendemo/bcc.patch
+$ <span class="hljs-built_in">cd</span> libbpf-tools/
+$ make -j$(nproc)</code></pre></div>
+<h4 id="生成-精简版-btf-文件">生成 “精简版” BTF 文件</h4>
+<p>这里，我们将使用<code> bpftool gen min_core_btf</code> 命令为 BCC 工具中的 bindsnoop、execsnoop 和opensnoop 同时生成精简的 BTF 文件。下述的命令对目录中存在的每个 BTF 文件逐次调用 bpftool 工具进行精简。</p>
+<div><pre class="hljs"><code>$ OBJ1=/tmp/btfgendemo/bcc/libbpf-tools/.output/bindsnoop.bpf.o
+$ OBJ2=/tmp/btfgendemo/bcc/libbpf-tools/.output/execsnoop.bpf.o
+$ OBJ3=/tmp/btfgendemo/bcc/libbpf-tools/.output/opensnoop.bpf.o
+
+$ mkdir -p /tmp/btfgendemo/btfs
+$ <span class="hljs-built_in">cd</span> /tmp/btfgendemo/btfhub-archive/ubuntu/focal/x86_64/
+
+$ <span class="hljs-keyword">for</span> f <span class="hljs-keyword">in</span> *.btf; <span class="hljs-keyword">do</span> bpftool gen min_core_btf <span class="hljs-string">"<span class="hljs-variable">$f</span>"</span> \
+  /tmp/btfgendemo/btfs/$(basename <span class="hljs-string">"<span class="hljs-variable">$f</span>"</span>) <span class="hljs-variable">$OBJ1</span> <span class="hljs-variable">$OBJ2</span> <span class="hljs-variable">$OBJ3</span>; \
+<span class="hljs-keyword">done</span>
+
+$ ls -lhn /tmp/btfgendemo/btfs | head
+total 864K
+-rw-r--r-- 1 1000 1000 1,1K Feb 8 14:46 5.11.0-1007-azure.btf
+-rw-r--r-- 1 1000 1000 1,1K Feb 8 14:46 5.11.0-1009-aws.btf
+-rw-r--r-- 1 1000 1000 1,1K Feb 8 14:46 5.11.0-1009-gcp.btf
+-rw-r--r-- 1 1000 1000 1,1K Feb 8 14:46 5.11.0-1012-azure.btf
+-rw-r--r-- 1 1000 1000 1,1K Feb 8 14:46 5.11.0-1013-azure.btf
+-rw-r--r-- 1 1000 1000 1,1K Feb 8 14:46 5.11.0-1014-aws.btf
+-rw-r--r-- 1 1000 1000 1,1K Feb 8 14:46 5.11.0-1014-gcp.btf
+-rw-r--r-- 1 1000 1000 1,1K Feb 8 14:46 5.11.0-1015-azure.btf
+-rw-r--r-- 1 1000 1000 1,1K Feb 8 14:46 5.11.0-1016-aws.btf</code></pre></div>
+<p>精简后生成的 BTF 文件大约为 1.1KB，Ubuntu Focal 对应的所有文件的大小为 864KB，将其与程序一起打包完全可行。</p>
+<p>如果我们对生成的文件进一步进行压缩，其大小还可以大幅缩减：</p>
+<div><pre class="hljs"><code>$ <span class="hljs-built_in">cd</span> /tmp/btfgendemo/btfs
+$ tar cvfJ compressed.tar.xz *.btf
+$ ls -lhn compressed.tar.xz
+-rw-r--r-- 1 1000 1000 2,5K Feb 17 15:19 compressed.tar.xz</code></pre></div>
+<p>压缩率如此之高是因为许多生成的文件相同，我们将在下文中进一步讨论。</p>
+<h4 id="验证">验证</h4>
+<p>为了验证，我们需要运行一台装有 Ubuntu Focal 的机器。这里提供的 Vagrant 文件可以用来创建对应的虚拟机。请注意，Ubuntu Focal 从内核 5.4.0-92-generic 版本开始启用 BTF 支持，所以我们需要运行其早期的版本进行验证。我们使用 <code>bento/ubuntu-20.04 Vagrant</code> 虚拟机中的 <code>202012.21.0</code> 版本，内核为 5.4.0-58-generic。</p>
+<p>本文使用 <code>sshfs</code> 在主机和虚拟机之间共享文件，需要我们确保已经安装了 <a title="https://github.com/dustymabe/vagrant-sshfs" href="https://github.com/dustymabe/vagrant-sshfs">vagrant-sshfs</a> 插件。</p>
+<div><pre class="hljs"><code>$ sudo vagrant plugin install vagrant-sshfs</code></pre></div>
+<div><pre class="hljs"><code><span class="hljs-comment"># /tmp/btfgendemo/Vagrantfile</span>
+Vagrant.configure(<span class="hljs-string">"2"</span>) <span class="hljs-keyword">do</span> | config |
+  config.vm.box = <span class="hljs-string">"bento/ubuntu-20.04"</span>
+  config.vm.box_version = <span class="hljs-string">"= 202012.21.0"</span>
+  config.vm.synced_folder <span class="hljs-string">"/tmp/btfgendemo"</span>, <span class="hljs-string">"/btfgendemo"</span>, <span class="hljs-built_in">type</span>: <span class="hljs-string">"sshfs"</span>
+
+  config.vm.provider <span class="hljs-string">"virtualbox"</span> <span class="hljs-keyword">do</span> | vb |
+    vb.gui = <span class="hljs-literal">false</span>
+    vb.cpus = 4
+    vb.memory = <span class="hljs-string">"4096"</span>
+  end
+end</code></pre></div>
+<p>启动虚拟机并使用 ssh 登录：</p>
+<div><pre class="hljs"><code>$ vagrant up
+$ vagrant ssh</code></pre></div>
+<p>后续的命令必须在虚拟机内执行。检查内核版本：</p>
+<div><pre class="hljs"><code>$ uname -a
+Linux vagrant 5.4.0-58-generic <span class="hljs-comment">#64-Ubuntu SMP Wed Dec 9 08:16:25 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux</span>
+</code></pre></div>
+<p>让我们检查内核是否启用了<code>CONFIG_DEBUG_INFO_BTF</code>：</p>
+<div><pre class="hljs"><code>$ cat /boot/config-$(uname -r) | grep CONFIG_DEBUG_INFO_BTF
+CONFIG_DEBUG_INFO_BTF is not <span class="hljs-built_in">set</span></code></pre></div>
+<p>在把 BTF 文件复制到正确路径之前，我们尝试运行以下这些工具：</p>
+<div><pre class="hljs"><code>$ sudo /btfgendemo/bcc/libbpf-tools/execsnoop
+libbpf: failed to parse target BTF: -2
+libbpf: failed to perform CO-RE relocations: -2
+libbpf: failed to load object <span class="hljs-string">'execsnoop_bpf'</span>
+libbpf: failed to load BPF skeleton <span class="hljs-string">'execsnoop_bpf'</span>: -2
+failed to load BPF object: -2</code></pre></div>
+<p>正如预期，我们运行工具失败，因为工具不能找到执行 CO-RE 重定位所需的 BTF 信息。</p>
+<p>接着，我们将该内核版本的 BTF 文件复制到对应目录：</p>
+<div><pre class="hljs"><code>$ cp /btfgendemo/btfs/$(uname -r).btf /tmp/vmlinux.btf</code></pre></div>
+<p>将复制 BTF 到指定目录后，工具运行正常：</p>
+<div><pre class="hljs"><code>
+$ sudo /btfgendemo/bcc/libbpf-tools/execsnoop
+PCOMM PID PPID RET ARGS
+^C
+
+$ sudo /btfgendemo/bcc/libbpf-tools/bindsnoop
+PID COMM RET PROTO OPTS IF PORT ADDR
+^C
+
+$ sudo /btfgendemo/bcc/libbpf-tools/opensnoop
+PID COMM FD ERR PATH
+^C</code></pre></div>
+<p>当然这只是为了演示工具工作流程的样例。真正的集成需要负责基于主机的内核版本自动提供对应的 BTF 文件。下面的部分通过两个例子展示了对应的集成。</p>
+<h3 id="43-集成样例">4.3 集成样例</h3>
+<p>在本节中，我们将介绍 Inspektor Gadget 和 Tracee 项目是如何使用 BTFGen。</p>
+<h4 id="inspektor-gadget">Inspektor Gadget</h4>
+<p><a title="https://github.com/kinvolk/inspektor-gadget" href="https://github.com/kinvolk/inspektor-gadget">Inspektor Gadget</a> 是一个用于调试/检查 Kubernetes 资源和应用程序的工具集。由于Inspektor Gadget 是以容器镜像的形式发布的，我们选择在其中为不同的 Linux发行版搭载 BTF 文件。我们在 Docker 文件中添加了一个<a title="https://github.com/kinvolk/inspektor-gadget/blob/v0.4.2/gadget.Dockerfile#L42-L46" href="https://github.com/kinvolk/inspektor-gadget/blob/v0.4.2/gadget.Dockerfile#L42-L46">步骤</a>，使其可以在构建容器镜像时生成 BTF 文件：</p>
+<div><pre class="hljs"><code>RUN <span class="hljs-built_in">set</span> -ex; \
+    <span class="hljs-keyword">if</span> [ <span class="hljs-string">"<span class="hljs-variable">$ENABLE_BTFGEN</span>"</span> = <span class="hljs-literal">true</span> ]; <span class="hljs-keyword">then</span> \
+        <span class="hljs-built_in">cd</span> /btf-tools &amp;&amp; \
+        LIBBPFTOOLS=/objs BTFHUB=/tmp/btfhub INSPEKTOR_GADGET=/gadget ./btfgen.sh; \
+    <span class="hljs-keyword">fi</span></code></pre></div>
+<p>辅助脚本 <a title="https://github.com/kinvolk/inspektor-gadget/blob/v0.4.2/tools/btfgen.sh" href="https://github.com/kinvolk/inspektor-gadget/blob/v0.4.2/tools/btfgen.sh">btfgen.sh</a> 调用 bpftool 为 BTFHub 支持的所有内核生成 BTF 文件。</p>
+<p>我们修改 <a title="https://github.com/kinvolk/inspektor-gadget/blob/v0.4.2/gadget-container/entrypoint.sh#L149-L154" href="https://github.com/kinvolk/inspektor-gadget/blob/v0.4.2/gadget-container/entrypoint.sh#L149-L154">entrypoint</a> 脚本，在容器文件系统上安装正确的 BTF 文件，使对应的工具都能运行。Inspektor 工具被设计成总是在容器中运行，因此我们可以将 BTF 文件安装在系统路径（<code>/boot/vmlinux-$(uname -r)</code>），而不影响主机。通过这样做，我们还可以避免修改不同的 BCC 工具的源代码（就像我们在上面的例子中做的那样）：</p>
+<div><pre class="hljs"><code>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"Kernel provided BTF is not available: Trying shipped BTF files"</span>
+SOURCE_BTF=/btfs/<span class="hljs-variable">$ID</span>/<span class="hljs-variable">$VERSION_ID</span>/<span class="hljs-variable">$ARCH</span>/<span class="hljs-variable">$KERNEL</span>.btf
+<span class="hljs-keyword">if</span> [-f <span class="hljs-variable">$SOURCE_BTF</span>]; <span class="hljs-keyword">then</span>
+        objcopy --input binary --output elf64-little --rename-section .data=.BTF <span class="hljs-variable">$SOURCE_BTF</span> /boot/vmlinux-<span class="hljs-variable">$KERNEL</span>
+        <span class="hljs-built_in">echo</span> <span class="hljs-string">"shipped BTF available. Installed at /boot/vmlinux-<span class="hljs-variable">$KERNEL</span>"</span>
+<span class="hljs-keyword">else</span>
+...</code></pre></div>
+<p>PR 完整实现参见 <a title="https://github.com/kinvolk/inspektor-gadget/pull/387" href="https://github.com/kinvolk/inspektor-gadget/pull/387">inspektor-gadget/pull/387</a></p>
+<h4 id="tracee">Tracee</h4>
+<p><a title="https://github.com/aquasecurity/tracee" href="https://github.com/aquasecurity/tracee">Tracee</a> 是用于 Linux 的运行时安全和取证工具。这里，生成的 BTF 文件可被嵌入到应用程序的二进制文件中。Makefile 有一个 <a title="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/Makefile.one#L507" href="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/Makefile.one#L507">btfhub</a> 目标，然后调用 <a title="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/3rdparty/btfhub.sh#L1" href="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/3rdparty/btfhub.sh#L1">btfhub.sh</a>。脚本克隆 BTFHub 仓库，并调用<a title="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/3rdparty/btfhub.sh#L112" href="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/3rdparty/btfhub.sh#L112">btfgen.sh</a>  来生成 BTF 文件。这些文件被移到 ./dist/btfhub 目录中。</p>
+<div><pre class="hljs"><code><span class="hljs-comment"># generate tailored BTFs</span>
+
+[ ! -f ./tools/btfgen.sh ] &amp;&amp; die <span class="hljs-string">"could not find btfgen.sh"</span>
+./tools/btfgen.sh -a <span class="hljs-variable">${ARCH}</span> -o <span class="hljs-variable">$TRACEE_BPF_CORE</span>
+
+<span class="hljs-comment"># move tailored BTFs to dist</span>
+
+[ ! -d <span class="hljs-variable">${BASEDIR}</span>/dist ] &amp;&amp; die <span class="hljs-string">"could not find dist directory"</span>
+[ ! -d <span class="hljs-variable">${BASEDIR}</span>/dist/btfhub ] &amp;&amp; mkdir <span class="hljs-variable">${BASEDIR}</span>/dist/btfhub
+
+rm -rf <span class="hljs-variable">${BASEDIR}</span>/dist/btfhub/*
+mv ./custom-archive/* <span class="hljs-variable">${BASEDIR}</span>/dist/btfhub</code></pre></div>
+<p>然后，使用 <a title="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/embedded-ebpf.go#L11" href="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/embedded-ebpf.go#L11">go:embed</a> 指令将 BTF 文件嵌入到 Go 二进制中。</p>
+<div><pre class="hljs"><code><span class="hljs-comment">//go:build ebpf</span>
+<span class="hljs-comment">// +build ebpf</span>
+
+<span class="hljs-keyword">package</span> tracee
+
+<span class="hljs-keyword">import</span> (
+    <span class="hljs-string">"embed"</span>
+)
+
+<span class="hljs-comment">//go:embed "dist/tracee.bpf.core.o"</span>
+<span class="hljs-comment">//go:embed "dist/btfhub/*"</span>
+
+<span class="hljs-keyword">var</span> BPFBundleInjected embed.FS</code></pre></div>
+<p>在运行时，当前内核的对应的 BTF文件被<a title="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/cmd/tracee-ebpf/main.go#L367" href="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/cmd/tracee-ebpf/main.go#L367">解压</a>，其路径传递给 <a title="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/cmd/tracee-ebpf/main.go#L373" href="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/cmd/tracee-ebpf/main.go#L373">libbpf-go</a>，用于 CO-RE 重定位。</p>
+<h3 id="44-限制">4.4 限制</h3>
+<p>内核中的 BTF 支持不仅仅是关于导出 BTF 类型。部分 eBPF 程序如 fentry/fexit 和 LSM 钩子需要内核导出 BTF 信息。这些程序将不能使用 BTFGen，唯一的选择是启用 CONFIG_DEBUG_INFO_BTF 的内核。</p>
+<h3 id="45-未来发展">4.5 未来发展</h3>
+<p>当然，我们知道 BTFGen 是一个临时的解决方案，直到大多数系统更新到默认导出 BTF 信息的内核版本。然而，我们认为这需要几年的时间，在这期间，BTFGen 可以帮助填补这一空白。</p>
+<p>以下是我们可以近期考虑的一些改进。</p>
+<h4 id="与其他项目的整合">与其他项目的整合</h4>
+<p>部分项目如 BCC 及其基于 libbpf 的工具都可以与 BTFGen 整合获益。 我们提交了一个 <a title="https://github.com/iovisor/bcc/pull/3889" href="https://github.com/iovisor/bcc/pull/3889">PR</a>，通过使用 BTFGen 使上述工具可以在更多的 Linux 发行版中使用。</p>
+<h4 id="删除重复的文件">删除重复的文件</h4>
+<p>eBPF 程序通常访问很少的内核类型，因此，两个不同的内核版本生成的文件很有可能是相同的，这对于同一 Linux 发行版的小版本内核来说尤其如此。对 BTFGen 的进一步改进是基于此，通过使用符号链接或类似的方法来避免创建重复的文件。</p>
+<p>这也可以直接在 BTFHub 上进行，因为有些源 BTF 文件是重复的，就像<a title="https://github.com/aquasecurity/btfhub/issues/17" href="https://github.com/aquasecurity/btfhub/issues/17">这个</a>问题中所指出的那样，但即使在这种情况下，出现重复文件的机会还是较低。</p>
+<h4 id="在线-api">在线 API</h4>
+<p>BTFHub 仓库体积很大，而且由于新内核的发布，它的规模还在不断增加。Seekret 创建了一个 <a title="https://github.com/seek-ret/btfhub-online" href="https://github.com/seek-ret/btfhub-online">API</a>，使用 BTFGen 和 BTFHub 为用户提供的 eBPF 对象按需生成 “精简版” BTF 文件。</p>
+<h2 id="5-更多信息">5. 更多信息</h2>
+<p>如果你想了解更多关于 eBPF、BTF、CO-RE、BTFHub 和 BTFGen 的信息，以下资料无疑是优秀的参考：</p>
+<ul>
+<li><a title="https://nakryiko.com/posts/bpf-core-reference-guide/" href="https://nakryiko.com/posts/bpf-core-reference-guide/">BPF CO-RE参考指南</a>：从开发者的角度解释了如何使用 CO-RE。</li>
+<li><a title="https://nakryiko.com/posts/bpf-portability-and-co-re/" href="https://nakryiko.com/posts/bpf-portability-and-co-re/">BPF CO-RE (Compile Once - Run Everywhere)</a>：解释了 CO-RE和该机制中涉及的不同组件。</li>
+<li><a title="https://github.com/aquasecurity/btfhub/blob/main/docs/btfgen-internals.md" href="https://github.com/aquasecurity/btfhub/blob/main/docs/btfgen-internals.md">eBPF BTF 生成器：通往真正的可移植 CO-RE eBPF 程序之路</a>：深入探讨 BTFGen 的实现。</li>
+<li><a title="https://www.kernel.org/doc/html/latest/bpf/btf.html" href="https://www.kernel.org/doc/html/latest/bpf/btf.html">BPF类型格式(BTF)</a>：BTF的内核文档。</li>
+</ul>
+<h2 id="6-致谢">6. 致谢</h2>
+<p>功能从已经存在的项目中获得了灵感，并由不同的公司联合实现。</p>
+<p>首先，我们要感谢 Aqua Security 团队在 BTFHub 上所做的出色工作，这是我们的基础项目。</p>
+<p>其次，我们要感谢在这个功能的开发过程中做出贡献的人员。Aqua Security 的 Rafael David Tinoco 和 Elastic 的 Lorenzo Fontana 和 Leonardo Di Donato。</p>
+<p>最后，libbpf 的维护者 Andrii Nakryiko 和 Alexei Starovoitov 以及 bpftool 的维护者 Quentin Monnet，他们为实现该功能提供了大量宝贵的反馈和指导。</p>
+<blockquote>
+<p>原文作者：DavidDi<br />
+原文链接：<a title="https://www.ebpf.top/post/btfgen-one-step-closer-to-truly-portable-ebpf-programs/" href="https://www.ebpf.top/post/btfgen-one-step-closer-to-truly-portable-ebpf-programs/">https://www.ebpf.top/post/btfgen-one-step-closer-to-truly-portable-ebpf-programs/</a><br />
+版权声明：本作品采用知识共享署名-非商业性使用-禁止演绎 4.0 国际许可协议进行许可，非商业转载请注明出处（作者，原文链接），商业转载请联系作者获得授权。</p>
+</blockquote>
+]]></content:encoded>
+        </item>
         <item>
             <title><![CDATA[eBPF总结]]></title>
             <guid>6659d0caaa3a4ab6a39850daca737519</guid>
