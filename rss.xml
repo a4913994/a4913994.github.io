@@ -4,9 +4,284 @@
         <title></title>
         <link>undefined</link>
         <description>undefined</description>
-        <lastBuildDate>Tue, 31 Jan 2023 15:36:40 GMT</lastBuildDate>
+        <lastBuildDate>Tue, 31 Jan 2023 16:37:09 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>Joplin Pages Publisher</generator>
+        <item>
+            <title><![CDATA[6. 文档系统 ---- 关于结构]]></title>
+            <guid>02ed0149cb0a4c5b865364a20e2fd29d</guid>
+            <pubDate>Tue, 31 Jan 2023 16:31:31 GMT</pubDate>
+            <content:encoded><![CDATA[<h2 id="为什么这不明显">为什么这不明显？</h2>
+<p>这种结构很清晰，也很有效，但它不那么明显是有原因的，那就是文档的每个象限的特征与方案中相邻象限的特征重叠的方式。</p>
+<p><img src="/_resources/c0b13b70118040068123301e5f90ba40.png" /></p>
+<p>每个象限都与其相邻的两个象限相似：</p>
+<ul>
+<li>教程和操作指南都与描述实际步骤有关</li>
+<li>操作指南和技术参考都是我们在工作、编码时所需要的</li>
+<li>参考指南和解释都涉及理论知识</li>
+<li>教程和解释在我们学习时最有用，而不是实际工作</li>
+</ul>
+<h2 id="崩溃的趋势">崩溃的趋势</h2>
+<p>鉴于这些重叠，不同类型的文档相互混淆和混合也就不足为奇了。事实上，这些不同类型的文档相互之间有一种自然的引力，而且很难抗拒。它的作用是破坏结构，这就是为什么这么多文档看起来像这样：</p>
+<p><img src="/_resources/4beabf32276340ae978dd4ea8e7f4daf.png" /></p>
+<h2 id="系统的采用">系统的采用</h2>
+<p>虽然很少能找到充分使用它的清晰示例，但大量文档以不同的方式识别这四个功能中的每一个。</p>
+<p>该计划在重大项目中的良好示例包括：</p>
+<ul>
+<li><a title="https://docs.divio.com/" href="https://docs.divio.com/">Divio Developer Handbook</a></li>
+<li><a title="https://docs.djangoproject.com/en/3.0/#how-the-documentation-is-organized" href="https://docs.djangoproject.com/en/3.0/#how-the-documentation-is-organized">Django’s documentation</a></li>
+<li><a title="http://docs.django-cms.org/" href="http://docs.django-cms.org/">django CMS’s documentation</a></li>
+</ul>
+<p>即使在非常少的文档中也可以使用该系统，例如 <a title="https://docs.coreport.ch/" href="https://docs.coreport.ch/">CoReport（一个开源 COVID-19 报告项目）</a>。在这里，应用该系统为未来的文档创建了一个框架，有助于确保新材料符合要求。</p>
+<p>有时文档非常少，以至于并非所有象限都准备好呈现，例如 <a title="https://github.com/flavours/getting-started-with-spring-boot/blob/master/README.md" href="https://github.com/flavours/getting-started-with-spring-boot/blob/master/README.md">Java 和 Spring-boot 入门</a>，它只包括教程、操作方法和参考资料。</p>
+<p>尽管在每种情况下，无论多么微小甚至不完整，系统都受到尊重，各部分及其目的之间的明确区分将立即使作者和用户受益，并有助于指导材料在未来发展时的扩展。</p>
+<h2 id="关于分析及其应用">关于分析及其应用</h2>
+<p>本文中对文档的分析基于多年编写和维护文档的经验，并花费了大量时间考虑如何改进它。</p>
+<p>它还基于来自各种学科的合理原则。例如，它的教程概念具有教学基础；它设定了一位导师和一位学习者，并将使用软件视为一门手艺，其中对一般原则的抽象理解来自于处理细节的具体步骤。</p>
+<p>该系统定期在会谈和互动研讨会上展示。该分析已应用于众多项目，包括大型内部文档集，并在非常广泛的技术主题中多次获得可用性和可维护性的好处。</p>
+<h2 id="参考">参考</h2>
+<p><a title="https://documentation.divio.com/adoption/" href="https://documentation.divio.com/adoption/">https://documentation.divio.com/adoption/</a></p>
+]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[5. 文档系统 ---- 说明]]></title>
+            <guid>d8e8b58f4e1f419cbbae1c5494b4a542</guid>
+            <pubDate>Tue, 31 Jan 2023 16:28:41 GMT</pubDate>
+            <content:encoded><![CDATA[<blockquote>
+<p>解释或讨论，澄清和阐明特定主题。它们扩大了文档对某个主题的覆盖范围。</p>
+</blockquote>
+<p>他们以理解为导向。</p>
+<p>解释同样可以描述为讨论；它们本质上是散漫的。它们是文档放松和从软件退后一步的机会，从更广阔的视野，从更高的层次甚至从不同的角度阐明它。您可能会想象一个讨论文档是在闲暇时阅读的，而不是阅读代码。</p>
+<p>这部分文档很少明确创建，相反，解释片段散布在其他部分中。有时，该部分存在，但有一个名称，例如背景或其他注释或关键主题 - 这些名称并不总是有用的。</p>
+<p>创建讨论并不像看起来那么容易 - 当您有某人问题的起点时，可以直接解释的事情在您有空白页并且必须写下一些相关内容时就不那么容易了。</p>
+<p>主题不是由您想要完成的特定任务定义的，例如操作指南，或者您希望用户学习的内容，例如教程。它不是由一台机器定义的，比如参考资料。它是由您认为一次尝试涵盖的合理区域来定义的，因此讨论主题的划分有时可能有点武断。</p>
+<h2 id="烹饪类比">烹饪类比</h2>
+<p>想想一部在历史、科学和技术背景下讨论食物和烹饪的作品。这是关于烹饪和厨房的。</p>
+<p>它不教授，它不是食谱的集合，它不只是描述。</p>
+<p>相反，它从多个角度分析、考虑事物。它可能会解释为什么我们现在按照自己的方式做事，甚至可以描述糟糕的做事方式，或模糊的替代方案。</p>
+<p>它加深了我们的知识并使它更丰富，即使它不是我们可以在任何实际意义上实际应用的知识——但它不需要是，为了有价值。</p>
+<p>当我们想在更高层次上思考烹饪，并想更多地了解这个主题时，我们可能会在闲暇时阅读它，远离厨房本身。</p>
+<h2 id="如何写出好的解释">如何写出好的解释</h2>
+<h3 id="提供上下文">提供上下文</h3>
+<p>解释是背景和上下文的地方——例如，Web 表单以及它们在 Django 中的处理方式，或在 Django CMS 中的搜索。</p>
+<p>他们还可以解释为什么会这样——设计决策、历史原因、技术限制。</p>
+<h3 id="讨论备选方案和意见">讨论备选方案和意见</h3>
+<p>解释可以考虑替代方案，或针对同一问题的多种不同方法。例如，在一篇关于 Django 部署的文章中，考虑和评估不同的 Web 服务器选项是合适的，</p>
+<p>讨论甚至可以考虑和权衡相反的意见——例如，测试模块是否应该在包目录中。</p>
+<h3 id="不指导不提供技术参考">不指导，不提供技术参考</h3>
+<p>解释应该做文档其他部分做不到的事情。这不是指导用户如何做某事的解释的地方。也不应提供技术说明。文档的这些功能已经在其他部分中得到了处理。</p>
+<h2 id="divio-文档中的示例">Divio 文档中的示例</h2>
+<p>看看我们的<a title="https://docs.divio.com/en/latest/reference/divio-cli" href="https://docs.divio.com/en/latest/reference/divio-cli">解释部分</a>（标题为“背景” - 只要目的明确，名称并不重要）。</p>
+<p>这些文章没有教任何东西。他们不会告诉用户该做什么。它们不是参考指南。他们只是讨论特定的话题。用户不需要了解（例如）缓存或 CDN 或我们如何管理环境变量来使用平台或完成任何特定任务，但时间很可能会到来，届时某人的经验和平台使用将成为通过对这些事情有更清晰、更好、更深入的理解而得到改善。</p>
+<p>这些文章提供了更大的图景和背景。用户是人；也许他们不需要严格地知道我们为什么以某种方式做某事，但知道这很可能会给他们带来一种满足感和舒适感，使他们成为更快乐的产品用户。</p>
+<p><img src="/_resources/c72ddba88f2145d49101e1ecc623e823.png" /></p>
+]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[4. 文档系统 ---- 参考指南]]></title>
+            <guid>d8969ada7b974ff5b02a21aa203533c6</guid>
+            <pubDate>Tue, 31 Jan 2023 16:24:57 GMT</pubDate>
+            <content:encoded><![CDATA[<blockquote>
+<p>参考指南是对机器及其操作方法的技术说明。</p>
+</blockquote>
+<p>参考指南只有一项工作：描述。它们是由代码决定的，因为最终这就是它们描述的内容：关键类、函数、API，因此它们应该列出函数、字段、属性和方法等内容，并说明如何使用它们。</p>
+<p>参考资料以信息为导向。</p>
+<p>无论如何，技术参考可以包含示例来说明用法，但不应试图解释基本概念或如何实现常见任务。</p>
+<p>参考资料应该简明扼要。</p>
+<p>请注意，描述确实包括如何使用机器的基本描述 - 例如，如何实例化特定类或调用特定方法，或将某些内容传递给函数时必须采取的预防措施。然而，这只是其技术参考功能的一部分，强调不要与操作指南混淆 - 描述软件的正确使用（技术参考）与展示如何使用它来实现特定目的不同（操作文档）。</p>
+<p>对于一些开发人员来说，参考指南是他们唯一能想到的文档。他们已经了解他们的软件，他们知道如何使用它。他们所能想到的其他人可能需要的只是有关它的技术信息。</p>
+<p>参考资料往往写得很好。它甚至可以 - 在某种程度上 - 自动生成，但这本身是不够的。</p>
+<h2 id="烹饪类比">烹饪类比</h2>
+<p>考虑一篇关于某种成分的百科全书文章，比如生姜。</p>
+<p>当您在参考书中查找生姜时，您需要的是有关该成分的信息——描述其来源、行为、化学成分以及烹饪方法的信息。</p>
+<p>您希望无论查找什么成分，信息都会以类似的方式呈现。您希望了解基本事实，例如生姜是姜黄和豆蔻家族的一员。</p>
+<p>这也是您希望收到有关潜在问题的警报的地方，例如：已知生姜会引起某些人的胃灼热或：生姜可能会干扰抗凝剂的作用，例如华法林或阿司匹林。</p>
+<h2 id="如何写出好的参考指南">如何写出好的参考指南</h2>
+<h3 id="围绕代码构建文档">围绕代码构建文档</h3>
+<p>为参考文档提供与代码库相同的结构，以便用户可以同时浏览代码和文档。这也将帮助维护者查看参考文档丢失或需要更新的地方。</p>
+<h3 id="始终如一">始终如一</h3>
+<p>在参考指南中，结构、语气、格式都必须保持一致——就像百科全书或字典一样。</p>
+<h3 id="除了描述什么都不做">除了描述什么都不做</h3>
+<p>技术参考的唯一工作就是描述，尽可能清楚和完整。其他任何事情（解释、讨论、指导、推测、意见）不仅会分散注意力，而且会使它更难使用和维护。在适当的时候提供示例来说明描述。</p>
+<p>避免使用参考资料来指导如何实现事物的诱惑，超出使用软件的基本范围，并且不允许对概念进行解释或对主题进行讨论。取而代之的是，链接到操作指南、解释和介绍性教程。</p>
+<h3 id="准确">准确</h3>
+<p>这些描述必须准确并保持最新。机器与您的描述之间的任何差异都将不可避免地导致用户误入歧途。</p>
+<h3 id="divio-文档中的示例">Divio 文档中的示例</h3>
+<p>查看我们的<a title="https://docs.divio.com/en/latest/reference/divio-cli" href="https://docs.divio.com/en/latest/reference/divio-cli">技术参考</a>部分中的示例。</p>
+<p>这是一个典型的参考指南（在本例中，针对我们的 Divio CLI）。</p>
+<p>本文所做的就是描述，以完整和准确的形式列出该工具的功能、命令和选项。</p>
+<p>这不是一本友好或引人入胜的读物，但它的目的是尽可能快速和无干扰地查找有关功能的信息。</p>
+<p><img src="/_resources/39dbb70411b14b989589918e6e9cc290.png" /></p>
+]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[3. 文档系统 ---- 操作指南]]></title>
+            <guid>3bd5b0fd198c4934bc32b1b464f28a33</guid>
+            <pubDate>Tue, 31 Jan 2023 16:20:44 GMT</pubDate>
+            <content:encoded><![CDATA[<p>操作指南引导读者完成解决现实世界问题所需的步骤。</p>
+<p>它们是实现特定目标的秘诀和指导——例如：如何创建网络表单；如何绘制三维数据集；如何启用 LDAP 身份验证。</p>
+<p>他们完全以目标为导向。</p>
+<p>操作指南与教程完全不同，切勿与它们混淆：</p>
+<ul>
+<li>教程是您决定初学者需要了解的内容。</li>
+<li>操作指南是对只有具有一定经验的用户才能提出的问题的答案。</li>
+</ul>
+<p>在操作指南中，您可以假设一些知识和理解。您可以假设用户已经知道如何做基本的事情和使用基本的工具。</p>
+<p>与教程不同，软件文档中的操作指南往往做得相当好。它们也很有趣且易于编写。</p>
+<h2 id="烹饪类比">烹饪类比</h2>
+<p><img src="/_resources/64b5ff532d70498891941154b75179a0.png" /></p>
+<p>想想一个食谱，准备吃的东西。</p>
+<p>食谱有一个明确、明确的结局。它解决了一个特定的问题。它向某人展示 - 可以假设他们已经具备一些基本知识 - 如何取得成就。</p>
+<p>不能指望以前从未做过饭的人成功地遵循食谱，因此食谱不能代替烹饪课。同时，阅读食谱的人会很生气地发现它试图教授他们已经知道的基础知识，或者包含与成分无关的讨论。</p>
+<h2 id="如何编写好的操作指南">如何编写好的操作指南</h2>
+<h3 id="提供一系列步骤">提供一系列步骤</h3>
+<p>操作指南必须包含一系列步骤，需要按顺序执行（就像教程一样）。您不必从头开始，只需从一个合理的起点开始。操作指南应该是可靠的，但它们不需要像教程那样具有铁一般的可重复性。</p>
+<h3 id="注重结果">注重结果</h3>
+<p>操作指南必须侧重于实现实际目标。其他任何事情都会让人分心。与教程一样，详细的解释在这里是不合适的。</p>
+<h3 id="解决特定问题">解决特定问题</h3>
+<p>操作指南必须解决特定问题：我如何……？</p>
+<p>这是操作指南不同于教程的一种方式：当涉及到操作指南时，可以假设读者知道他们应该实现什么，但还不知道如何实现 - 而在教程中，您有责任决定读者需要了解哪些内容。</p>
+<h3 id="不解释概念">不解释概念</h3>
+<p>操作指南不应解释任何事情。这不是进行此类讨论的场所；他们只会妨碍行动。如果解释很重要，请链接到它们。</p>
+<h3 id="允许一些灵活性">允许一些灵活性</h3>
+<p>操作指南应该允许使用略有不同的方法来做同样的事情。它只需要足够的灵活性，以便用户可以看到它将如何应用于与您描述的示例略有不同的示例，或者了解如何使其适应与您假设的系统或配置略有不同的系统或配置。不要太具体以至于指南除了你心中的确切目的之外没有任何用处。</p>
+<h3 id="把事情留在外面">把事情留在外面</h3>
+<p>实用性比完整性更有价值。教程需要是完整的、端到端的指南；操作指南没有。他们可以在您认为合适的地方开始和结束。他们也不需要提及该提及的所有内容，只是因为它与主题相关。臃肿的操作指南无法帮助用户快速找到他们的解决方案。</p>
+<h3 id="名字很好引导">名字很好引导</h3>
+<p>操作文档的标题应该告诉用户它到底做了什么。 How to create a class-based view 这个标题不错。创建基于类的视图或更糟的是，基于类的视图不是。</p>
+<h3 id="divio-文档中的示例">Divio 文档中的示例</h3>
+<p>看看我们的<a title="https://docs.divio.com/en/latest/how-to/" href="https://docs.divio.com/en/latest/how-to/">操作指南</a>。</p>
+<p>其中每一个都是对一个问题的回答：我如何……？每个标题前面都可以清楚地加上“How to”字样。每一个都是一个秘诀，引导您完成完成特定任务所需的步骤。</p>
+<p>尽管教程和操作指南都是为用户服务的，但是教程是由知道用户需要知道什么的作者主导的，而操作指南是由提出问题的用户引导的。</p>
+<p><img src="/_resources/740543613b8d409e9e9293a2c371cb6a.png" /></p>
+]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[2. 文档系统 ---- 教程]]></title>
+            <guid>0b3fe84173924c459ed57b3b36078e88</guid>
+            <pubDate>Tue, 31 Jan 2023 16:10:58 GMT</pubDate>
+            <content:encoded><![CDATA[<p>教程是指导读者通过一系列步骤完成某种项目的课程。它们是您的项目所需要的，以便向初学者展示他们可以用它取得一些成就。</p>
+<p>他们完全以学习为导向，具体来说，他们以学习如何做而不是学习那个为导向。</p>
+<p>您是老师，您要对学生的行为负责。在您的指导下，学生将执行一系列操作以达到某个目的。</p>
+<p>结局和行动取决于你，但决定它们应该是什么可能是一项艰苦的工作。结束必须是有意义的，但对于一个完全的初学者来说也是可以实现的。</p>
+<p>重要的是完成教程后，学习者能够理解文档的其余部分以及软件本身。</p>
+<p>大多数软件项目都有非常糟糕的——或者根本不存在的——教程。教程将把你的学习者变成用户。糟糕或缺失的教程将阻止您的项目获得新用户。</p>
+<p>在描述四种文档的部分中，这是迄今为止最长的 - 这是因为教程最容易被误解，也最难做好。最好的教学方式是有老师在场，与学生互动。这几乎不可能，我们的书面教程充其量只是一个远非完美的替代品。这就是特别关注它们的更多理由。</p>
+<p>教程需要对初学者有用，易于理解，有意义且极其强大，并保持最新。您可能会发现编写和维护教程所占用的时间和精力与其他三个部分加在一起所占用的时间和精力一样多。</p>
+<h2 id="烹饪类比">烹饪类比</h2>
+<p>考虑一个教孩子做饭的类比。</p>
+<p>你教孩子做什么并不重要。重要的是孩子觉得它很有趣，并获得信心，并想再做一次。</p>
+<p>通过孩子所做的事情，他将学习有关烹饪的重要知识。它将了解在厨房、使用器具和处理食物时的感觉。</p>
+<p>这是因为使用软件就像烹饪一样是一门手艺。它是知识——但它是实践知识，而不是理论知识。</p>
+<p>当我们学习一门新手艺或技能时，我们总是边做边学。</p>
+<h2 id="如何写出好的教程">如何写出好的教程</h2>
+<h3 id="允许用户边做边学">允许用户边做边学</h3>
+<p><strong>一开始，我们只能通过实践来学习任何东西</strong>——这就是我们学习说话或走路的方式。</p>
+<p>在您的软件教程中，您的学习者需要做一些事情。他们在按照您的教程进行操作时所做的不同事情需要涵盖广泛的工具和操作，从一开始最简单的工具和更复杂的工具和操作。</p>
+<h3 id="让用户开始">让用户开始</h3>
+<p>如果您的初学者的第一步是手持婴儿学步，那是完全可以接受的。如果您让初学者做的事情不是有经验的人会做的，或者即使这不是“正确”的方式，这也是完全可以接受的——初学者教程与最佳实践手册不同。</p>
+<p>教程的目的是让您的学习者开始他们的旅程，而不是让他们到达最终目的地。</p>
+<h3 id="确保您的教程有效">确保您的教程有效</h3>
+<p>作为导师，你的工作之一是激发初学者的信心：对软件、对教程、对导师，当然还有对他们自己实现要求的能力的信心。</p>
+<p>有很多因素促成了这一点。友好的语气会有所帮助，语言的一致使用以及材料的逻辑进展也会有所帮助。但最重要的一点是，你要求初学者做的事情必须奏效。学习者需要看到您要求他们采取的行动会产生您所说的效果。</p>
+<p>如果学习者的操作产生错误或意外结果，那么您的教程就失败了——即使这不是您的错。当你的学生和你在一起时，你可以拯救他们；如果他们自己阅读你的文档，你就不能——所以你必须提前防止这种情况发生。毫无疑问，这说起来容易做起来难。</p>
+<h3 id="确保用户立即看到结果">确保用户立即看到结果</h3>
+<p>学习者所做的每一件事都应该完成一些可以理解的事情，无论多么小。如果您的学生在看到结果之前必须在两页纸上做一些奇怪且难以理解的事情，那就太长了。每个动作的效果都应该尽快可见和明显，并且与动作的联系应该清楚。</p>
+<p>教程的每个部分或整个教程的结论必须是有意义的成就。</p>
+<h3 id="让您的教程可重复">让您的教程可重复</h3>
+<p>您的教程必须可靠地可重复。这并不容易实现：人们将使用不同的操作系统、经验水平和工具来实现它。更重要的是，他们使用的任何软件或资源很可能同时发生变化。</p>
+<p>本教程每次都必须适用于所有人。</p>
+<p>不幸的是，教程需要定期和详细的测试以确保它们仍然有效。</p>
+<h3 id="关注具体步骤而不是抽象概念">关注具体步骤，而不是抽象概念</h3>
+<p>教程需要具体，围绕具体的、特定的行动和结果构建。</p>
+<p>引入抽象的诱惑是巨大的；毕竟，大多数计算都是通过这种方式获得其能力的。但是所有的学习都是从具体和具体到一般和抽象的，要求学习者在他们甚至有机会掌握具体之前欣赏抽象层次是糟糕的教学。</p>
+<h3 id="提供最少的必要解释">提供最少的必要解释</h3>
+<p>不要解释学习者为了完成教程不需要知道的任何事情。扩展讨论很重要——只是不在教程中。在教程中，它是一种障碍和干扰。只有最低限度是合适的。相反，链接到文档中其他地方的解释。</p>
+<h3 id="只关注用户需要采取的步骤">只关注用户需要采取的步骤</h3>
+<p>您的教程需要专注于手头的任务。也许您要介绍的命令还有许多其他选项，或者可能有不同的方式来访问某个 API。没关系：现在，您的学习者不需要了解这些就可以取得进步。</p>
+<h3 id="divio-文档中的示例">Divio 文档中的示例</h3>
+<p>看看我们的<a title="https://docs.divio.com/en/latest/introduction/" href="https://docs.divio.com/en/latest/introduction/">教程</a>。</p>
+<p>特别是，请参阅 Django 教程。本教程做出的承诺是：如果您具备学习本教程所需的基本知识，并且按照它的指示进行操作，您最终将得到一个可用的 Django Web 应用程序，其中包含 Postgres 数据库、S3 媒体存储等.为了作为教程工作，它必须履行该承诺。</p>
+<p>请注意，它不会告诉您将学习什么，而只会告诉您将做什么。学习来自于那样做。本教程对您将要执行的操作以及执行顺序负全部责任。</p>
+<p><img src="/_resources/89080eae08bf40d58fc1a1ef6f780f9d.png" /></p>
+]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[1. 文档系统 ---- 介绍]]></title>
+            <guid>a2e5226395d2413dbeec0ff7c99ddcfc</guid>
+            <pubDate>Tue, 31 Jan 2023 15:52:16 GMT</pubDate>
+            <content:encoded><![CDATA[<blockquote>
+<p>为了编写好的软件文档，需要了解一个秘密：没有一种叫做文档的东西，而是有四种。</p>
+</blockquote>
+<p>它们是：<strong>教程</strong>、<strong>操作指南</strong>、<strong>技术参考</strong>和<strong>解释</strong>。它们代表四种不同的目的或功能，所以需要四种不同的创建方法。理解这一点的含义将有助于改进大多数文档。</p>
+<p><img src="/_resources/edacd9c6002b4530bc8bb2197a145e51.png" /></p>
+<center style="font-size:14px;color:#C0C0C0;text-decoration:underline;margin-top:-20px" class="jop-noMdConv">文档系统</center>
+<p>此处概述的文档系统是一个简单、全面且几乎普遍适用的方案。它在广泛的领域和应用中得到了实践证明。</p>
+<p>如果你能将这些原则付诸实践，它会让你的文档变得更好，你的项目、产品或团队会更成功。</p>
+<h2 id="介绍">介绍</h2>
+<h3 id="问题与解决方案">问题与解决方案</h3>
+<h4 id="解决的问题">解决的问题</h4>
+<p>你的产品有多好并不重要，因为如果它的文档不够好，人们就不会使用它。即使他们因为别无选择而不得不使用它，如果没有良好的文档，他们也不会有效地或按照您希望的方式使用它。</p>
+<p>几乎每个人都明白这一点。几乎每个人都知道他们需要好的文档，而且大多数人都试图创建好的文档。大多数人都失败了。</p>
+<p>通常，这不是因为他们不够努力。通常，这是因为他们没有以正确的方式做事。</p>
+<p>这个系统是一种让你的文档变得更好的方法，不是通过更努力地工作，而是通过正确的方式来做。正确的方法是更简单的方法——更容易编写，也更容易维护。</p>
+<h4 id="原理">原理</h4>
+<p>这实际上不是秘密，当然也不应该是秘密：文档需要包括并围绕其四个不同功能构建：<strong>教程、操作指南、技术参考和解释</strong>。他们每个都需要一种独特的写作方式。使用软件的人在不同的时间、不同的情况下需要这四种不同的文档——所以软件通常都需要它们，而且它们都应该集成到您的文档中。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left"></th>
+<th style="text-align:left">教程</th>
+<th style="text-align:left">操作指南</th>
+<th style="text-align:left">参考</th>
+<th style="text-align:left">解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">面向</td>
+<td style="text-align:left">学习</td>
+<td style="text-align:left">一个目标</td>
+<td style="text-align:left">信息</td>
+<td style="text-align:left">理解</td>
+</tr>
+<tr>
+<td style="text-align:left">必须</td>
+<td style="text-align:left">让新人开始</td>
+<td style="text-align:left">展示如何解决特定问题</td>
+<td style="text-align:left">描述原理</td>
+<td style="text-align:left">诠释</td>
+</tr>
+<tr>
+<td style="text-align:left">它的形式</td>
+<td style="text-align:left">一堂课</td>
+<td style="text-align:left">一系列步骤</td>
+<td style="text-align:left">尝试描述</td>
+<td style="text-align:left">话语解释</td>
+</tr>
+<tr>
+<td style="text-align:left">比如</td>
+<td style="text-align:left">教小孩做饭</td>
+<td style="text-align:left">烹饪书中的食谱</td>
+<td style="text-align:left">参考百科文章</td>
+<td style="text-align:left">一篇关于烹饪社会史的文章</td>
+</tr>
+</tbody>
+</table>
+<p>这种划分使作者和读者都清楚什么材料，什么样的材料，去哪里。它告诉作者如何写，写什么，写在哪里。它使作者免于浪费大量时间试图将他们想要传达的信息拼凑成有意义的形式，因为这些类型的文档中的每一种都只有一项工作。</p>
+<p>事实上，如果不隐式或明确地识别此方案的象限，则很难维护良好的文档。每种类型的需求都与其他类型的需求不同，因此任何未能保持这种结构的文档尝试都会受到影响，因为它会同时被拉向不同的方向。</p>
+<p>一旦您理解了结构，它就成为分析现有文档以及理解需要做什么来改进它的非常有用的工具。</p>
+<p>在以下各节中，将详细介绍这四个部分中的每一个。</p>
+<h4 id="使文档工作">使文档工作</h4>
+<h4 id="对于作者">对于作者</h4>
+<p>文档维护者必须处理的最令人头疼的问题之一是不清楚他们应该做什么。他们写了又改，但发现很难以令人满意的方式将它们组合在一起。</p>
+<p>这种结构通过明确区分和分离解决了这些问题。他们制作的文档更易于编写和维护，更易于使用和使用。</p>
+<p>该文档不会自行编写 - 但现在可以编写它，而不必为不合适、范围不明确或对应包含的内容或采用的样式产生疑问而苦苦挣扎。写什么、怎么写、放在哪里都变得清晰多了。</p>
+<h4 id="对于读者">对于读者</h4>
+<p>它更好地为用户服务，因为在他们与软件交互的周期的所有不同阶段，他们会找到合适的文档类型，满足当时的需求。</p>
+<p>编写明确和明确地解决四个象限中每一个的文档有助于软件吸引和留住更多用户，他们将更有效地使用它——这是软件创建者最想要的事情之一。</p>
+]]></content:encoded>
+        </item>
         <item>
             <title><![CDATA[Golang错误处理]]></title>
             <guid>6cd2eaf95f824f7d9f74885783dd6547</guid>
@@ -949,704 +1224,6 @@ mv ./custom-archive/* <span class="hljs-variable">${BASEDIR}</span>/dist/btfhub<
             <content:encoded><![CDATA[<p>我希望这篇简短的报告能让你了解 eBPF 以及它为何如此强大。我真正希望的是你已经准备好自己尝试一些基于 eBPF 的工具了！</p>
 <p>如果你想更深入地了解技术方面，一个不错的起点是 <a title="https://ebpf.io/" href="https://ebpf.io/">ebpf.io</a>，你可以在其中找到更多有关该技术和 eBPF 基金会的信息。对于编程示例，<a title="https://github.com/lizrice/ebpf-beginners" href="https://github.com/lizrice/ebpf-beginners">我的 GitHub 上的 ebpf-beginners 存储库</a> 中有一些资源。</p>
 <p>要了解其他人如何利用 eBPF 工具，可以参加 <a title="https://twitter.com/ebpfsummit" href="https://twitter.com/ebpfsummit">eBPF 峰会</a> 和 <a title="https://events.linuxfoundation.org/cloud-native-ebpf-day-europe/" href="https://events.linuxfoundation.org/cloud-native-ebpf-day-europe/">云原生 eBPF Day</a> 等活动 ，用户在这里分享他们的成功案例和学习经验。你可以从 <a title="https://ebpf.io/slack" href="https://ebpf.io/slack">ebpf.io/slack</a> 访问一个活动的 Slack 频道。 我希望能在那里看到你！</p>
-]]></content:encoded>
-        </item>
-        <item>
-            <title><![CDATA[eBPF 工具集]]></title>
-            <guid>05fb5135e88749908c4725eced4486be</guid>
-            <pubDate>Wed, 21 Dec 2022 05:32:32 GMT</pubDate>
-            <content:encoded><![CDATA[<blockquote>
-<p>既然你已经了解了 eBPF 是什么，以及 eBPF 程序是如何工作的，那么让我们转向探索一些基于该技术构建的工具，你可能会在生产部署中使用这些工具。我们将考虑一些基于 eBPF 的开源项目示例，这些项目在三个重要领域提供功能：网络、可观察性和安全性。</p>
-</blockquote>
-<h3 id="网络">网络</h3>
-<p>eBPF 程序可以附加到网络接口和内核网络栈中的各个附加点。在每个附加点，eBPF 程序都可以丢弃数据包、将它们发送到不同的目的地，甚至修改内容。这就实现了一些非常强大的功能。让我们看看现在通常使用 eBPF 实现的一些网络功能。</p>
-<h4 id="负载均衡">负载均衡</h4>
-<p>如果你对网络 eBPF 的可扩展性有任何疑问，要知道它正在 Facebook 大规模使用。他们是 BPF 的早期采用者并在 2018 年引入了 <a title="https://engineering.fb.com/2018/05/22/open-source%E3%80%81open-sourcing-katran-a-scalable-network-load-balancer/" href="https://engineering.fb.com/2018/05/22/open-source%E3%80%81open-sourcing-katran-a-scalable-network-load-balancer/">Katran</a> ，其是一个开源的第 4 层负载均衡器。</p>
-<p>另一个高度扩展的负载均衡器示例来自 Cloudflare 的 <a title="https://blog.cloudflare.com/unimog-cloudflares-edge-load-balancer/" href="https://blog.cloudflare.com/unimog-cloudflares-edge-load-balancer/">Unimog</a> 边缘负载均衡器。通过在内核中运行，eBPF 程序可以操作网络数据包并将它们转发到适当的目的地，而无需每个数据包都必须通过网络栈并到达用户空间。</p>
-<p>Cilium 项目以 eBPF Kubernetes 网络插件而闻名（稍后我将讨论），但它作为独立的负载均衡器用于大型电信和企业内部署中。同样，在早期阶段处理数据包而不必转换到用户空间的能力使其具有高性能。</p>
-<h4 id="kubernetes-网络">Kubernetes 网络</h4>
-<p>CNCF 项目 <a title="https://cilium.io/" href="https://cilium.io/">Cilium</a> 是最初的基于 eBPF 的 CNI 实现。它最初是由一群致力于 eBPF 的内核维护者发起的，他们很早认识到其在云原生网络中的应用潜力。Cilium 现在被用作 Google Kubernetes Engine、Amazon EKS Anywhere 和阿里云的默认数据平面。</p>
-<p>在云原生世界中，Pod 一直在停止和启动，每个 Pod 都被分配一个 IP 地址。在启用 eBPF 的网络之前，每个节点都必须不断更新一组 iptables 规则，以便在 pod 之间进行路由；而管理这些 iptables 规则在规模上会变得非常不方便。如图 6-1 所示，Cilium 极大地简化了路由，因此它本质上是 eBPF 中的一个简单的表查找，从而使得[显著的性能改进](<a title="https://cilium.io/blog/2021/05/11/cni-benchmark%EF%BC%89%E3%80%82" href="https://cilium.io/blog/2021/05/11/cni-benchmark%EF%BC%89%E3%80%82">https://cilium.io/blog/2021/05/11/cni-benchmark）。</a></p>
-<p>除了传统的 iptables 版本之外，另一个添加了 eBPF 实现的 Kubernetes CNI 是 Project <a title="https://github.com/projectcalico/calico" href="https://github.com/projectcalico/calico">Calico</a>。</p>
-<p><img src="/_resources/98da9dfc81f14178b40df0080b6200c3.png" /></p>
-<h4 id="服务网格-service-mesh">服务网格 Service Mesh</h4>
-<p>eBPF 作为更高效的服务网格数据平面的基础也非常有意义。许多服务网格功能在第 7 层即应用程序层运行，并使用 Envoy 等代理组件代表应用程序执行操作。在 Kubernetes 中，这些代理通常部署在 sidecar 模型中，每个 pod 有一个代理容器，以便代理可以访问 pod 的网络命名空间。正如你在第 5 章中所看到的，eBPF 提供了一种比 sidecar 模型更有效的方法。由于内核可以访问所有 pod 命名空间，我们可以使用 eBPF 在 pod 中的应用程序和主机上的单个代理之间建立连接，如图 6-2 所示。</p>
-<p><img src="/_resources/f3e6858a87294719b3da17740d59b4ea.png" /></p>
-<p>我还有另一篇关于使用 eBPF 实现更高效的服务网格数据平面的文章，<a title="https://www.youtube.com/watch?v=VV3MzbPXyTM" href="https://www.youtube.com/watch?v=VV3MzbPXyTM">Solo.io</a> 也是如此。在撰写本文时，Cilium Service Mesh 处于测试阶段，与传统的 Sidecar 代理方法相比，显示出早期的<a title="https://isovalent.com/blog/post/2021-12-08-ebpf-servicemesh" href="https://isovalent.com/blog/post/2021-12-08-ebpf-servicemesh">性能提升</a> .</p>
-<h3 id="可观测">可观测</h3>
-<p>正如你在本报告前面所见，eBPF 程序可以了解机器上发生的一切。通过收集有关事件的数据并将它们传递到用户空间，eBPF 启用了一系列强大的可观察性工具，可以向你展示应用程序是执行和表现如何，而无需对这些应用程序进行任何更改。eBPF 还支持整个系统的可观察性，而不仅仅是单个应用程序，因此你可以了解主机的行为。</p>
-<p>你在本报告的前面部分已经接触过了 BCC 项目，多年来，Brendan Gregg 在 Netflix 开展了开创性工作，并展示了如何使用这些 eBPF 工具在大规模和高性能常见下观察你感兴趣的<a title="https://www.brendangregg.com/" href="https://www.brendangregg.com/">几乎任何指标</a>。</p>
-<p>Kinvolk 的 <a title="https://github.com/inspektor-gadget/inspektor-gadget" href="https://github.com/inspektor-gadget/inspektor-gadget">Inspektor Gadget</a> 将其中一些源自 BCC 的工具引入了 Kubernetes 的世界，这样你就可以轻松地在命令行上观察特定的工作负载。</p>
-<p>新一代项目和工具正在这项工作的基础上提供基于 GUI 的可观察性。CNCF 项目 Pixie 允许你运行预先编写或自定义的脚本，并通过强大且具有视觉吸引力的 UI 查看指标和日志。因为其基于 eBPF，这意味着你可以自动检测所有应用程序并获取性能数据，而无需进行任何代码更改或配置。图 6-3 仅显示了 <a title="https://px.dev/" href="https://px.dev/">Pixie</a> 中可用的许多可视化的一个示例。</p>
-<p>另一个名为 <a title="https://github.com/parca-dev/parca" href="https://github.com/parca-dev/parca">Parca</a> 的可观察性项目专注于持续分析，使用 eBPF 来有效地采样 CPU 使用率等指标，你可以使用这些指标来检测性能瓶颈。</p>
-<p><img src="/_resources/19f8441cc108462fbd4620423198f863.png" /></p>
-<p>Cilium 的 Hubble 组件是一个具有命令行界面和 UI（如图 6-4 所示）的可观察性工具，专注于 Kubernetes 集群中的网络流。<br />
-<img src="/_resources/9127b2763c794b699e5f4408e819c179.png" /></p>
-<p>在云原生环境中，IP 地址不断被动态分配和重新分配，基于 IP 地址的传统网络可观察性工具的用途非常有限。作为 CNI，Cilium 可以访问工作负载身份信息，这意味着 Hubble 可以显示由 Kubernetes pod、服务和命名空间标识的服务地图和流数据。这对于诊断网络问题非常宝贵。</p>
-<p>如果可以观察活动，（这是安全工具的基础），你就可以将正在发生的事情与策略或规则进行比较，以了解该活动是预期的还是可疑的。让我们转向一些使用 eBPF 提供云原生安全功能的工具。</p>
-<h3 id="安全">安全</h3>
-<p>有强大的云原生工具可用，通过使用 eBPF 来检测甚至阻止恶意活动来增强安全性。我将这些分为两类：保护网络活动和保护应用程序在运行时的预期行为。</p>
-<h4 id="网络安全">网络安全</h4>
-<p>因为 eBPF 允许检查和操作网络数据包，所以它在网络安全方面有很多用途。基本原则是，如果一个网络数据包被认为是恶意的或有问题的，如不符合某些安全验证标准，它可以简单地被丢弃。eBPF 是一种高效的实现方式，因为它可以挂接到内核中网络栈的相关部分，甚至可以挂接到网络接口卡上。这意味着可以丢弃不符合策略或恶意的数据包在产生由网络堆栈处理并传递给用户空间的处理成本之前。</p>
-<p>eBPF 在大规模生产中的早期用途之一是用于 [Cloudflare] (<a title="https://blog.cloudflare.com/how-to-drop-10-million-packets/" href="https://blog.cloudflare.com/how-to-drop-10-million-packets/">https://blog.cloudflare.com/how-to-drop-10-million-packets/</a>) 的 DDoS（分布式拒绝服务）保护。 DDoS 攻击者用许多网络消息淹没目标机器，希望目标无法足够快地处理它们，并忙于处理这些消息，以至于它无法做有用的工作。 Cloudflare 工程师使用 eBPF 程序在数据包到达后立即对其进行检查，并快速确定数据包是否是此类攻击的一部分，如果是则将其丢弃。数据包不必通过内核的网络栈，因此处理所需的资源要少得多，并且目标可以应对更高速率的恶意流量。</p>
-<p>eBPF 程序还被用作针对“死亡数据包”内核漏洞的动态缓解措施。2攻击者制作网络数据包的方式是利用内核中的一个错误，该错误会阻止它正确处理该数据包。无需等待内核补丁推出，可以通过加载 eBPF 程序来缓解攻击，该程序会查找这些特制数据包并丢弃它们。这样做的真正美妙之处在于，可以动态加载 eBPF 程序，而无需更改机器上的任何内容。</p>
-<p>在 Kubernetes 中，<a title="http://networkpolicy.io/" href="http://networkpolicy.io/">网络策略</a> 是一等公民，但它留给网络插件来执行。一些 CNI，包括 Cilium 和 Calico，为更强大的规则提供扩展的网络策略功能，例如允许或禁止流量到由完全限定域名而不是 IP 地址指定的目的地。 <a title="https://app.networkpolicy.io/" href="https://app.networkpolicy.io/">app.networkpolicy.io</a> 有一个很好的工具可以探索网络策略及其影响，如图 6-5 所示。</p>
-<p>标准 Kubernetes 网络策略规则适用于进出应用程序 pod 的流量，但由于 eBPF 对所有网络流量具有可见性，它也可用于主机防火墙功能，限制进出主机（虚拟）机器的流量。3</p>
-<p>eBPF 也可以用来提供透明加密，无论是通过 WireGuard 还是 IPsec。4这里，透明意味着应用程序不需要任何修改——事实上，应用程序可以完全不知道它的网络流量是加密的.</p>
-<p><img src="/_resources/8adbe19aaed640278d890fe558796448.png" /></p>
-<h3 id="运行时安全">运行时安全</h3>
-<p>eBPF 还被用于构建检测应用程序何时以非预期或恶意方式运行的工具，其中一些工具还可用于防止不良行为。一些可疑行为的示例可能包括意外访问文件、运行可执行程序或试图获得额外权限。</p>
-<p>事实上，你可能已经以 seccomp 的形式使用了基于 BPF 的安全实施，这是一种用于限制任何应用程序可以调用的系统调用集的 Linux 特性。</p>
-<p>CNCF 项目 <a title="https://falco.org/" href="https://falco.org/">Falco</a> 扩展了限制应用程序可以进行的系统调用的想法。Falco 的规则定义是在 YAML 中创建的，这比 seccomp 配置文件更易于人类阅读和解释。默认的 Falco 驱动程序是一个内核模块，但也有一个附加到“原始系统调用”事件的 eBPF 探针驱动程序。它不会阻止这些系统调用完成，但它可以生成日志或其他通知，以提醒运维人员注意潜在的恶意事件。</p>
-<p>正如我们在第 3 章中看到的，可以将 eBPF 程序附加到 LSM 接口以防止恶意行为或缓解已知漏洞。例如，Denis Efremov 编写了一个 <a title="https://github.com/evdenis/lsm_bpf_check_argc0" href="https://github.com/evdenis/lsm_bpf_check_argc0">eBPF 程序</a> 来防止 exec() 系统调用在没有传递任何参数的情况下运行，以减轻 PwnKit* 5 高危漏洞。eBPF 也可用于缓解投机执行 “Spectre” 攻击。</p>
-<p><a title="https://github.com/aquasecurity/tracee" href="https://github.com/aquasecurity/tracee">Tracee</a> 是另一个使用 eBPF 实现运行时安全的开源项目。除了基于系统调用的检查外，它还使用了 LSM 接口。这有助于避免在仅检查系统调用时容易受到 <a title="https://lwn.net/Articles/245630/" href="https://lwn.net/Articles/245630/">TOCTTOU</a> 条件竞争的影响。 Tracee 支持 Open Policy Agent 的 Rego 语言中定义的规则，也允许使用 Go 中定义的插件规则。</p>
-<p>Cilium 的 <a title="https://github.com/cilium/tetragon" href="https://github.com/cilium/tetragon">Tetragon</a> 组件提供了另一种强大的方法，使用 eBPF 来监控容器安全可观察性的四个黄金信号：进程执行、网络套接字、文件访问和 7 层网络身份。这使得运维可以准确地查看导致任何恶意或可疑事件的原因，直至特定 pod 中的可执行名称和用户身份。例如，如果受到挖矿攻击，你可以准确地看到哪个可执行文件打开了与矿池的网络连接，从哪个 pod 以及何时打开。这些取证对于了解危害是如何发生的以及使构建安全策略以防止将来发生类似攻击变得非常宝贵。</p>
-<p>如果你想更深入地研究 eBPF 的安全可观察性主题，请查看 Natália Ivánkó 和 Jed Salazar 的报告7。密切关注云原生 eBPF 空间，因为不久我们就会看到利用 BPF LSM 和其他 eBPF 定制来提供安全实施和可观察性的工具。</p>
-<p>我们介绍了几个在网络、可观察性和安全性方面的云原生工具。与此前工具相比，他们使用 eBPF 为他们带来了两个关键优势：</p>
-<ol>
-<li>
-<p>从内核中的优势来看，eBPF 程序对所有进程都有可见性。</p>
-</li>
-<li>
-<p>通过避免内核和用户空间执行之间的转换，eBPF 程序提供了一种非常高效的方式来收集事件数据或处理网络数据包。</p>
-</li>
-</ol>
-<p>这并不意味着我们应该对所有事情都使用 eBPF！在 eBPF 中编写特定于业务的应用程序不太可能有意义，就像我们通常将应用程序编写为内核模块一样。这条规则可能有一些例外，可能是针对高频交易等极高的性能要求。正如我们在本章中所看到的，eBPF 主要是作为工具来检测其他应用程序的。</p>
-<blockquote>
-<p>请参阅 Cilium 的主机<a title="https://docs.cilium.io/en/stable/gettingstarted/host-firewall/" href="https://docs.cilium.io/en/stable/gettingstarted/host-firewall/">防火墙文档</a>。<br />
-Tailscale 有这两种加密协议的<a title="https://tailscale.com/kb/1173/ipsec-vs-wireguard/" href="https://tailscale.com/kb/1173/ipsec-vs-wireguard/">比较</a></p>
-</blockquote>
-]]></content:encoded>
-        </item>
-        <item>
-            <title><![CDATA[eBPF 在云原生环境中的应用]]></title>
-            <guid>cc36bf9f073844cc89955cf2819ae38f</guid>
-            <pubDate>Wed, 21 Dec 2022 04:15:42 GMT</pubDate>
-            <content:encoded><![CDATA[<h3 id="每台主机一个内核">每台主机一个内核</h3>
-<p>要理解为什么 eBPF 在云原生世界中如此强大，你需要非常清楚一个概念：每台机器（或虚拟机）只有一个内核，并且该机器上运行的所有容器共享同一个内核 ,1 如图 5-1 所示。同一个内核参与并知道在任何给定主机上运行的所有应用程序代码。</p>
-<p>通过检测内核，就像在使用 eBPF 时所做的那样，我们可以同时检测在该机器上运行的所有应用程序代码。当我们将 eBPF 程序加载到内核中并将其附加到事件时，无论事件涉及哪个进程，eBPF 程序都会被触发</p>
-<p><img src="/_resources/284144fa07954bc0a04ba97697db2143.png" /></p>
-<h3 id="ebpf-vs-sidecar-模型">eBPF vs Sidecar 模型</h3>
-<p>在 eBPF 之前，大多数 Kubernetes 的可观察性和安全工具都使用 sidecar 模型。此模型允许将检测部署在单独的容器中，但与应用程序位于同一 pod 中。当这种方法被采用时，已经前迈进了一步，因为这意味着你不再需要直接在应用程序中编写检测代码。只需部署 sidecar，它就可以看到同一个 pod 中的其他容器。 注入 sidecar 的过程通常是自动化的，因此这提供了一种机制来确保所有应用程序都被检测。</p>
-<p>每个 sidecar 容器都会消耗资源，总量需要乘以注入 sidecar 的 pod 数量。这可能非常重要——例如，如果每个 sidecar 都需要自己的路由信息或策略规则副本，那么这是一种浪费。（关于这方面的更多信息，Thomas Graf 写了一篇 [sidecars 与 eBPF 用于服务网格的比较](<a title="https://isovalent.com/blog/post/2021-12-08-ebpf-servicemesh%EF%BC%89%E3%80%82%EF%BC%89" href="https://isovalent.com/blog/post/2021-12-08-ebpf-servicemesh%EF%BC%89%E3%80%82%EF%BC%89">https://isovalent.com/blog/post/2021-12-08-ebpf-servicemesh）。）</a></p>
-<p>Sidecar 的另一个问题是，你不能保证机器上的每个应用程序都已正确检测。想象一下，攻击者设法破坏了一个主机并启动了一个单独的 pod 来运行，例如进行挖矿。他们不太可能礼貌地使用 sidecar 可观察性或安全工具来检测他们的挖矿程序。这时，你需要一个单独的系统来了解相关活动。</p>
-<p>但是同一个挖矿 pod 与在该主机上运行的合法 pod 共享内核。 如果你使用基于 eBPF 的工具，如图 5-2 所示，挖矿者会被发现。</p>
-<p><img src="/_resources/e0727e9746f34257b0a2179111a5f3c6.png" /></p>
-<h3 id="ebpf-和进程隔离">eBPF 和进程隔离</h3>
-<p>我主张将功能整合到单个每个节点的基于 eBPF 的代理中，而不是每个 pod 的 sidecar。如果该代理可以访问机器上运行的所有 Pod，这不是安全风险吗？我们是否已经失去了应用程序之间可能会阻止它们相互干扰的隔离？</p>
-<p>作为一个花了很多时间在容器安全方面工作的人，我可以理解这些担忧，但重要的是要深入研究底层机制，以真正理解为什么它不是最初可能出现的缺陷。</p>
-<p>需要记住的重要一点是，这些 pod 都共享一个内核，并且内核对 pod 或容器没有天生的理解。相反，内核对进程进行操作，并使用 cgroup 和命名空间将进程彼此隔离。这些结构阻止用户空间中的进程能够看到或相互干扰，这是由内核控制的。一旦在内核中处理数据（例如，从磁盘读取或发送到网络），你就依赖于内核的正确行为。例如，只有内核代码说应该尊重文件权限。没有额外的魔法权威层可以阻止内核忽略文件权限，并从它想要访问的任何文件中读取数据 —— 只是内核本身没有被编码为不这样做。</p>
-<p>Linux 系统上存在的安全控制假定内核本身是可以信任的。它们可以防止在用户空间中运行的代码出现不良行为。</p>
-<p>我们在第 2 章中看到，eBPF 验证器确保任何 eBPF 程序只尝试访问它应该有权访问的内存。验证程序检查程序是否不可能超出其权限，包括确保内存由当前进程拥有或者是当前网络数据包的一部分。这意味着 eBPF 代码比周围的内核代码受到更严格的控制，无需通过任何类型的验证步骤。</p>
-<p>如果攻击者将容器化应用程序逃逸到节点上，并且能够提升权限，则该攻击者可以破坏同一节点上的其他应用程序。由于这些逃逸并不为人所知，因此作为容器安全专家，我不建议在没有某种级别的额外安全工具的情况下与不受信任的应用程序或用户一起在共享机器上运行敏感应用程序。对于高度敏感的数据，你甚至可能不想与不受信任的用户在同一裸机上的虚拟机中运行。但是，如果你准备在同一个虚拟机上并行运行应用程序（这在许多不是特别敏感的应用程序中是完全合理的），那么 eBPF 不会通过共享内核增加已经存在的风险。</p>
-<p>当然，恶意的 eBPF 程序可能会造成各种破坏，编写恶意 eBPF 代码当然很容易——例如，复制每个网络数据包并将其发送给窃听者。默认情况下，非 root 用户不能加载 eBPF 程序的权限，2 你应该只授予信任用户或软件系统这个权限，就像 root 权限一样。所以，你必须小心运行的代码的出处（并且有一个[倡议]（<a title="https://lwn.net/Articles/853489/%EF%BC%89%E6%AD%A3%E5%9C%A8%E5%8F%91%E6%8C%A5%E4%BD%9C%E7%94%A8%EF%BC%8C%E4%BB%A5%E6%94%AF%E6%8C%81%E5%AF%B9" href="https://lwn.net/Articles/853489/%EF%BC%89%E6%AD%A3%E5%9C%A8%E5%8F%91%E6%8C%A5%E4%BD%9C%E7%94%A8%EF%BC%8C%E4%BB%A5%E6%94%AF%E6%8C%81%E5%AF%B9">https://lwn.net/Articles/853489/）正在发挥作用，以支持对</a> eBPF 程序的签名检查，以帮助解决这种问题）。你还可以使用 eBPF 程序来密切关注其他 eBPF 程序！</p>
-<p>现在你已经大致了解了为什么 eBPF 是云原生工具的强大基础，下一章将为你提供一些来自云原生生态系统的 eBPF 工具的具体示例。</p>
-]]></content:encoded>
-        </item>
-        <item>
-            <title><![CDATA[eBPF复杂性]]></title>
-            <guid>006498407dcc4a5e90998ae265d7c1cd</guid>
-            <pubDate>Wed, 21 Dec 2022 03:36:48 GMT</pubDate>
-            <content:encoded><![CDATA[<h3 id="跨内核版本的可移植性">跨内核版本的可移植性</h3>
-<p>eBPF 程序可以访问内核数据结构，这些数据结构可能会随着不同的内核版本而改变。结构本身是在构成 Linux 源代码一部分的头文件中定义的。过往，你必须针对与要运行这些程序的内核兼容的正确头文件集来编译 eBPF 程序。</p>
-<h3 id="bcc-可移植性方法">BCC 可移植性方法</h3>
-<p>为了解决跨内核的可移植性，BCC1（BPF Compiler Collection）项目采用了在运行时在目标机器上编译 eBPF 代码的方法。 这意味着编译工具链需要安装到代码运行的每台目标机器上2，并且你必须等待编译完成才能启动工具。你还必须保证内核头文件存在于文件系统上（但并非总是如此）。接着我们进入 BPF CO-RE。</p>
-<h3 id="co-re">CO-RE</h3>
-<p>CO-RE（一次编译，到处运行）方法包含几个元素：</p>
-<h4 id="btf-bpf-type-format">BTF (BPF Type Format)</h4>
-<p>这是一种表达数据结构和函数签名布局的格式。现代 Linux 内核支持 BTF，因此你可以从正在运行的系统生成一个名为 vmlinux.h 的头文件，其中包含 BPF 程序可能需要的有关内核的所有数据结构信息。</p>
-<h4 id="libbpf-bpf-库">libbpf, BPF 库</h4>
-<p>一方面，libbpf 提供了加载 eBPF 程序和 map 到内核的函数。但它在可移植性方面也起着重要作用：依据 BTF 信息来调整 eBPF 代码，以补偿编译时存在的数据结构与目标机器上的数据结构之间的任何差异。</p>
-<h4 id="编译器支持">编译器支持</h4>
-<p>clang 编译器得到了增强，因此当它编译 eBPF 程序时，它包括所谓的 BTF 重定向（relocations），这是 libbpf 在加载 BPF 程序和 map 到内核时用来知道要调整哪些内容。</p>
-<h4 id="可选的-bpf-脚手架">可选的 BPF 脚手架</h4>
-<p>可以使用 bpftool gen skeleton 从编译的 BPF 目标文件中自动生成脚手架，其中包含辅助函数，用户空间代码可以调用这些辅助函数来管理 BPF 程序的生命周期——将其加载到内核中，附加到事件等等。这些函数是更高级别的抽象，对开发人员来说比直接使用 libbpf 更方便。</p>
-<p>有关 CO-RE 的更详细说明，请阅读 Andrii Nakryiko 详细的<a title="https://nakryiko.com/posts/bpf-portability-and-co-re/" href="https://nakryiko.com/posts/bpf-portability-and-co-re/">讲解</a>。</p>
-<p>vmlinux 文件形式的 BTF 信息自 5.4 版起已包含在 Linux 内核中，但也可以为较旧的内核生成 libbpf 可以使用的原始 BTF 数据。<a title="https://github.com/aquasecurity/btfhub" href="https://github.com/aquasecurity/btfhub">BTF Hub</a> 上有关于如何生成 BTF 文件的信息，以及用于各种 Linux 发行版的文件存档。</p>
-<p>BPF CO-RE 方法使 eBPF 程序员比过去更容易让他们的代码在任何 Linux 发行版上运行——或者至少在任何新的 Linux 发行版上运行，以支持程序使用的任何 eBPF 功能集。但这并不能使 eBPF 编程轻松自如：其本质上仍然是内核编程。</p>
-<h3 id="linux-内核知识">Linux 内核知识</h3>
-<p>很快你会认识到，你仍然需要关于 Linux 内核的领域知识才能编写更高级的工具。你需要了解可以访问的数据结构，这取决于调用 eBPF 代码的上下文。并非每个应用程序开发人员都有解析网络数据包、访问套接字缓冲区或处理系统调用参数的经验。</p>
-<p>内核将如何响应 eBPF 代码的行为？正如你在第 2 章中所了解的，内核由数百万行代码组成。它的文档可能很少，因此你可能会发现自己必须阅读内核源代码才能弄清楚某些东西是如何工作的。</p>
-<p>你还需要弄清楚 <strong>eBPF 代码应该附加到哪些事件上</strong>。如果可以选择将 kprobe 附加到整个内核中的任何函数入口点，这可能不是一个容易的决定。在某些情况下，这很简单，例如如果你想访问传入的网络数据包，那么在合适的网络接口进行 XDP 挂钩是一个明显的选择。如果你想提供对特定内核事件的可观察性，在内核代码中找到适当的附加点可能并不难。</p>
-<p>但在其他情况下，选择可能并不带明确。例如，仅使用 kprobes 挂钩构成内核系统调用接口的函数的工具可能会受到称为 time-of-check to time-of-use (TOCTTOU) 的安全漏洞的影响。攻击者有一个很小的机会窗口，他们可以在 eBPF 代码读取参数之后，但在被复制到内核内存之前更改系统调用的参数。Rex Guo 和 Junyuan Zeng 在 DEF CON 29 上对此进行了精彩的<a title="https://www.youtube.com/watch?v=yaAdM8pWKG8" href="https://www.youtube.com/watch?v=yaAdM8pWKG8">演示</a>。一些最广泛使用的 eBPF 工具是以非常初级的方式编写的，并且容易受到这种攻击。这并不是一个容易的利用，并且有一些方法可以减轻这些攻击，但是如果你要保护高度敏感的数据免受老练的对手的攻击，请深入了解你使用的工具是否会受到影响。</p>
-<p>你已经看到了 BPF CO-RE 如何使 eBPF 程序在不同的内核版本上工作，但它只考虑了数据结构布局的变化，而不考虑内核行为的更广泛的变化。例如，如果想将 eBPF 程序附加到内核中的特定函数或跟踪点，你可能需要一个计划 B，如果该函数或跟踪点不存在于不同的内核版本中该怎么办。</p>
-<h3 id="多-ebpf-程序协调">多 eBPF 程序协调</h3>
-<p>现在可用的许多基于 eBPF 的工具都提供了一套可观察性功能，通过将 eBPF 程序挂钩到一组内核事件来实现。其中大部分是由 Brendan Gregg 和其他人在 BCC 和 bpftrace 工具中所研发。当前这代（通常是商业的）工具可能会提供更漂亮的图形和 UI，但他们利用的 eBPF 程序高度基于这些原来的工具。</p>
-<p>当你想要编写协调不同类型事件之间交互的代码时，事情会变得相当复杂。例如，Cilium 通过内核的网络栈在多个点查看网络数据包，并根据来自 Kubernetes CNI（容器网络接口）的有关 Kubernetes Pod 的信息来处理流量。构建这个系统需要 Cilium 开发人员深入了解内核如何处理网络流量，以及 “Pod” 和 “Container” 的用户空间概念如何映射到 cgroup 和 namespace 等内核概念。在实践中，几个 Cilium 维护者也是内核开发人员，致力于增强 eBPF 和网络支持；因此，他们拥有这些知识。</p>
-<p>底线是，尽管 eBPF 提供了一个非常高效和强大的平台来连接内核，但对于没有丰富内核经验的普通开发人员来说，这不是一件容易的事。如果你有兴趣亲身体验 eBPF 编程，我强烈建议你将其作为练习学习；在这一领域积累经验可能非常有价值，因为它必将在未来几年继续成为广受欢迎的专业技能。但实际上，大多数组织不太可能在内部构建大量定制的 eBPF 工具，而是会利用来自专业 eBPF 社区的项目和产品。</p>
-<blockquote>
-<ol>
-<li>Cilium 文档 描述了附加到不同网络钩子的 eBPF 程序如何组合以实现复杂的网络功能 .</li>
-<li>有关更多信息，请参阅 Andrii Nakryiko 的 IO Visor <a title="https://lists.iovisor.org/g/iovisor-dev/message/1966" href="https://lists.iovisor.org/g/iovisor-dev/message/1966">帖子</a></li>
-</ol>
-</blockquote>
-]]></content:encoded>
-        </item>
-        <item>
-            <title><![CDATA[eBPF程序]]></title>
-            <guid>9179edc8a10440259cfed3172dc96a04</guid>
-            <pubDate>Wed, 21 Dec 2022 02:24:37 GMT</pubDate>
-            <content:encoded><![CDATA[<h3 id="定制程序附加到事件">定制程序附加到事件</h3>
-<p>eBPF程序本身通常用C或Rust编写并编译成目标文件。目标文件是一个标准的 ELF（可执行和可链接格式）文件，可以使用 <code>readelf</code> 等工具进行检查，它包含程序字节码和<code> map</code> 的定义。</p>
-<p><img src="/_resources/0b877c2c038c4686badaade0eaddcde1.png" /></p>
-<p>一旦你将 eBPF 程序加载到内核中，它就必须附加到一个事件上。每当事件发生时，相关的 eBPF 程序就会被触发执行。</p>
-<h3 id="进入或退出函数">进入或退出函数</h3>
-<p>你可以附加一个 eBPF 程序，在进入或退出内核函数时触发。当前许多 eBPF 示例都使用 kprobes（附加到内核函数入口点）和 kretprobes（函数退出）的机制。在最近的内核版本中，有一个更有效的替代方案，称为 fentry/fexit</p>
-<p>你还可以使用 uprobes 和 uretprobes 将 eBPF 程序附加到用户空间函数</p>
-<h3 id="tracepoint">Tracepoint</h3>
-<p>你也可以将eBPF程序附加到内核内定义的 tracepoints4。通过在 /sys/kernel/debug/tracing/events 下查找机器上的事件</p>
-<h3 id="perf-事件">Perf 事件</h3>
-<p>Perf 是一个用于收集性能数据的子系统。你可以将 eBPF 程序挂接到所有收集 perf 数据的地方，这可以通过在机器上运行 perf list 来确定。</p>
-<h3 id="linux安全模块接口linux-security-module-interface">Linux安全模块接口（Linux Security Module Interface）</h3>
-<p>LSM 接口允许在内核允许某些操作之前检查安全策略。你可能遇到过使用此接口的 AppArmor 或 SELinux。使用 eBPF，你可以将自定义程序附加到相同的检查点，从而实现灵活、动态的安全策略和运行时安全工具的一些新方法</p>
-<h3 id="网络接口-xdpexpress-data-path">网络接口 XDP（eXpress Data Path）</h3>
-<p><code>XDP（eXpress Data Path)</code> 允许将 eBPF 程序附加到网络接口，每当收到数据包就会触发 eBPF 执行。XDP 可以检查甚至修改数据包，eBPF 程序的退出代码用于通知内核如何处理该数据包：传递、丢弃或重定向。 这可以构成一些非常有效的网络功能的基础。</p>
-<h3 id="套接字和其他网络-hook">套接字和其他网络 Hook</h3>
-<p>你可以附加 eBPF 程序以在应用程序打开在网络套接字上执行操作、以及在发送或接收消息时运行 eBPF 程序。 在内核的网络栈中还有称为 traffic control 或 tc 的 Hook，eBPF 程序可以在初始数据包处理后运行</p>
-<p>有些功能可以单独使用 eBPF 程序来实现，但在许多情况下，我们希望 eBPF 代码从用户空间应用程序接收信息或将数据传递给用户空间应用程序。 允许数据在 eBPF 程序和用户空间之间或不同 eBPF 程序之间传递的机制称为<code> maps</code></p>
-<h3 id="ebpf-map">eBPF Map</h3>
-<p>Map 功能的添加是 eBPF 首字母缩写词中 e 代表 扩展 的显着标志之一。</p>
-<p>Map 是与 eBPF 程序一起定义的数据结构。Map 有多种不同类型的，但它们本质上都是键值存储。eBPF 程序及用户空间代码可以读取和写入数据。Map 的常见用途包括：</p>
-<ul>
-<li>一个 eBPF 程序编写有关事件的指标和其他数据，供用户空间代码稍后查询；</li>
-<li>用户空间代码编写配置信息，以便 eBPF 程序读取并相应地执行；</li>
-<li>一个 eBPF 将数据写入 map，供另一个 eBPF 程序读取，这种方式允许跨多个内核事件同步信息；</li>
-</ul>
-<p>如果内核和用户空间代码都将访问同一个 map，他们将需要对存储在 mmap 中的数据结构达成共识。这可以通过在用户空间和内核代码中包含定义这些数据结构的头文件来完成，但如果两者是通过不相同的语言编写，你将需要仔细创建字节结构定义字节对齐兼容。</p>
-<p>我们已经讨论了 eBPF 工具的主要组成部分：在内核中运行的 eBPF 程序、加载程序并与之交互的用户空间代码，以及允许程序共享数据的 map。为了更好理解，我们通过一个例子演示。</p>
-<h3 id="opensnoop-样例">Opensnoop 样例</h3>
-<p>对于 eBPF 程序示例，我选择了实用的工具 opensnoop，其可用于显示任何进程打开了哪些文件。该实用程序的原始版本是 Brendan Gregg 最初在 BCC 项目中编写的众多 BPF 工具之一，你可以在 GitHub 上找到该项目。后来该工具使用 libbpf 重写（你将在下一章中看到），在这个例子中，我使用的是 libbpf-tools 目录下的较新版本。</p>
-<p>当运行 opensnoop 时，你将看到的输出很大程度上取决于当时虚拟机上发生的情况，但它应该看起来像这样：</p>
-<div><pre class="hljs"><code>PID    COMM FD ERR PATH
-93965  cat     3   0 /etc/ld.so.cache
-93965  cat     3   0 /lib/x86_64-linux-gnu/libc.so.6
-93965  cat     3   0 /usr/lib/locale/locale-archive
-93965  cat     3   0 /usr/share/locale/locale.alias
-...</code></pre></div>
-<p>每一行输出表示一个进程打开（或试图打开）一个文件。这些列显示了进程 ID、正在运行的命令、文件描述符、任何错误代码的指示以及被打开文件的路径。</p>
-<p>Opensnoop 的工作方式是将 eBPF 程序附加到 open() 和 openat() 系统调用上，任何应用程序都必须通过这些调用来要求内核打开一个文件。让我们深入了解一下这一点是如何实现的。为了简洁起见，我们并不看每一行代码，但我希望这足以让你了解它是如何工作的。(如果你对这么深的内容不感兴趣的话，请跳到下一章！）。</p>
-<p>每行输出表明一个进程打开（或试图打开）一个文件。 这些列显示进程 ID、正在运行的命令、文件描述符、任何错误代码以及正在打开的文件的路径。</p>
-<p>Opensnoop 通过将 eBPF 程序附加到 open() 和 openat() 系统调用上工作，任何应用程序都必须进行这些调用以请求内核打开文件。 接着，我们将深入了解其实现。为简洁起见，我们不会查看代码的每一行，但我希望它足以让你了解其工作原理。（如果你对深入研究不感兴趣，请随意跳到下一章！）</p>
-<h3 id="opensnoop-ebpf-代码">Opensnoop eBPF 代码</h3>
-<p>eBPF 代码是用 C 语言编写的，位于文件 opensnoop.bpf.c 中。在该文件的头部附近，你可以看到两个 eBPF map 的定义 start 和 event：</p>
-<div><pre class="hljs"><code>    <span class="hljs-class"><span class="hljs-keyword">struct</span> {</span>
-        __uint(type, BPF_MAP_TYPE_HASH);
-        __uint(max_entries, <span class="hljs-number">10240</span>);
-        __type(key, u32);
-        __type(value, <span class="hljs-keyword">struct</span> <span class="hljs-type">args_t</span>);
-    } start <span class="hljs-title function_">SEC</span><span class="hljs-params">(<span class="hljs-string">".maps"</span>)</span>;
-    <span class="hljs-class"><span class="hljs-keyword">struct</span> {</span>
-        __uint(type, BPF_MAP_TYPE_PERF_EVENT_ARRAY);
-        __uint(key_size, <span class="hljs-keyword">sizeof</span>(u32));
-        __uint(value_size, <span class="hljs-keyword">sizeof</span>(u32));
-    } events <span class="hljs-title function_">SEC</span><span class="hljs-params">(<span class="hljs-string">".maps"</span>)</span>;</code></pre></div>
-<p>当创建 ELF 目标文件时，它包含每个 map 和要加载到内核中的每个程序的区块（section），通过 SEC() 宏定义。</p>
-<p>当我们查看程序时，你将看到，start map 用于在处理系统调用时临时存储系统调用的参数（包括正在打开的文件的名称）。events map 7 用于将事件信息从内核中的 eBPF 代码传递到用户空间可执行文件。 如图 3-2 所示。<br />
-<img src="/_resources/b933858157824a2fb9af347c7d5608bf.png" /></p>
-<p>在 opensnoop.bpf.c 文件的后面，你会发现两个非常相似的函数：</p>
-<div><pre class="hljs"><code>SEC(<span class="hljs-string">"tracepoint/syscalls/sys_enter_open"</span>)
-    <span class="hljs-type">int</span> <span class="hljs-title function_">tracepoint__syscalls__sys_enter_open</span><span class="hljs-params">(<span class="hljs-keyword">struct</span>
-        trace_event_raw_sys_enter* ctx)</span></code></pre></div>
-<p>和</p>
-<div><pre class="hljs"><code>    SEC(<span class="hljs-string">"tracepoint/syscalls/sys_enter_openat"</span>)
-    <span class="hljs-type">int</span> <span class="hljs-title function_">tracepoint__syscalls__sys_enter_openat</span><span class="hljs-params">(<span class="hljs-keyword">struct</span>
-    trace_event_raw_sys_enter* ctx)</span></code></pre></div>
-<p>打开文件有两种不同的系统调用：8 openat() 和 open()。两者功能相同，只是 openat() 有一个额外的目录文件描述符参数，并且要打开的文件的路径名是相对于该目录的。同样，除了处理参数中的差异外，opensnoop 中对应的两个处理函数是相同。</p>
-<p>如你所见，它们都采用指向 trace_event_raw_sys_enter 的结构的指针参数。你可以在运行的特定内核生成的 vmlinux 头文件中找到此结构的定义。 编写 eBPF 程序的包括计算程序接收到的结构作为其上下文，以及如何访问其中的信息。</p>
-<p>这两个函数使用 BPF 辅助函数来获取到请求系统调用的进程的 ID：</p>
-<div><pre class="hljs"><code>u64 id = bpf_get_current_pid_tgid();</code></pre></div>
-<p>后续代码得到了文件名和传递给系统调用的标志，并把它们放在一个叫做 args 的结构中：</p>
-<div><pre class="hljs"><code>args.fname = (<span class="hljs-keyword">const</span> <span class="hljs-type">char</span> *)ctx-&gt;args[<span class="hljs-number">0</span>];
-             args.flags = (<span class="hljs-type">int</span>)ctx-&gt;args[<span class="hljs-number">1</span>];</code></pre></div>
-<p>该结构使用当前程序 ID 作为 key 保存到 start map 中。</p>
-<div><pre class="hljs"><code>bpf_map_update_elem(&amp;start, &amp;pid, &amp;args, <span class="hljs-number">0</span>);</code></pre></div>
-<p>这就是 eBPF 程序在进入系统调用时所做的全部。但是在 opensnoop.bpf.c 中定义的另一对 eBPF 程序会在系统调用退出时触发：</p>
-<div><pre class="hljs"><code>SEC(<span class="hljs-string">"tracepoint/syscalls/sys_exit_open"</span>)
-<span class="hljs-type">int</span> tracepoint__syscalls__sys_exit_open</code></pre></div>
-<p>该程序及其函数 openat() 共享函数 trace_exit() 中的公共代码。你有没有注意到 eBPF 程序调用的所有函数都以静态 __always_inline 为前缀？这指示编译器将函数的指令内联，这是因为在旧版本内核中，不允许 BPF 程序跳转到单独的函数。较新的内核和 LLVM 版本中已经可以支持非内联函数调用，但是设置 <code>__always_inline</code> 可确保 BPF 验证器保能够更好工作。（现在还有 BPF 尾调用的概念，即执行从一个 BPF 程序跳转到另一个。你可以在 eBPF 文档中阅读有关 BPF 函数调用和尾部调用的更多信息。）</p>
-<p>在 trace_exit() 函数中创建一个空的事件结构：</p>
-<div><pre class="hljs"><code>    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">event</span> <span class="hljs-title">event</span> =</span> {};</code></pre></div>
-<p>这将填充有关即将结束的 open/openat 系统调用的信息，并通过 event map 发送到用户空间。</p>
-<p>在开始的 start hash_map 中应该有一个对应于当前进程 ID 的条目：</p>
-<div><pre class="hljs"><code>ap = bpf_map_lookup_elem(&amp;start, &amp;pid);</code></pre></div>
-<p>这包含有关在 sys_enter_open(at) 调用期间先前写入的文件名和 flags 的信息。 flags 字段是一个直接存储在结构体中的整数，所以直接从结构体中读取就可以了：</p>
-<div><pre class="hljs"><code>    event.flags = ap-&gt;flags;</code></pre></div>
-<p>相反，文件名被写入用户空间内存中的一些字节数，验证器需要确保此 eBPF 程序从内存中的该位置读取该字节数是安全的。这是使用另一个辅助函数 bpf_probe_read_user_str() 完成的：</p>
-<div><pre class="hljs"><code>    bpf_probe_read_user_str(&amp;event.fname, <span class="hljs-keyword">sizeof</span>(event.fname), ap-&gt;fname);</code></pre></div>
-<p>当前的命令行名称（即进行 open(at) 系统调用的可执行文件的名称）也被复制到事件结构中，使用另一个 BPF 辅助函数：</p>
-<div><pre class="hljs"><code>bpf_get_current_comm(&amp;event.comm, <span class="hljs-keyword">sizeof</span>(event.comm));</code></pre></div>
-<p>event 结构被写入事件 perf 缓冲区 map ：</p>
-<div><pre class="hljs"><code>bpf_perf_event_output(ctx, &amp;events, BPF_F_CURRENT_CPU, &amp;event, <span class="hljs-keyword">sizeof</span>(event));</code></pre></div>
-<p>用户空间代码从该 map 中读取事件信息。在我们讨论这个问题之前，让我们简要地看一下 Makefile。</p>
-<h3 id="libbpf-tools-makefile">libbpf-tools Makefile</h3>
-<p>当构建 eBPF 代码时，你会得到一个包含 eBPF 程序和 map 的二进制定义的目标文件。你还需要额外的一个用户空间可执行文件，它将这些程序和 map 加载到内核中，并充当用户接口。 让我们看看构建 opensnoop 的 Makefile，是如何创建 eBPF 目标文件和可执行文件的。</p>
-<p>Makefiles 由一组规则组成，这些规则的语法可能有点不透明（opaque），所以如果你不熟悉 Makefiles 并且不是特别关心细节，请随意跳过本节！</p>
-<p>我们正在查看的 opensnoop 示例是诸多样例工具之一，这些样例工具共同使用一个 Makefile 构建，你可以在 libbpf-tools 目录中找到该 Makefile。 此文件中的所有内容并非都特别令人感兴趣，但我想强调一些规则。第一个是使用 bpf.c 文件并使用 clang 编译器创建 BPF 目标对象文件的规则：</p>
-<div><pre class="hljs"><code>**$(OUTPUT)/%.bpf.o**: **%.bpf.c** $(LIBBPF_OBJ) $(wildcard %.h) $(AR.. $(call msg,BPF,$@)
-$(Q)$(**CLANG**) $(CFLAGS) **-target bpf** -D__TARGET_ARCH_$(ARCH) \
--I$(ARCH)/ $(INCLUDES) -c $(filter %.c,$^) -o $@ &amp;&amp; \
-    $(LLVM_STRIP) -g $@</code></pre></div>
-<p>因此，opensnoop.bpf.c 被编译成 $(OUTPUT)/open snoop.bpf.o。这个对象文件包含将被载入内核的 eBPF 程序和 map。</p>
-<p>另一条规则使用 bpftool gen skeleton 从 bpf.o 对象文件中包含的映射和程序定义创建一个脚手架头文件。</p>
-<p>因此，opensnoop.bpf.c 被编译成 $(OUTPUT)/open snoop.bpf.o。该目标文件包含将加载到内核中的 eBPF 程序和 map。</p>
-<p>另一个规则使用 bpftool gen 脚手架从该 bpf.o 目标文件中包含的 map 和程序定义创建脚手架头文件：</p>
-<div><pre class="hljs"><code>**$(OUTPUT)/%.skel.h: $(OUTPUT)/%.bpf.o** | $(OUTPUT) $(call msg,GEN-SKEL,$@)
-$(Q)$(**BPFTOOL**) **gen skeleton** $&lt; &gt; $@</code></pre></div>
-<p>opensnoop.c 用户空间代码包含这个 opensnoop.skel.h 头文件，以获取它与内核中的 eBPF 程序共享的 map 的定义。这允许用户空间和内核代码了解存储在这些 map 中的数据结构的布局。</p>
-<p>以下规则将用户空间代码从 opensnoop.c 编译成一个名为 $(OUTPUT)/opensnoop.o 的二进制对象：</p>
-<div><pre class="hljs"><code>**$(OUTPUT)/%.o**: %.c $(wildcard %.h) $(LIBBPF_OBJ) | $(OUTPUT) $(call msg,CC,$@)
-$(Q)$(**CC**) $(CFLAGS) $(INCLUDES) -c $(filter %.c,$^) -o $@</code></pre></div>
-<p>最后，有一个规则使用 cc 将用户空间应用程序对象（在我们的例子中，opensnoop.o）链接到一组可执行文件中：</p>
-<div><pre class="hljs"><code>$(APPS): %: $(OUTPUT)/%.o $(LIBBPF_OBJ) $(COMMON_OBJ) | $(OUT... $(call msg,BINARY,$@)
-$(Q)$ (**CC**) $(CFLAGS) $^ $(LDFLAGS) -lelf -lz -o $@</code></pre></div>
-<p>现在你已经了解了如何分别生成 eBPF 和用户空间程序，接着让我们看看对应的用户空间代码。</p>
-<h3 id="opensnoop-用户空间代码">Opensnoop 用户空间代码</h3>
-<p>正如我所提到的，与 eBPF 代码交互的用户空间代码几乎可以用任何编程语言编写。我们将在本节讨论的示例是用 C 编写的，但如果你有兴趣，可以将其与用 Python 编写的原始 BCC 版本进行比较，你可以在 bcc/tools 中找到它。</p>
-<p>用户空间代码在 opensnoop.c 文件中。文件的前半部分有 #include 指令（其中一个是自动生成的 opensnoop.skel.h 文件）、各种定义以及处理不同命令行选项的代码，我们不会在这里详述。让我们也略过诸如 print_event() 之类的函数，它将有关事件的信息写入屏幕。从 eBPF 的角度来看，所有有趣的代码都在 main() 函数中。</p>
-<p>你将看到诸如 <code>opensnoop_bpf__open()</code>、<code>open snoop_bpf__load()</code> 和 <code>opensnoop_bpf__attach()</code> 之类的函数。这些都是在<code> bpftool gen</code> 脚手架创建的自动生成代码中定义的。10 自动生成的代码处理在 eBPF 目标文件中定义的所有单独的 eBPF 程序、map 和附加点。</p>
-<p>一旦 opensnoop 启动并运行，其工作就是监听事件 perf 缓冲区并将事件中包含的信息写入屏幕。首先，它打开与 perf 缓冲区关联的文件描述符，并将 handle_event() 设置为新事件到达时的调用的函数：</p>
-<div><pre class="hljs"><code>     pb = perf_buffer__new(bpf_map__fd(obj-&gt;maps.events),
-         PERF_BUFFER_PAGES, handle_event, handle_lost_events,
-         <span class="hljs-literal">NULL</span>, <span class="hljs-literal">NULL</span>);</code></pre></div>
-<p>然后程序轮询缓冲区事件，直到达到时间限制，或者用户中断程序：</p>
-<div><pre class="hljs"><code>     <span class="hljs-keyword">while</span> (!exiting) {
-              err = perf_buffer__poll(pb, PERF_POLL_TIMEOUT_MS);
-       ... 
-     }</code></pre></div>
-<p>传递给 handle_event() 的数据参数指向 eBPF 程序为该事件写入 map 的事件结构。用户空间代码可以获取此信息，对其进行格式化并将供用户查看。</p>
-<p>正如你所见，opensnoop 注册了 eBPF 程序，每次任何应用程序调用 open() 或 openat() 系统调用时都会调用 eBPF 程序。这些在内核中运行的 eBPF 程序收集有关该系统调用的上下文的信息——可执行文件名称和进程 ID——以及有关正在打开的文件的信息。此信息被写入 map，用户空间可以从中读取它并将其显示给用户。</p>
-<p>你可以在 libbpf-tools 目录中找到数十个类似的 eBPF 工具示例，每个示例通常检测一个系统调用或一系列相关的系统调用，如 open() 和 openat()。</p>
-<p>系统调用是一个稳定的内核接口，它们提供了一种非常强大的方式来观察（虚拟）机器上发生的事情。但不要误以为 eBPF 编程开始和结束于拦截系统调用。除此之外，还有很多其他稳定的接口用于附加 eBPF 程序，包括 LSM 和网络栈中的各个挂载点。如果愿意冒险或解决内核版本之间的更改，那么你可以附加 eBPF 程序的地方范围将会非常广泛。</p>
-<blockquote>
-<ol>
-<li>请参阅 <a title="https://docs.cilium.io/en/stable/bpf/#instruction-set" href="https://docs.cilium.io/en/stable/bpf/#instruction-set">BPF 指令集文档</a>。</li>
-<li>Brendan Gregg 的网站是一个很好的关于<a title="https://www.brendangregg.com/perf.html" href="https://www.brendangregg.com/perf.html">perf event</a>的信息来源。<br />
-如果你有兴趣看到一个具体的例子，你可能想看我在 <a title="https://oreil.ly/K6jLs" href="https://oreil.ly/K6jLs">2021 年 eBPF 峰会</a>上的演讲，我在几分钟内实现了一个非常基本的负载均衡器，作为我们如何使用的说明 eBPF 改变内核处理网络数据包的方式<br />
-在撰写本文时，此代码为事件 map 使用 perf 缓冲区。如果今天为最近的内核编写此代码，你将从 <a title="https://nakryiko.com/posts/bpf-ringbuf/#bpf-ringbuf-vs-bpf-perfbuf" href="https://nakryiko.com/posts/bpf-ringbuf/#bpf-ringbuf-vs-bpf-perfbuf">ring buffer</a> 缓冲区获得更好的性能，这是一种较新的替代方案<br />
-参见 Andrii Nakryiko 描述 BPF 脚手架代码生成的<a title="https://lwn.net/Articles/806328/" href="https://lwn.net/Articles/806328/">帖子</a></li>
-</ol>
-</blockquote>
-]]></content:encoded>
-        </item>
-        <item>
-            <title><![CDATA[K8s Code-Generator工具概览]]></title>
-            <guid>7f35bf7cd74c4c79afbbb5e0a9bd1b5e</guid>
-            <pubDate>Fri, 16 Dec 2022 07:38:37 GMT</pubDate>
-            <content:encoded><![CDATA[<blockquote>
-<p><a title="https://github.com/kubernetes/code-generator" href="https://github.com/kubernetes/code-generator">Code-Generator工具</a> 生成Kubernets风格的API类型</p>
-</blockquote>
-<p><code>k8s.io/client-go</code>提供了对k8s原生资源的informer和clientset等等，但对于自定义资源的操作则相对低效，需要使用 rest api 和 dynamic client 来操作，并自己实现反序列化等功能。</p>
-<p><code>code-generator</code> 提供了以下工具用于为k8s中的资源生成相关代码，可以更加方便的操作自定义资源：</p>
-<ul>
-<li><code>deepcopy-gen</code>: 生成深度拷贝对象方法
-<ul>
-<li>在文件中添加注释<code>// +k8s:deepcopy-gen=package</code></li>
-<li>为单个类型添加自动生成<code>// +k8s:deepcopy-gen=true</code></li>
-<li>为单个类型关闭自动生成<code>// +k8s:deepcopy-gen=false</code></li>
-</ul>
-</li>
-<li><code>client-gen</code>: 为资源生成标准的操作方法(get;list;watch;create;update;patch;delete) 在<code>pkg/apis/${GROUP}/${VERSION}/types.go</code>中使用，使用<code>// +genclient</code>标记对应类型生成的客户端，如果与该类型相关联的资源不是命名空间范围的(例如PersistentVolume), 则还需要附加<code>// + genclient：nonNamespaced</code>标记
-<ul>
-<li><code>// +genclient</code>:  生成默认的客户端动作函数（create, update, delete, get, list, update, patch, watch以及 是否生成updateStatus取决于.Status字段是否存在）</li>
-<li><code>// +genclient:nonNamespaced</code>: 所有动作函数都是在没有名称空间的情况下生成</li>
-<li><code>// +genclient:onlyVerbs=create,get</code>: 指定的动作函数被生成</li>
-<li><code>// +genclient:skipVerbs=watch</code>: 生成watch以外所有的动作函数</li>
-<li><code>// +genclient:noStatus</code>: 即使.Status字段存在也不生成updateStatus动作函数</li>
-</ul>
-</li>
-<li><code>informer-gen</code>: 生成informer，提供事件机制(AddFunc,UpdateFunc,DeleteFunc)来响应kubernetes的event</li>
-<li><code>lister-gen</code>: 为get和list方法提供只读缓存层</li>
-<li><code>conversion-gen</code>: 是用于自动生成在内部和外部类型之间转换的函数的工具<br />
-一般的转换代码生成任务涉及三套程序包：
-<ul>
-<li>一套包含内部类型的程序包</li>
-<li>一套包含外部类型的程序包</li>
-<li>单个目标程序包（即，生成的转换函数所在的位置，以及开发人员授权的转换功能所在的位置）, 包含内部类型的包在Kubernetes的常规代码生成框架中扮演着称为<code>peer package</code>的角色<br />
-使用方法</li>
-<li><code>// +k8s:conversion-gen=&lt;import-path-of-internal-package&gt;</code>: 标记转换内部软件包</li>
-<li><code>// +k8s:conversion-gen-external-types=&lt;import-path-of-external-package&gt;</code>: 标记转换外部软件包</li>
-<li><code>// +k8s:conversion-gen=false</code>: 标记不转换对应注释或结构</li>
-</ul>
-</li>
-<li><code>defaulter-gen</code>: 用于生产Defaulter函数
-<ul>
-<li><code>// +k8s:defaulter-gen=&lt;field-name-to-flag&gt;</code>: 为包含字段的所有类型创建defaulters</li>
-<li><code>// +k8s:defaulter-gen=true|false</code>: 所有都生成</li>
-</ul>
-</li>
-<li><code>go-to-protobuf</code>: 通过go struct生成pb idl</li>
-<li><code>import-boss</code>: 在给定存储库中强制执行导入限制</li>
-<li><code>openapi-gen</code>: 生成openAPI定义<br />
-使用方法：
-<ul>
-<li><code>+k8s:openapi-gen=true</code>: 为指定包或方法开启</li>
-<li><code>+k8s:openapi-gen=false</code>: 指定包关闭</li>
-</ul>
-</li>
-<li><code>register-gen</code>: 生成register</li>
-<li><code>set-gen</code><br />
-code-generator整合了这些gen，使用脚本<a title="https://github.com/kubernetes/code-generator/blob/master/generate-groups.sh" href="https://github.com/kubernetes/code-generator/blob/master/generate-groups.sh">generate-groups.sh</a>和<a title="https://github.com/kubernetes/code-generator/blob/master/generate-internal-groups.sh" href="https://github.com/kubernetes/code-generator/blob/master/generate-internal-groups.sh">generate-internal-groups.sh</a>可以为自定义资源生产相关代码。</li>
-</ul>
-]]></content:encoded>
-        </item>
-        <item>
-            <title><![CDATA[Code-Generator 生成crd的clientset、informer、listers]]></title>
-            <guid>be1a77beec5a4d11a3a886d59e7cea33</guid>
-            <pubDate>Fri, 16 Dec 2022 07:35:50 GMT</pubDate>
-            <content:encoded><![CDATA[<blockquote>
-<p><a title="https://github.com/kubernetes/code-generator" href="https://github.com/kubernetes/code-generator">Code-Generator工具</a> 生成Kubernets风格的API类型</p>
-</blockquote>
-<p><code>k8s.io/client-go</code>提供了对k8s原生资源的informer和clientset等等，但对于自定义资源的操作则相对低效，需要使用 rest api 和 dynamic client 来操作，并自己实现反序列化等功能。</p>
-<p><code>code-generator</code> 提供了以下工具用于为k8s中的资源生成相关代码，可以更加方便的操作自定义资源：</p>
-<ul>
-<li><code>deepcopy-gen</code>: 生成深度拷贝对象方法
-<ul>
-<li>在文件中添加注释<code>// +k8s:deepcopy-gen=package</code></li>
-<li>为单个类型添加自动生成<code>// +k8s:deepcopy-gen=true</code></li>
-<li>为单个类型关闭自动生成<code>// +k8s:deepcopy-gen=false</code></li>
-</ul>
-</li>
-<li><code>client-gen</code>: 为资源生成标准的操作方法(get;list;watch;create;update;patch;delete) 在<code>pkg/apis/${GROUP}/${VERSION}/types.go</code>中使用，使用<code>// +genclient</code>标记对应类型生成的客户端，如果与该类型相关联的资源不是命名空间范围的(例如PersistentVolume), 则还需要附加<code>// + genclient：nonNamespaced</code>标记
-<ul>
-<li><code>// +genclient</code>:  生成默认的客户端动作函数（create, update, delete, get, list, update, patch, watch以及 是否生成updateStatus取决于.Status字段是否存在）</li>
-<li><code>// +genclient:nonNamespaced</code>: 所有动作函数都是在没有名称空间的情况下生成</li>
-<li><code>// +genclient:onlyVerbs=create,get</code>: 指定的动作函数被生成</li>
-<li><code>// +genclient:skipVerbs=watch</code>: 生成watch以外所有的动作函数</li>
-<li><code>// +genclient:noStatus</code>: 即使.Status字段存在也不生成updateStatus动作函数</li>
-</ul>
-</li>
-<li><code>informer-gen</code>: 生成informer，提供事件机制(AddFunc,UpdateFunc,DeleteFunc)来响应kubernetes的event</li>
-<li><code>lister-gen</code>: 为get和list方法提供只读缓存层</li>
-<li><code>conversion-gen</code>: 是用于自动生成在内部和外部类型之间转换的函数的工具<br />
-一般的转换代码生成任务涉及三套程序包：
-<ul>
-<li>一套包含内部类型的程序包</li>
-<li>一套包含外部类型的程序包</li>
-<li>单个目标程序包（即，生成的转换函数所在的位置，以及开发人员授权的转换功能所在的位置）, 包含内部类型的包在Kubernetes的常规代码生成框架中扮演着称为<code>peer package</code>的角色<br />
-使用方法</li>
-<li><code>// +k8s:conversion-gen=&lt;import-path-of-internal-package&gt;</code>: 标记转换内部软件包</li>
-<li><code>// +k8s:conversion-gen-external-types=&lt;import-path-of-external-package&gt;</code>: 标记转换外部软件包</li>
-<li><code>// +k8s:conversion-gen=false</code>: 标记不转换对应注释或结构</li>
-</ul>
-</li>
-<li><code>defaulter-gen</code>: 用于生产Defaulter函数
-<ul>
-<li><code>// +k8s:defaulter-gen=&lt;field-name-to-flag&gt;</code>: 为包含字段的所有类型创建defaulters</li>
-<li><code>// +k8s:defaulter-gen=true|false</code>: 所有都生成</li>
-</ul>
-</li>
-<li><code>go-to-protobuf</code>: 通过go struct生成pb idl</li>
-<li><code>import-boss</code>: 在给定存储库中强制执行导入限制</li>
-<li><code>openapi-gen</code>: 生成openAPI定义<br />
-使用方法：
-<ul>
-<li><code>+k8s:openapi-gen=true</code>: 为指定包或方法开启</li>
-<li><code>+k8s:openapi-gen=false</code>: 指定包关闭</li>
-</ul>
-</li>
-<li><code>register-gen</code>: 生成register</li>
-<li><code>set-gen</code><br />
-code-generator整合了这些gen，使用脚本<a title="https://github.com/kubernetes/code-generator/blob/master/generate-groups.sh" href="https://github.com/kubernetes/code-generator/blob/master/generate-groups.sh">generate-groups.sh</a>和<a title="https://github.com/kubernetes/code-generator/blob/master/generate-internal-groups.sh" href="https://github.com/kubernetes/code-generator/blob/master/generate-internal-groups.sh">generate-internal-groups.sh</a>可以为自定义资源生产相关代码。</li>
-</ul>
-<h2 id="kubebuilder">kubebuilder</h2>
-<blockquote>
-<p>Kubebuilder是用于使用 <a title="https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/" href="https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/">自定义资源定义（CRD）</a> 构建Kubernetes API的框架。</p>
-<p>类似于Ruby on Rails和SpringBoot之类的Web开发框架，Kubebuilder可以提高速度并降低开发人员管理的复杂性，以便在Go中快速构建和发布Kubernetes API。它建立在用于构建核心Kubernetes API的规范技术的基础之上，以提供减少样板和麻烦的简单抽象。</p>
-<p>Resource + Controller = Operator，可以利用Kubebuilder编写自定义资源的Operator。</p>
-</blockquote>
-<h3 id="结合背景">结合背景</h3>
-<p><code>Kubebuilder</code> 与 <code>code-generator</code> 都可以为CRD生成Kubernetes API相关代码，从代码生成层面来讲， 两者的区别在于</p>
-<ul>
-<li>Kubebuilder不会生成informers、listers、clientsets，而code-generator会。</li>
-<li>Kubebuilder会生成Controller、Admission Webhooks，而code-generator不会。</li>
-<li>Kubebuilder会生成manifests yaml，而code-generator不会。</li>
-<li>Kubebuilder还带有一些其他便利性设施。</li>
-</ul>
-<p>使用Kubebuilder可以快捷生成CRD以及相关的控制器框架，然而由于Kubebuilder不会生成clientset等包，当别的服务想要操作CRD时将会很麻烦。</p>
-<p>两者结合后可以使用Kubebuilder生成CRD和一整套控制器架构，再使用code-generator生成informers、listers、clientsets等。</p>
-<h3 id="初始化项目">初始化项目</h3>
-<h4 id="创建一个项目">创建一个项目</h4>
-<div><pre class="hljs"><code>[root@kubebuilder ~]<span class="hljs-comment"># mkdir -p $GOPATH/src/my.domain/example</span>
-[root@kubebuilder ~]<span class="hljs-comment"># cd $GOPATH/src/my.domain/example</span>
-[root@kubebuilder example]<span class="hljs-comment"># kubebuilder init --domain my.domain </span>
-[root@kubebuilder example]<span class="hljs-comment"># tree -CL 2</span>
-.
-├── config
-│   ├── default
-│   ├── manager
-│   ├── prometheus
-│   └── rbac
-├── Dockerfile
-├── go.mod
-├── go.sum
-├── hack
-│   └── boilerplate.go.txt
-├── main.go
-├── Makefile
-└── PROJECT</code></pre></div>
-<h4 id="创建一个api">创建一个api</h4>
-<div><pre class="hljs"><code>[root@kubebuilder example]<span class="hljs-comment"># kubebuilder create api --group example --version v1 --kind Guestbook</span>
-Create Resource [y/n]
-y
-Create Controller [y/n]
-y
-...
-
-[root@kubebuilder example]<span class="hljs-comment"># tree -CL 3</span>
-.
-├── api
-│   └── v1
-│       ├── groupversion_info.go
-│       ├── guestbook_types.go
-│       └── zz_generated.deepcopy.go
-├── bin
-│   └── controller-gen
-├── config
-│   ├── crd
-│   │   ├── kustomization.yaml
-│   │   ├── kustomizeconfig.yaml
-│   │   └── patches
-│   ├── default
-│   │   ├── kustomization.yaml
-│   │   ├── manager_auth_proxy_patch.yaml
-│   │   └── manager_config_patch.yaml
-│   ├── manager
-│   │   ├── controller_manager_config.yaml
-│   │   ├── kustomization.yaml
-│   │   └── manager.yaml
-│   ├── prometheus
-│   │   ├── kustomization.yaml
-│   │   └── monitor.yaml
-│   ├── rbac
-│   │   ├── auth_proxy_client_clusterrole.yaml
-│   │   ├── auth_proxy_role_binding.yaml
-│   │   ├── auth_proxy_role.yaml
-│   │   ├── auth_proxy_service.yaml
-│   │   ├── guestbook_editor_role.yaml
-│   │   ├── guestbook_viewer_role.yaml
-│   │   ├── kustomization.yaml
-│   │   ├── leader_election_role_binding.yaml
-│   │   ├── leader_election_role.yaml
-│   │   ├── role_binding.yaml
-│   │   └── service_account.yaml
-│   └── samples
-│       └── example_v1_guestbook.yaml
-├── controllers
-│   ├── guestbook_controller.go
-│   └── suite_test.go
-├── Dockerfile
-├── go.mod
-├── go.sum
-├── hack
-│   └── boilerplate.go.txt
-├── main.go
-├── Makefile
-└── PROJECT</code></pre></div>
-<p>注意：<br />
-如果修改了<code>api/v1/guestbook_types.go</code>，需要执行以下命令来更新代码和manifests：</p>
-<div><pre class="hljs"><code>make &amp;&amp; make manifests</code></pre></div>
-<h4 id="使用code-generator">使用code-generator</h4>
-<h5 id="更新依赖版本">更新依赖版本</h5>
-<p>初始化项目后的go.mod：</p>
-<div><pre class="hljs"><code>[root@kubebuilder example]<span class="hljs-comment"># cat go.mod</span>
-module my.domain
-
-go 1.16
-
-require (
-    github.com/onsi/ginkgo v1.14.1
-    github.com/onsi/gomega v1.10.2
-    k8s.io/apimachinery v0.20.2
-    k8s.io/client-go v0.20.2
-    sigs.k8s.io/controller-runtime v0.8.3
-)</code></pre></div>
-<p>需要将初始化的k8s库更新到要使用的版本，如：</p>
-<div><pre class="hljs"><code>[root@kubebuilder example]<span class="hljs-comment"># K8S_VERSION=v0.18.6</span>
-[root@kubebuilder example]<span class="hljs-comment"># go get k8s.io/client-go@$K8S_VERSION</span>
-[root@kubebuilder example]<span class="hljs-comment"># go get k8s.io/apimachinery@$K8S_VERSION</span></code></pre></div>
-<h5 id="安装code-generator">安装code-generator</h5>
-<p>k8s的版本号与 go.mod 中的 k8s.io/client-go 的版本保持一致即可。</p>
-<p>**注意：**需要将依赖复制到vendor中</p>
-<div><pre class="hljs"><code>最新版本已经不包含， github.com/googleapis/gnostic/OpenAPIv2 ，如果不改版本会报如下错误
-...
-    github.com/googleapis/gnostic/OpenAPIv2: module github.com/googleapis/gnostic@latest found (v0<span class="hljs-number">.5</span><span class="hljs-number">.5</span>), but does not contain <span class="hljs-keyword">package</span> github.com/googleapis/gnostic/OpenAPIv2
-Error: failed to create API: unable to run post-scaffold tasks of <span class="hljs-string">"base.go.kubebuilder.io/v3"</span>: exit status <span class="hljs-number">1</span>
-...
-[root@kubebuilder example]# <span class="hljs-keyword">go</span> get github.com/googleapis/gnostic@v0<span class="hljs-number">.4</span><span class="hljs-number">.0</span>
-
-[root@kubebuilder example]# <span class="hljs-keyword">go</span> get k8s.io/code-generator@$K8S_VERSION
-[root@kubebuilder example]# <span class="hljs-keyword">go</span> mod vendor</code></pre></div>
-<h5 id="创建修改所需文件">创建&amp;修改所需文件</h5>
-<p>需要在api目录下创建code-generator所需的文件，并添加相关注释。</p>
-<ul>
-<li>新增 <code>api/v1/doc.go</code>,<br />
-<strong>注意</strong>: 修改groupName，package与api的version保持一致。</li>
-</ul>
-<div><pre class="hljs"><code>[root@kubebuilder example]# cat api/v1/doc.<span class="hljs-keyword">go</span>
-<span class="hljs-comment">// +k8s:deepcopy-gen=package</span>
- 
-<span class="hljs-comment">// Package v1 is the v1alpha1 version of the API.</span>
-<span class="hljs-comment">// +groupName=example.my.domain</span>
-<span class="hljs-keyword">package</span> v1</code></pre></div>
-<ul>
-<li>新增<code>api/v1/register.go</code><br />
-<strong>注意</strong>: package与api的version保持一致</li>
-</ul>
-<div><pre class="hljs"><code>[root@kubebuilder example]# cat api/v1/register.<span class="hljs-keyword">go</span>
-<span class="hljs-keyword">package</span> v1
-  
-<span class="hljs-keyword">import</span> (
-    <span class="hljs-string">"k8s.io/apimachinery/pkg/runtime/schema"</span>
-)
-  
-<span class="hljs-comment">// SchemeGroupVersion is group version used to register these objects.</span>
-<span class="hljs-keyword">var</span> SchemeGroupVersion = GroupVersion
-  
-<span class="hljs-comment">// Resource takes an unqualified resource and returns a Group qualified GroupResource</span>
-<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Resource</span><span class="hljs-params">(resource <span class="hljs-keyword">string</span>)</span> <span class="hljs-title">schema</span>.<span class="hljs-title">GroupResource</span></span> {
-    <span class="hljs-keyword">return</span> SchemeGroupVersion.WithResource(resource).GroupResource()
-}</code></pre></div>
-<ul>
-<li>修改<code>api/v1/{crd}_types.go</code>文件，添加注释<code> // +genclient</code></li>
-</ul>
-<div><pre class="hljs"><code>[root@kubebuilder example]# cat api/v1/guestbook_types.<span class="hljs-keyword">go</span>
-...
-<span class="hljs-comment">// +genclient</span>
-<span class="hljs-comment">//+kubebuilder:object:root=true</span>
-
-<span class="hljs-comment">// GuestbookList contains a list of Guestbook</span>
-<span class="hljs-keyword">type</span> GuestbookList <span class="hljs-keyword">struct</span> {
-...</code></pre></div>
-<h5 id="准备脚本">准备脚本</h5>
-<p>在项目 <code>hack</code> 目录下准备以下文件：</p>
-<ul>
-<li><code>hack/tools.go</code></li>
-</ul>
-<div><pre class="hljs"><code>[root@kubebuilder example]# cat hack/tools.<span class="hljs-keyword">go</span>
-<span class="hljs-comment">// +build tools</span>
-  
-<span class="hljs-keyword">package</span> tools
-  
-<span class="hljs-keyword">import</span> _ <span class="hljs-string">"k8s.io/code-generator"</span></code></pre></div>
-<ul>
-<li><code>hack/update-codegen.sh</code><br />
-<code>MODULE</code> 和 <code>go.mod</code> 保持一致<br />
-<code>API_PKG=api</code>，和 <code>api</code> 目录保持一致<br />
-<code>OUTPUT_PKG=generated/example</code>，与生成Resource时指定的group保持一致<br />
-<code>GROUP=example</code>， 和生成Resource时指定的group 保持一致<br />
-<code>VERSION=v1</code>， 和生成Resource时指定的version保持一致</li>
-</ul>
-<div><pre class="hljs"><code>[root@kubebuilder example]<span class="hljs-comment"># cat ./hack/update-codegen.sh</span>
-<span class="hljs-comment">#!/usr/bin/env bash</span>
-<span class="hljs-comment">#表示有报错即退出 跟set -e含义一样</span>
-<span class="hljs-built_in">set</span> -o errexit
-<span class="hljs-comment">#执行脚本的时候，如果遇到不存在的变量，Bash 默认忽略它 ,跟 set -u含义一样</span>
-<span class="hljs-built_in">set</span> -o nounset
-<span class="hljs-comment"># 只要一个子命令失败，整个管道命令就失败，脚本就会终止执行 </span>
-<span class="hljs-built_in">set</span> -o pipefail
-  
-<span class="hljs-comment">#kubebuilder项目的MODULE</span>
-MODULE=my.domain/example
-  
-<span class="hljs-comment">#api包</span>
-APIS_PKG=api
-  
-<span class="hljs-comment">#代码生出输出，生成Resource时指定的group一样</span>
-OUTPUT_PKG=generated/example
-  
-<span class="hljs-comment"># group-version such as cronjob:v1</span>
-GROUP=example
-VERSION=v1
-GROUP_VERSION=<span class="hljs-variable">$GROUP</span>:<span class="hljs-variable">$VERSION</span>
-  
-SCRIPT_ROOT=$(dirname <span class="hljs-string">"<span class="hljs-variable">${BASH_SOURCE[0]}</span>"</span>)/..
-CODEGEN_PKG=<span class="hljs-variable">${CODEGEN_PKG:-$(cd "<span class="hljs-variable">${SCRIPT_ROOT}</span>"; ls -d -1 ./vendor/k8s.io/code-generator 2&gt;/dev/null || echo ../code-generator)}</span>
-  
-<span class="hljs-comment"># kubebuilder2.3.2版本生成的api目录结构code-generator无法直接使用</span>
-rm -rf <span class="hljs-string">"<span class="hljs-variable">${APIS_PKG}</span>/<span class="hljs-variable">${GROUP}</span>"</span> &amp;&amp; mkdir -p <span class="hljs-string">"<span class="hljs-variable">${APIS_PKG}</span>/<span class="hljs-variable">${GROUP}</span>"</span> &amp;&amp; cp -r <span class="hljs-string">"<span class="hljs-variable">${APIS_PKG}</span>/<span class="hljs-variable">${VERSION}</span>/"</span> <span class="hljs-string">"<span class="hljs-variable">${APIS_PKG}</span>/<span class="hljs-variable">${GROUP}</span>"</span>
-  
-<span class="hljs-comment"># generate the code with:</span>
-<span class="hljs-comment"># --output-base    because this script should also be able to run inside the vendor dir of</span>
-<span class="hljs-comment">#                  k8s.io/kubernetes. The output-base is needed for the generators to output into the vendor dir</span>
-<span class="hljs-comment">#                  instead of the $GOPATH directly. For normal projects this can be dropped.</span>
-<span class="hljs-comment">#client,informer,lister(注意: code-generator 生成的deepcopy不适配 kubebuilder 所生成的api)</span>
-bash <span class="hljs-string">"<span class="hljs-variable">${CODEGEN_PKG}</span>"</span>/generate-groups.sh <span class="hljs-string">"client,informer,lister"</span> \
-  <span class="hljs-variable">${MODULE}</span>/<span class="hljs-variable">${OUTPUT_PKG}</span> <span class="hljs-variable">${MODULE}</span>/<span class="hljs-variable">${APIS_PKG}</span> \
-  <span class="hljs-variable">${GROUP_VERSION}</span> \
-  --go-header-file <span class="hljs-string">"<span class="hljs-variable">${SCRIPT_ROOT}</span>"</span>/hack/boilerplate.go.txt
-<span class="hljs-comment">#  --output-base "${SCRIPT_ROOT}"</span>
-<span class="hljs-comment">#  --output-base "${SCRIPT_ROOT}/../../.."</span></code></pre></div>
-<p><strong>注意</strong>:</p>
-<ul>
-<li>
-<p>kubebuilder2.3.2版本生成的api目录结构code-generator无法直接使用，需要在sh脚本中进行处理。</p>
-</li>
-<li>
-<p>修改脚本执行参数可以选择生成的代码，如：“client,informer,lister”。</p>
-</li>
-<li>
-<p>无需再次生成deepcopy：code-generator 生成的deepcopy不适配 kubebuilder 所生成的api。</p>
-</li>
-<li>
-<p><code>Makefile</code>添加生成命令</p>
-</li>
-</ul>
-<div><pre class="hljs"><code>[root@kubebuilder example]<span class="hljs-comment"># chmod +x hack/update-codegen.sh </span>
-[root@kubebuilder example]<span class="hljs-comment"># vim Makefile</span>
- 71 update-codegen: <span class="hljs-comment">## generetor clientset informer inderx code</span>
- 72         ./hack/update-codegen.sh</code></pre></div>
-<h5 id="生成代码">生成代码</h5>
-<p>项目根目录下执行<code>make update-codegen</code>即可，将生成如下代码结构：</p>
-<div><pre class="hljs"><code>[root@kubebuilder example]<span class="hljs-comment"># tree  generated/</span>
-generated/
-└── example
-    ├── clientset
-    │   └── versioned
-    │       ├── clientset.go
-    │       ├── doc.go
-    │       ├── fake
-    │       │   ├── clientset_generated.go
-    │       │   ├── doc.go
-    │       │   └── register.go
-    │       ├── scheme
-    │       │   ├── doc.go
-    │       │   └── register.go
-    │       └── typed
-    │           └── example
-    │               └── v1
-    │                   ├── doc.go
-    │                   ├── example_client.go
-    │                   ├── fake
-    │                   │   ├── doc.go
-    │                   │   ├── fake_example_client.go
-    │                   │   └── fake_guestbook.go
-    │                   ├── generated_expansion.go
-    │                   └── guestbook.go
-    ├── informers
-    │   └── externalversions
-    │       ├── example
-    │       │   ├── interface.go
-    │       │   └── v1
-    │       │       ├── guestbook.go
-    │       │       └── interface.go
-    │       ├── factory.go
-    │       ├── generic.go
-    │       └── internalinterfaces
-    │           └── factory_interfaces.go
-    └── listers
-        └── example
-            └── v1
-                ├── expansion_generated.go
-                └── guestbook.go</code></pre></div>
-<p>之后便可以通过clientset等包对自定义资源对象进行操作。</p>
-<p><strong>注意事项：</strong><br />
-<code>kubebuilder2.3.2</code>版本生成的api目录结构为 <code>api/v1</code>，而<code>code-generator</code>需要的api目录结构为 <code>api/example/v1</code>，相比较增加了<code>group</code>这一层。</p>
-<ul>
-<li><code>hack/update-codegen.sh</code> 脚本会自动根据kubebuilder的api生成code-generator所需目录结构。</li>
-<li><code>code-generator</code> 生成的deepcopy不适配 kubebuilder 所生成的api。</li>
-<li><code>code-generator</code> 生成代码后再次使用make操作时可能由于生成的代码影响命令正常执行，例如： <code>make manifests</code> 在生成CRD模版时，需先删除api以及generated目录中为code-generator生成的代码，才可正常生成CRD模版。</li>
-<li>使用时kubebuilder正常使用 <code>api/v1</code> 中的types，而code-generator生成的clientset等则需要使用 <code>api/example/v1</code> 中的types。</li>
-</ul>
 ]]></content:encoded>
         </item>
     </channel>
