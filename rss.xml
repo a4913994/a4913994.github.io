@@ -4,9 +4,109 @@
         <title></title>
         <link>undefined</link>
         <description>undefined</description>
-        <lastBuildDate>Tue, 31 Jan 2023 14:48:16 GMT</lastBuildDate>
+        <lastBuildDate>Tue, 31 Jan 2023 14:49:25 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>Joplin Pages Publisher</generator>
+        <item>
+            <title><![CDATA[Golang项目目录结构]]></title>
+            <guid>f2a72a9994004b52a6cf5ce91d394c31</guid>
+            <pubDate>Mon, 30 Jan 2023 02:30:43 GMT</pubDate>
+            <content:encoded><![CDATA[<p>这是 Go 应用程序项目的基本布局。它不是核心 Go 开发团队定义的官方标准；然而，它是 Go 生态系统中一组常见的老项目和新项目的布局模式。其中一些模式比其他模式更受欢迎。它还具有许多小的增强，以及对任何足够大的实际应用程序通用的几个支持目录。</p>
+<p>如果你尝试学习 Go，或者你正在为自己建立一个 PoC 或一个玩具项目，这个项目布局是没啥必要的。从一些非常简单的事情开始(一个 <code>main.go</code> 文件绰绰有余)。随着项目的增长，请记住保持代码结构良好非常重要，否则你最终会得到一个凌乱的代码，这其中就包含大量隐藏的依赖项和全局状态。当有更多的人参与这个项目时，你将需要更多的结构。这时候，介绍一种管理包/库的通用方法是很重要的。当你有一个开源项目时，或者当你知道其他项目从你的项目存储库中导入代码时，这时候拥有私有(又名 <code>internal</code>)包和代码就很重要。克隆存储库，保留你需要的内容，删除其他所有的内容!仅仅因为它在那里并不意味着你必须全部使用它。这些模式都没有在每个项目中使用。甚至 <code>vendor</code> 模式也不是通用的。</p>
+<p>Go 1.14 <a title="https://github.com/golang/go/wiki/Modules" href="https://github.com/golang/go/wiki/Modules"><code>Go Modules</code></a> 终于可以投入生产了。除非你有特定的理由不使用它们，否则使用 <a title="https://blog.golang.org/using-go-modules" href="https://blog.golang.org/using-go-modules"><code>Go Modules</code></a> 。如果你使用，就无需担心 $GOPATH 以及项目放置的位置。存储库中的 <code>go.mod</code> 文件基本假定你的项目托管在 Github 上，但这不是要求。模块路径可以是任何地方，尽管第一个模块路径组件的名称中应该有一个点（当前版本的 Go 不再强制使用该模块，但如果使用稍旧的版本，如果没有 <code>mod</code> 文件构建失败的话 ，不要惊讶）。如果你想知道更多信息，请参阅 Issues <a title="https://github.com/golang/go/issues/37554" href="https://github.com/golang/go/issues/37554"><code>37554</code></a> 和 <a title="https://github.com/golang/go/issues/32819" href="https://github.com/golang/go/issues/32819"><code>32819</code></a> 。</p>
+<p>此项目布局是通用的，并且不会尝试强加一个特定的 Go 包结构。</p>
+<p>这是社区的努力。 如果看到新的模式，或者认为一个现有的模式需要更新，请提一个 issue。</p>
+<p>如果需要命名、格式和样式方面的帮助，请运行 <a title="https://golang.org/cmd/gofmt/" href="https://golang.org/cmd/gofmt/"><code>gofmt</code></a> 和 <a title="https://github.com/golang/lint" href="https://github.com/golang/lint"><code>golint</code></a> 。还要确保阅读这些 Go 代码风格的指导方针和建议:</p>
+<ul>
+<li><a title="https://talks.golang.org/2014/names.slide" href="https://talks.golang.org/2014/names.slide">https://talks.golang.org/2014/names.slide</a></li>
+<li><a title="https://golang.org/doc/effective_go.html#names" href="https://golang.org/doc/effective_go.html#names">https://golang.org/doc/effective_go.html#names</a></li>
+<li><a title="https://blog.golang.org/package-names" href="https://blog.golang.org/package-names">https://blog.golang.org/package-names</a></li>
+<li><a title="https://github.com/golang/go/wiki/CodeReviewComments" href="https://github.com/golang/go/wiki/CodeReviewComments">https://github.com/golang/go/wiki/CodeReviewComments</a></li>
+<li><a title="https://rakyll.org/style-packages" href="https://rakyll.org/style-packages">Style guideline for Go packages</a> (rakyll/JBD)</li>
+</ul>
+<p>参见 <a title="https://medium.com/golang-learn/go-project-layout-e5213cdcfaa2" href="https://medium.com/golang-learn/go-project-layout-e5213cdcfaa2"><code>Go Project Layout</code></a> 了解更多的背景信息。</p>
+<p>更多关于包的命名和组织以及其他代码结构的建议:</p>
+<ul>
+<li><a title="https://www.youtube.com/watch?v=PTE4VJIdHPg" href="https://www.youtube.com/watch?v=PTE4VJIdHPg">GopherCon EU 2018: Peter Bourgon - Best Practices for Industrial Programming</a></li>
+<li><a title="https://www.youtube.com/watch?v=MzTcsI6tn-0" href="https://www.youtube.com/watch?v=MzTcsI6tn-0">GopherCon Russia 2018: Ashley McNamara + Brian Ketelsen - Go best practices.</a></li>
+<li><a title="https://www.youtube.com/watch?v=ltqV6pDKZD8" href="https://www.youtube.com/watch?v=ltqV6pDKZD8">GopherCon 2017: Edward Muller - Go Anti-Patterns</a></li>
+<li><a title="https://www.youtube.com/watch?v=oL6JBUk6tj0" href="https://www.youtube.com/watch?v=oL6JBUk6tj0">GopherCon 2018: Kat Zien - How Do You Structure Your Go Apps</a></li>
+</ul>
+<h2 id="go-目录">Go 目录</h2>
+<h3 id="cmd"><code>/cmd</code></h3>
+<p>本项目的主干。</p>
+<p>每个应用程序的目录名应该与你想要的可执行文件的名称相匹配(例如，<code>/cmd/myapp</code>)。</p>
+<p>不要在这个目录中放置太多代码。如果你认为代码可以导入并在其他项目中使用，那么它应该位于 <code>/pkg</code> 目录中。如果代码不是可重用的，或者你不希望其他人重用它，请将该代码放到 <code>/internal</code> 目录中。你会惊讶于别人会怎么做，所以要明确你的意图!</p>
+<p>通常有一个小的 <code>main</code> 函数，从 <code>/internal</code> 和 <code>/pkg</code> 目录导入和调用代码，除此之外没有别的东西。</p>
+<p>有关示例，请参阅 <a title="cmd/README.md" href="cmd/README.md"><code>/cmd</code></a> 目录。</p>
+<h3 id="internal"><code>/internal</code></h3>
+<p>私有应用程序和库代码。这是你不希望其他人在其应用程序或库中导入代码。请注意，这个布局模式是由 Go 编译器本身执行的。有关更多细节，请参阅Go 1.4 <a title="https://golang.org/doc/go1.4#internalpackages" href="https://golang.org/doc/go1.4#internalpackages"><code>release notes</code></a> 。注意，你并不局限于顶级 <code>internal</code> 目录。在项目树的任何级别上都可以有多个内部目录。</p>
+<p>你可以选择向 internal 包中添加一些额外的结构，以分隔共享和非共享的内部代码。这不是必需的(特别是对于较小的项目)，但是最好有有可视化的线索来显示预期的包的用途。你的实际应用程序代码可以放在 <code>/internal/app</code> 目录下(例如 <code>/internal/app/myapp</code>)，这些应用程序共享的代码可以放在 <code>/internal/pkg</code> 目录下(例如 <code>/internal/pkg/myprivlib</code>)。</p>
+<h3 id="pkg"><code>/pkg</code></h3>
+<p>外部应用程序可以使用的库代码(例如 <code>/pkg/mypubliclib</code>)。其他项目会导入这些库，希望它们能正常工作，所以在这里放东西之前要三思:-)注意，<code>internal</code> 目录是确保私有包不可导入的更好方法，因为它是由 Go 强制执行的。<code>/pkg</code> 目录仍然是一种很好的方式，可以显式地表示该目录中的代码对于其他人来说是安全使用的好方法。由 Travis Jeffery  撰写的 <a title="https://travisjeffery.com/b/2019/11/i-ll-take-pkg-over-internal/" href="https://travisjeffery.com/b/2019/11/i-ll-take-pkg-over-internal/"><code>I'll take pkg over internal</code></a> 博客文章提供了 <code>pkg</code> 和 <code>internal</code> 目录的一个很好的概述，以及什么时候使用它们是有意义的。</p>
+<p>当根目录包含大量非 Go 组件和目录时，这也是一种将 Go 代码分组到一个位置的方法，这使得运行各种 Go 工具变得更加容易（正如在这些演讲中提到的那样: 来自 GopherCon EU 2018 的 <a title="https://www.youtube.com/watch?v=PTE4VJIdHPg" href="https://www.youtube.com/watch?v=PTE4VJIdHPg"><code>Best Practices for Industrial Programming</code></a> , <a title="https://www.youtube.com/watch?v=oL6JBUk6tj0" href="https://www.youtube.com/watch?v=oL6JBUk6tj0">GopherCon 2018: Kat Zien - How Do You Structure Your Go Apps</a> 和 <a title="https://www.youtube.com/watch?v=3gQa1LWwuzk" href="https://www.youtube.com/watch?v=3gQa1LWwuzk">GoLab 2018 - Massimiliano Pippi - Project layout patterns in Go</a> ）。</p>
+<p>如果你想查看哪个流行的 Go 存储库使用此项目布局模式，请查看 <a title="pkg/README.md" href="pkg/README.md"><code>/pkg</code></a> 目录。这是一种常见的布局模式，但并不是所有人都接受它，一些 Go 社区的人也不推荐它。</p>
+<p>如果你的应用程序项目真的很小，并且额外的嵌套并不能增加多少价值(除非你真的想要:-)，那就不要使用它。当它变得足够大时，你的根目录会变得非常繁琐时(尤其是当你有很多非 Go 应用组件时)，请考虑一下。</p>
+<p>可以参考的开源项目<a title="https://github.com/go-kit/kit" href="https://github.com/go-kit/kit">go-kit</a></p>
+<h3 id="vendor"><code>/vendor</code></h3>
+<p>应用程序依赖项(手动管理或使用你喜欢的依赖项管理工具，如新的内置 <a title="https://github.com/golang/go/wiki/Modules" href="https://github.com/golang/go/wiki/Modules"><code>Go Modules</code></a> 功能)。<code>go mod vendor</code> 命令将为你创建 <code>/vendor</code> 目录。请注意，如果未使用默认情况下处于启用状态的 Go 1.14，则可能需要在 <code>go build</code> 命令中添加 <code>-mod=vendor</code> 标志。</p>
+<p>如果你正在构建一个库，那么不要提交你的应用程序依赖项。</p>
+<p>注意，自从 <a title="https://golang.org/doc/go1.13#modules" href="https://golang.org/doc/go1.13#modules"><code>1.13</code></a> 以后，Go 还启用了模块代理功能(默认使用 <a title="https://proxy.golang.org" href="https://proxy.golang.org"><code>https://proxy.golang.org</code></a> 作为他们的模块代理服务器)。在<a title="https://blog.golang.org/module-mirror-launch" href="https://blog.golang.org/module-mirror-launch"><code>here</code></a> 阅读更多关于它的信息，看看它是否符合你的所有需求和约束。如果需要，那么你根本不需要 <code>vendor</code> 目录。</p>
+<p>国内模块代理功能默认是被墙的，七牛云有维护专门的的<a title="https://github.com/goproxy/goproxy.cn/blob/master/README.zh-CN.md" href="https://github.com/goproxy/goproxy.cn/blob/master/README.zh-CN.md"><code>模块代理</code></a> 。</p>
+<h2 id="服务应用程序目录">服务应用程序目录</h2>
+<h3 id="api"><code>/api</code></h3>
+<p>OpenAPI/Swagger 规范，JSON 模式文件，协议定义文件。</p>
+<p>有关示例，请参见 <a title="api/README.md" href="api/README.md"><code>/api</code></a> 目录。</p>
+<h2 id="web-应用程序目录">Web 应用程序目录</h2>
+<h3 id="web"><code>/web</code></h3>
+<p>特定于 Web 应用程序的组件:静态 Web 资产、服务器端模板和 SPAs。</p>
+<h2 id="通用应用目录">通用应用目录</h2>
+<h3 id="configs"><code>/configs</code></h3>
+<p>配置文件模板或默认配置。</p>
+<p>将你的 <code>confd</code> 或 <code>consul-template</code> 模板文件放在这里。</p>
+<h3 id="init"><code>/init</code></h3>
+<p>System init（systemd，upstart，sysv）和 process manager/supervisor（runit，supervisor）配置。</p>
+<h3 id="scripts"><code>/scripts</code></h3>
+<p>执行各种构建、安装、分析等操作的脚本。</p>
+<p>这些脚本保持了根级别的 Makefile 变得小而简单(例如， <a title="https://github.com/hashicorp/terraform/blob/master/Makefile" href="https://github.com/hashicorp/terraform/blob/master/Makefile"><code>https://github.com/hashicorp/terraform/blob/master/Makefile</code></a> )。</p>
+<p>有关示例，请参见  <a title="scripts/README.md" href="scripts/README.md"><code>/scripts</code></a> 目录。</p>
+<h3 id="build"><code>/build</code></h3>
+<p>打包和持续集成。</p>
+<p>将你的云( AMI )、容器( Docker )、操作系统( deb、rpm、pkg )包配置和脚本放在 <code>/build/package</code> 目录下。</p>
+<p>将你的 CI (travis、circle、drone)配置和脚本放在 <code>/build/ci</code> 目录中。请注意，有些 CI 工具(例如 Travis CI)对配置文件的位置非常挑剔。尝试将配置文件放在 <code>/build/ci</code> 目录中，将它们链接到 CI 工具期望它们的位置(如果可能的话)。</p>
+<h3 id="deployments"><code>/deployments</code></h3>
+<p>IaaS、PaaS、系统和容器编排部署配置和模板(docker-compose、kubernetes/helm、mesos、terraform、bosh)。注意，在一些存储库中(特别是使用 kubernetes 部署的应用程序)，这个目录被称为 <code>/deploy</code>。</p>
+<h3 id="test"><code>/test</code></h3>
+<p>额外的外部测试应用程序和测试数据。你可以随时根据需求构造 <code>/test</code> 目录。对于较大的项目，有一个数据子目录是有意义的。例如，你可以使用 <code>/test/data</code> 或 <code>/test/testdata</code> (如果你需要忽略目录中的内容)。请注意，Go 还会忽略以“.”或“_”开头的目录或文件，因此在如何命名测试数据目录方面有更大的灵活性。</p>
+<p>有关示例，请参见  <a title="test/README.md" href="test/README.md"><code>/test</code></a> 目录。</p>
+<h2 id="其他目录">其他目录</h2>
+<h3 id="docs"><code>/docs</code></h3>
+<p>设计和用户文档(除了 godoc 生成的文档之外)。</p>
+<p>有关示例，请参阅 <a title="docs/README.md" href="docs/README.md"><code>/docs</code></a> 目录。</p>
+<h3 id="tools"><code>/tools</code></h3>
+<p>这个项目的支持工具。注意，这些工具可以从 <code>/pkg</code> 和 <code>/internal</code> 目录导入代码。</p>
+<p>有关示例，请参见 <a title="tools/README.md" href="tools/README.md"><code>/tools</code></a> 目录。</p>
+<h3 id="examples"><code>/examples</code></h3>
+<p>你的应用程序和/或公共库的示例。</p>
+<p>有关示例，请参见 <a title="examples/README.md" href="examples/README.md"><code>/examples</code></a> 目录。</p>
+<h3 id="third_party"><code>/third_party</code></h3>
+<p>外部辅助工具，分叉代码和其他第三方工具(例如 Swagger UI)。</p>
+<h3 id="githooks"><code>/githooks</code></h3>
+<p>Git hooks。</p>
+<h3 id="assets"><code>/assets</code></h3>
+<p>与存储库一起使用的其他资产(图像、徽标等)。</p>
+<h3 id="website"><code>/website</code></h3>
+<p>如果你不使用 Github 页面，则在这里放置项目的网站数据。</p>
+<p>有关示例，请参见 <a title="website/README.md" href="website/README.md"><code>/website</code></a> 目录。</p>
+<h2 id="你不应该拥有的目录">你不应该拥有的目录</h2>
+<h3 id="src"><code>/src</code></h3>
+<p>有些 Go 项目确实有一个 <code>src</code> 文件夹，但这通常发生在开发人员有 Java 背景，在那里它是一种常见的模式。如果可以的话，尽量不要采用这种 Java 模式。你真的不希望你的 Go 代码或 Go 项目看起来像 Java:-)</p>
+<p>不要将项目级别 <code>src</code> 目录与 Go 用于其工作空间的 <code>src</code> 目录(如 <a title="https://golang.org/doc/code.html" href="https://golang.org/doc/code.html"><code>How to Write Go Code</code></a> 中所述)混淆。<code>$GOPATH</code> 环境变量指向你的(当前)工作空间(默认情况下，它指向非 windows 系统上的 <code>$HOME/go</code>)。这个工作空间包括顶层 <code>/pkg</code>, <code>/bin</code> 和 <code>/src</code> 目录。你的实际项目最终是 <code>/src</code> 下的一个子目录，因此，如果你的项目中有 <code>/src</code> 目录，那么项目路径将是这样的: <code>/some/path/to/workspace/src/your_project/src/your_code.go</code>。注意，在 Go 1.11 中，可以将项目放在 <code>GOPATH</code> 之外，但这并不意味着使用这种布局模式是一个好主意。</p>
+<h3 id="utilscommon"><code>/utils，/common</code></h3>
+<p>不要在项目中出现 utils 和 common 这种包，如果出现这种包，因为我们并不能从包中知道你这个包的作用，长久之后这个包就会变成一个大杂烩，所有东西都往这里面扔。</p>
+<p>举个例子，我们当前使用<code>gin</code>作为路由框架，但是<code>gin</code>的 <code>handler</code> 注册其实不是很方便，所以我们做了一层封装，这个时候这个工具方法我们一般放在<code> /pkg/ginx</code> 目录下，表示这个是对<code>gin</code>增强的包，不直接使用<code>gin</code>作为包名的原因是因为我们在项目中也会引用<code>gin</code>相同的命名一个是会导致误解，另一个是在同时导入的时候也会需要去进行重命名会比较麻烦</p>
+]]></content:encoded>
+        </item>
         <item>
             <title><![CDATA[BTFGen: 让 eBPF 程序可移植发布更近一步]]></title>
             <guid>f14b5b38df1f4a5d8ad1745dbfde1eb1</guid>
