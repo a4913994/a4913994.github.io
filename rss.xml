@@ -4,9 +4,526 @@
         <title></title>
         <link>undefined</link>
         <description>undefined</description>
-        <lastBuildDate>Tue, 31 Jan 2023 14:49:25 GMT</lastBuildDate>
+        <lastBuildDate>Tue, 31 Jan 2023 15:36:40 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>Joplin Pages Publisher</generator>
+        <item>
+            <title><![CDATA[Golang错误处理]]></title>
+            <guid>6cd2eaf95f824f7d9f74885783dd6547</guid>
+            <pubDate>Tue, 31 Jan 2023 14:53:47 GMT</pubDate>
+            <content:encoded><![CDATA[<h2 id="最佳实践">最佳实践</h2>
+<h3 id="panic">panic</h3>
+<ol>
+<li>在程序启动的时候，如果有强依赖的服务出现故障时<code>panic</code>退出</li>
+<li>在程序启动的时候，如果发现有配置明显不符合要求， 可以<code>panic</code>退出（防御编程）</li>
+<li>其他情况下只要不是不可恢复的程序错误，都不应该直接<code>panic</code>应该返回<code>error</code></li>
+<li>在程序入口处，例如<code>gin</code>中间件需要使用<code>recover</code>预防<code>panic</code>程序退出</li>
+<li>在程序中我们应该避免使用野生的<code>goroutine</code>
+<ol>
+<li>如果是在请求中需要执行异步任务，应该使用异步<code>worker</code>，消息通知的方式进行处理，避免请求量大时大量<code>goroutine</code>创建</li>
+<li>如果需要使用<code>goroutine</code>时，应该使用统一的<code>Go</code>函数进行创建，这个函数中会进行<code>recover</code>，避免因为野生<code>goroutine panic</code>导致主进程退出</li>
+</ol>
+</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Go</span><span class="hljs-params">(f <span class="hljs-keyword">func</span>()</span>)</span>{
+    <span class="hljs-keyword">go</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span>{
+        <span class="hljs-keyword">defer</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span>{
+            <span class="hljs-keyword">if</span> err := <span class="hljs-built_in">recover</span>(); err != <span class="hljs-literal">nil</span> {
+                log.Printf(<span class="hljs-string">"panic: %+v"</span>, err)
+            }
+        }()
+
+        f()
+    }()
+}</code></pre></div>
+<h3 id="error">error</h3>
+<ol>
+<li>我们在应用程序中使用<code>github.com/pkg/errors</code>处理应用错误，注意在公共库当中，<strong>一般不使用这个</strong></li>
+<li><code>error</code>应该是函数的最后一个返回值，当<code>error</code>不为<code>nil</code>时，函数的其他返回值是不可用的状态，不应该对其他返回值做任何期待
+<ol>
+<li><code>func f() (io.Reader, *S1, error)</code>在这里，我们不知道<code>io.Reader</code>中是否有数据，可能有，也有可能有一部分</li>
+</ol>
+</li>
+<li>错误处理的时候应该先判断错误， <code>if err != nil</code>出现错误及时返回，使代码是一条流畅的直线，避免过多的嵌套.</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-comment">// good case</span>
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">f</span><span class="hljs-params">()</span> <span class="hljs-title">error</span></span> {
+    a, err := A()
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        <span class="hljs-keyword">return</span> err
+    }
+
+    <span class="hljs-comment">// ... 其他逻辑</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>
+}
+
+<span class="hljs-comment">// bad case</span>
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">f</span><span class="hljs-params">()</span> <span class="hljs-title">error</span></span> {
+    a, err := A()
+    <span class="hljs-keyword">if</span> err == <span class="hljs-literal">nil</span> {
+    	<span class="hljs-comment">// 其他逻辑</span>
+    }
+
+    <span class="hljs-keyword">return</span> err
+}</code></pre></div>
+<ol start="4">
+<li>在应用程序中出现错误时，使用<code>errors.New</code>或者<code>errors.Errorf</code>返回错误</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(u *usecese)</span> <span class="hljs-title">usecase1</span><span class="hljs-params">()</span> <span class="hljs-title">error</span></span> {
+    money := u.repo.getMoney(uid)
+    <span class="hljs-keyword">if</span> money &lt; <span class="hljs-number">10</span> {
+        errors.Errorf(<span class="hljs-string">"用户余额不足, uid: %d, money: %d"</span>, uid, money)
+    }
+    <span class="hljs-comment">// 其他逻辑</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>
+}</code></pre></div>
+<ol start="5">
+<li>如果是调用应用程序的其他函数出现错误，请直接返回，如果需要携带信息，请使用 <code>errors.WithMessage</code></li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(u *usecese)</span> <span class="hljs-title">usecase2</span><span class="hljs-params">()</span> <span class="hljs-title">error</span></span> {
+    name, err := u.repo.getUserName(uid)
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        <span class="hljs-keyword">return</span> errors.WithMessage(err, <span class="hljs-string">"其他附加信息"</span>)
+    }
+
+    <span class="hljs-comment">// 其他逻辑</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>
+}</code></pre></div>
+<ol start="5">
+<li>如果是调用其他库（标准库、企业公共库、开源第三方库等）获取到错误时，请使用<code>errors.Wrap</code>添加堆栈信息
+<ol>
+<li>切记，不要每个地方都是用<code>errors.Wrap</code>只需要在错误第一次出现时进行 <code>errors.Wrap</code>即可</li>
+<li>根据场景进行判断是否需要将其他库的原始错误吞掉，例如可以把 <code>repository</code>层的数据库相关错误吞掉，返回业务错误码，避免后续我们分割微服务或者更换 ORM  库时需要去修改上层代码</li>
+<li>注意我们在基础库，被大量引入的第三方库编写时一般不使用 <code>errors.Wrap</code> 避免堆栈信息重复</li>
+</ol>
+</li>
+<li><strong>禁止每个出错的地方都打日志</strong>，只需要在进程的最开始的地方使用 %+v  进行统一打印，例如 http/rpc 服务的中间件</li>
+<li>错误判断使用<code>errors.Is</code>进行比较</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">f</span><span class="hljs-params">()</span> <span class="hljs-title">error</span></span> {
+    err := A()
+    <span class="hljs-keyword">if</span> errors.Is(err, io.EOF){
+    	<span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>
+    }
+
+    <span class="hljs-comment">// 其他逻辑</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>
+}</code></pre></div>
+<ol start="8">
+<li>错误类型判断，使用 errors.As  进行赋值</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">f</span><span class="hljs-params">()</span> <span class="hljs-title">error</span></span> {
+    err := A()
+
+    <span class="hljs-keyword">var</span> errA errorA
+    <span class="hljs-keyword">if</span> errors.As(err, &amp;errA){
+    	<span class="hljs-comment">// ...</span>
+    }
+
+    <span class="hljs-comment">// 其他逻辑</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>
+}</code></pre></div>
+<ol start="9">
+<li>如何判定错误的信息是否足够，想一想当你的代码出现问题需要排查的时候你的错误信息是否可以帮助你快速的定位问题，例如我们在请求中一般会输出参数信息，用于辅助判断错误</li>
+<li>对于业务错误，推荐在一个统一的地方创建一个错误字典，错误字典里面应该包含错误的 code，并且在日志中作为独立字段打印，方便做业务告警的判断，错误必须有清晰的错误文档</li>
+<li>不需要返回，被忽略的错误必须输出日志信息</li>
+<li>同一个地方不停的报错，最好不要不停输出错误日志，这样可能会导致被大量的错误日志信息淹没，无法排查问题，比较好的做法是打印一次错误详情，然后打印出错误出现的次数</li>
+<li>对同一个类型的错误，采用相同的模式，例如参数错误，不要有的返回 404 有的返回 200</li>
+<li><strong>处理错误的时候，需要处理已分配的资源</strong>，使用<code>defer</code>进行清理，例如文件句柄</li>
+</ol>
+<h2 id="panic-or-error">panic or error?</h2>
+<ol>
+<li>在 Go 中<code>panic</code>会导致程序直接退出，是一个致命的错误，如果使用<code>panic  recover</code>进行处理的话，会存在很多问题
+<ol>
+<li>性能问题，频繁<code>panic recover</code>性能不好</li>
+<li>容易导致程序异常退出，只要有一个地方没有处理到就会导致程序进程整个退出</li>
+<li>不可控，一旦<code>panic</code>就将处理逻辑移交给了外部，我们并不能预设外部包一定会进行处理</li>
+</ol>
+</li>
+<li>什么时候使用<code>panic</code>呢？
+<ol>
+<li>对于真正意外的情况，那些表示不可恢复的程序错误，例如索引越界、不可恢复的环境问题、栈溢出，我们才使用 panic</li>
+</ol>
+</li>
+<li>使用 error 处理有哪些好处？
+<ol>
+<li>简单</li>
+<li>考虑失败，而不是成功(Plan for failure, not success)</li>
+<li>没有隐藏的控制流</li>
+<li>完全交给你来控制 error</li>
+<li>Error are values</li>
+</ol>
+</li>
+</ol>
+<h2 id="为什么标准库中-errorsnew-会返回一个指针">为什么标准库中 errors.New 会返回一个指针</h2>
+<p>翻看标准库的源代码我们可以发现，<code> errors</code>  库中的 <code>errorString</code>  结构体实现了<code> error</code>  接口，为什么在 <code>New</code>  一个 <code>error</code> 的时候会返回一个结构体的指针呢？</p>
+<div><pre class="hljs"><code><span class="hljs-comment">// New returns an error that formats as the given text.</span>
+<span class="hljs-comment">// Each call to New returns a distinct error value even if the text is identical.</span>
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">New</span><span class="hljs-params">(text <span class="hljs-keyword">string</span>)</span> <span class="hljs-title">error</span></span> {
+    <span class="hljs-keyword">return</span> &amp;errorString{text}
+}
+
+<span class="hljs-comment">// errorString is a trivial implementation of error.</span>
+<span class="hljs-keyword">type</span> errorString <span class="hljs-keyword">struct</span> {
+    s <span class="hljs-keyword">string</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(e *errorString)</span> <span class="hljs-title">Error</span><span class="hljs-params">()</span> <span class="hljs-title">string</span></span> {
+    <span class="hljs-keyword">return</span> e.s
+}</code></pre></div>
+<p>我们先来看一个例子，我们同样创建了 <code>errorString</code> 的结构体，我们自定义的和标准库中的唯一不同就是，自建的这个返回的是值，而不是指针。</p>
+<p>在<code>main</code>函数的对比中我们就可以发现，我们自定义的<code>errorString</code>在对比的时候只要对应的字符串相同就会返回 <code>true</code>，但是标准库的包不会。</p>
+<p>这是因为，在对比两个 <code>struct</code> 是否相同的时候，会去对比，这两个 <code>struct</code> 里面的各个字段是否是相同的，如果相同就返回 <code>true</code>，但是对比指针的时候会去判断两个指针的地址是否一致。</p>
+<p><strong>如果字符串相等就返回 true 会导致什么问题呢？</strong></p>
+<p>如果我有两个包，定义了两个错误，他们其实是两个相同的字符串，在其他库调用对比的时候，可能会由于不同的书写顺序，走进不同的分支导致一些奇奇怪怪的错误</p>
+<div><pre class="hljs"><code><span class="hljs-keyword">type</span> errorString <span class="hljs-keyword">struct</span> {
+    text <span class="hljs-keyword">string</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(e errorString)</span> <span class="hljs-title">Error</span><span class="hljs-params">()</span> <span class="hljs-title">string</span></span> {
+    <span class="hljs-keyword">return</span> e.text
+}
+
+<span class="hljs-comment">// New 创建一个自定义错误</span>
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">New</span><span class="hljs-params">(s <span class="hljs-keyword">string</span>)</span> <span class="hljs-title">error</span></span> {
+    <span class="hljs-keyword">return</span> errorString{text: s}
+}
+
+<span class="hljs-keyword">var</span> errorString1 = New(<span class="hljs-string">"test a"</span>)
+<span class="hljs-keyword">var</span> err1 = errors.New(<span class="hljs-string">"test b"</span>)
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">if</span> errorString1 == New(<span class="hljs-string">"test a"</span>) {
+        fmt.Println(<span class="hljs-string">"err string a"</span>) <span class="hljs-comment">// 会输出</span>
+    }
+
+    <span class="hljs-keyword">if</span> err1 == errors.New(<span class="hljs-string">"test b"</span>) {
+        fmt.Println(<span class="hljs-string">"err b"</span>) <span class="hljs-comment">// 不会输出</span>
+    }
+}</code></pre></div>
+<h2 id="error-type-错误定义与判断">error type: 错误定义与判断</h2>
+<h3 id="sentinel-error">Sentinel Error</h3>
+<p>哨兵错误，就是定义一些包级别的错误变量，然后在调用的时候外部包可以直接对比变量进行判定，在标准库当中大量的使用了这种方式</p>
+<p>例如下方 <code>io</code>  库中定义的错误</p>
+<div><pre class="hljs"><code><span class="hljs-comment">// EOF is the error returned by Read when no more input is available.</span>
+<span class="hljs-comment">// Functions should return EOF only to signal a graceful end of input.</span>
+<span class="hljs-comment">// If the EOF occurs unexpectedly in a structured data stream,</span>
+<span class="hljs-comment">// the appropriate error is either ErrUnexpectedEOF or some other error</span>
+<span class="hljs-comment">// giving more detail.</span>
+<span class="hljs-keyword">var</span> EOF = errors.New(<span class="hljs-string">"EOF"</span>)
+
+<span class="hljs-comment">// ErrUnexpectedEOF means that EOF was encountered in the</span>
+<span class="hljs-comment">// middle of reading a fixed-size block or data structure.</span>
+<span class="hljs-keyword">var</span> ErrUnexpectedEOF = errors.New(<span class="hljs-string">"unexpected EOF"</span>)
+
+<span class="hljs-comment">// ErrNoProgress is returned by some clients of an io.Reader when</span>
+<span class="hljs-comment">// many calls to Read have failed to return any data or error,</span>
+<span class="hljs-comment">// usually the sign of a broken io.Reader implementation.</span>
+<span class="hljs-keyword">var</span> ErrNoProgress = errors.New(<span class="hljs-string">"multiple Read calls return no data or error"</span>)
+</code></pre></div>
+<p>我们在外部判定的时候一般使用等值判定或者使用<code> errors.Is</code>  进行判断</p>
+<div><pre class="hljs"><code><span class="hljs-keyword">if</span> err == io.EOF {
+    <span class="hljs-comment">//...</span>
+}
+
+<span class="hljs-keyword">if</span> errors.Is(err, io.EOF){
+    <span class="hljs-comment">//...</span>
+}</code></pre></div>
+<p>这种错误处理方式有一个问题是，将<code>error</code>当做包的<code>API</code>暴露给了第三方，这样会导致在做重构或者升级的时候很麻烦，并且这种方式包含的错误信息会十分的有限</p>
+<h3 id="error-types">error types</h3>
+<p>这个就类似我们前面定义的<code>errorString</code>一样实现了<code>error</code> 的接口，然后在外部是否类型断言来判断是否是这种错误类型</p>
+<div><pre class="hljs"><code><span class="hljs-keyword">type</span> MyStruct <span class="hljs-keyword">struct</span> {
+    s <span class="hljs-keyword">string</span>
+    name <span class="hljs-keyword">string</span>
+    path <span class="hljs-keyword">string</span>
+}
+
+
+
+<span class="hljs-comment">// 使用的时候</span>
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">f</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">switch</span> err.(<span class="hljs-keyword">type</span>) {
+        <span class="hljs-keyword">case</span> *MyStruct:
+        <span class="hljs-comment">// ...</span>
+        <span class="hljs-keyword">case</span> others:
+        <span class="hljs-comment">// ...</span>
+    }
+}</code></pre></div>
+<p>这种方式相对于哨兵来说，可以包含更加丰富的信息，但是同样也将错误的类型暴露给了外部，例如标准库中的<code>os.PathError</code></p>
+<h3 id="opaque-errors">Opaque errors</h3>
+<p>不透明的错误处理，这种方式最大的特点就是只返回错误，暴露错误判定接口，不返回类型，这样可以减少 API 的暴露，后续的处理会比较灵活，这个一般用在公共库会比较好</p>
+<div><pre class="hljs"><code><span class="hljs-keyword">type</span> temporary <span class="hljs-keyword">interface</span> {
+    Temporary() <span class="hljs-keyword">bool</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">IsTemporary</span><span class="hljs-params">(err error)</span> <span class="hljs-title">bool</span></span> {
+    te, ok := err.(temporary)
+    <span class="hljs-keyword">return</span> ok &amp;&amp; te.Temporary()
+}</code></pre></div>
+<h2 id="error-handle-错误处理优化">error handle: 错误处理优化</h2>
+<p>在 go 中常常会存在大量的 <code>if err</code>代码，下面介绍两种常见的减少这种代码的方式</p>
+<h3 id="bufioscan">bufio.scan</h3>
+<p>对比下面两个函数的处理我们可以发现，<code>count2</code>  使用<code>sc.Scan</code>  之后一个 <code>if err</code> 的判断都没有，极大的简化了代码，这是因为在<code>sc.Scan</code>做了很多处理，像很多类似的，需要循环读取的都可以考虑像这样包装之后进行处理，这样外部包调用的时候就会非常简洁</p>
+<div><pre class="hljs"><code><span class="hljs-comment">// 统计文件行数</span>
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">count</span><span class="hljs-params">(r io.Reader)</span> <span class="hljs-params">(<span class="hljs-keyword">int</span>, error)</span></span> {
+    <span class="hljs-keyword">var</span> (
+        br    = bufio.NewReader(r)
+        lines <span class="hljs-keyword">int</span>
+        err   error
+    )
+
+    <span class="hljs-keyword">for</span> {
+        <span class="hljs-comment">// 读取到换行符就说明是一行</span>
+        _, err = br.ReadString(<span class="hljs-string">'\n'</span>)
+        lines++
+        <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+            <span class="hljs-keyword">break</span>
+        }
+    }
+
+    <span class="hljs-comment">// 当错误是 EOF 的时候说明文件读取完毕了</span>
+    <span class="hljs-keyword">if</span> err != io.EOF {
+        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>, err
+    }
+
+    <span class="hljs-keyword">return</span> lines, err
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">count2</span><span class="hljs-params">(r io.Reader)</span> <span class="hljs-params">(<span class="hljs-keyword">int</span>, error)</span></span> {
+    <span class="hljs-keyword">var</span> (
+        sc    = bufio.NewScanner(r)
+        lines <span class="hljs-keyword">int</span>
+    )
+
+    <span class="hljs-keyword">for</span> sc.Scan() {
+        lines++
+    }
+
+    <span class="hljs-keyword">return</span> lines, sc.Err()
+}</code></pre></div>
+<h3 id="error-writer">error writer</h3>
+<p>看一个来自 go blog 的例子：<a title="https://blog.golang.org/errors-are-values" href="https://blog.golang.org/errors-are-values">https://blog.golang.org/errors-are-values</a></p>
+<p>一般代码：</p>
+<div><pre class="hljs"><code>_, err = fd.Write(p0[a:b])
+<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+    <span class="hljs-keyword">return</span> err
+}
+_, err = fd.Write(p1[c:d])
+<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+    <span class="hljs-keyword">return</span> err
+}
+_, err = fd.Write(p2[e:f])
+<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+    <span class="hljs-keyword">return</span> err
+}
+<span class="hljs-comment">// and so on</span></code></pre></div>
+<p>errWriter</p>
+<div><pre class="hljs"><code><span class="hljs-keyword">type</span> errWriter <span class="hljs-keyword">struct</span> {
+    w   io.Writer
+    err error
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(ew *errWriter)</span> <span class="hljs-title">write</span><span class="hljs-params">(buf []<span class="hljs-keyword">byte</span>)</span></span> {
+    <span class="hljs-keyword">if</span> ew.err != <span class="hljs-literal">nil</span> {
+        <span class="hljs-keyword">return</span>
+    }
+    _, ew.err = ew.w.Write(buf)
+}
+
+<span class="hljs-comment">// 使用时</span>
+ew := &amp;errWriter{w: fd}
+ew.write(p0[a:b])
+ew.write(p1[c:d])
+ew.write(p2[e:f])
+<span class="hljs-comment">// and so on</span>
+<span class="hljs-keyword">if</span> ew.err != <span class="hljs-literal">nil</span> {
+    <span class="hljs-keyword">return</span> ew.err
+}</code></pre></div>
+<p>如果去翻 标准库中<code>bufio.Writer</code> 的源代码，你会发现也有这种用法，这种就是将重复的逻辑进行了封装，然后把<code>error</code>暂存，然后我们就只需要在最后判断一下<code>error</code>就行了</p>
+<h2 id="wrap-error-错误包装">wrap error: 错误包装</h2>
+<h3 id="errorswrap-有何作用为什么不用标准库的-fmterrorfw">errors.wrap 有何作用，为什么不用标准库的 fmt.Errorf("%w")</h3>
+<p>我们先看一下标准库的源码，我们可以发现当<code>p.wrappedErr != nil</code> 的时候（也就是有 <code>%w</code>）的时候，会使用一个 <code>wrapError</code>  将错误包装，看 <code>wrapError</code>  的源码可以发现，这个方法只是包装了一下原始错误，并且可以做到附加一些文本信息，但是没有堆栈信息。</p>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Errorf</span><span class="hljs-params">(format <span class="hljs-keyword">string</span>, a ...<span class="hljs-keyword">interface</span>{})</span> <span class="hljs-title">error</span></span> {
+    p := newPrinter()
+    p.wrapErrs = <span class="hljs-literal">true</span>
+    p.doPrintf(format, a)
+    s := <span class="hljs-keyword">string</span>(p.buf)
+    <span class="hljs-keyword">var</span> err error
+    <span class="hljs-keyword">if</span> p.wrappedErr == <span class="hljs-literal">nil</span> {
+        err = errors.New(s)
+    } <span class="hljs-keyword">else</span> {
+        err = &amp;wrapError{s, p.wrappedErr}
+    }
+    p.free()
+    <span class="hljs-keyword">return</span> err
+}
+
+<span class="hljs-keyword">type</span> wrapError <span class="hljs-keyword">struct</span> {
+    msg <span class="hljs-keyword">string</span>
+    err error
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(e *wrapError)</span> <span class="hljs-title">Error</span><span class="hljs-params">()</span> <span class="hljs-title">string</span></span> {
+    <span class="hljs-keyword">return</span> e.msg
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(e *wrapError)</span> <span class="hljs-title">Unwrap</span><span class="hljs-params">()</span> <span class="hljs-title">error</span></span> {
+    <span class="hljs-keyword">return</span> e.err
+}</code></pre></div>
+<p>再看一下 <code>pkg/errors</code> 的源码，我肯可以发现除了使用 <code>withMessage</code>  附加了错误信息之外还使用<code> withStack</code>  附加了堆栈信息，这样我们在程序入口处打印日志信息的时候就可以将堆栈信息一并打出了</p>
+<div><pre class="hljs"><code><span class="hljs-comment">// Wrap returns an error annotating err with a stack trace</span>
+<span class="hljs-comment">// at the point Wrap is called, and the supplied message.</span>
+<span class="hljs-comment">// If err is nil, Wrap returns nil.</span>
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Wrap</span><span class="hljs-params">(err error, message <span class="hljs-keyword">string</span>)</span> <span class="hljs-title">error</span></span> {
+    <span class="hljs-keyword">if</span> err == <span class="hljs-literal">nil</span> {
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>
+    }
+    err = &amp;withMessage{
+        cause: err,
+        msg:   message,
+    }
+    <span class="hljs-keyword">return</span> &amp;withStack{
+        err,
+        callers(),
+    }
+}</code></pre></div>
+<h3 id="为什么不允许处处使用-errorswrap">为什么不允许处处使用 errors.Wrap</h3>
+<p>因为每一次 <code>errors.Wrap</code> 的调用都会为错误添加堆栈信息，如果处处调用那会有大量的无用堆栈<br />
+我们先看一下只有一处<code> wrap</code></p>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    fmt.Printf(<span class="hljs-string">"err: %+v"</span>, c())
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">a</span><span class="hljs-params">()</span> <span class="hljs-title">error</span></span> {
+    <span class="hljs-keyword">return</span> errors.Wrap(fmt.Errorf(<span class="hljs-string">"xxx"</span>), <span class="hljs-string">"test"</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">b</span><span class="hljs-params">()</span> <span class="hljs-title">error</span></span> {
+    <span class="hljs-keyword">return</span> a()
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">c</span><span class="hljs-params">()</span> <span class="hljs-title">error</span></span> {
+    <span class="hljs-keyword">return</span> b()
+}</code></pre></div>
+<p>看结果我们可以发现已经可以打印出全部的堆栈信息了</p>
+<div><pre class="hljs"><code>err: xxx
+test
+main.a
+        /home/ll/project/Go<span class="hljs-number">-000</span>/Week02/blog/wrap.<span class="hljs-keyword">go</span>:<span class="hljs-number">14</span>
+main.b
+        /home/ll/project/Go<span class="hljs-number">-000</span>/Week02/blog/wrap.<span class="hljs-keyword">go</span>:<span class="hljs-number">18</span>
+main.c
+        /home/ll/project/Go<span class="hljs-number">-000</span>/Week02/blog/wrap.<span class="hljs-keyword">go</span>:<span class="hljs-number">22</span>
+main.main
+        /home/ll/project/Go<span class="hljs-number">-000</span>/Week02/blog/wrap.<span class="hljs-keyword">go</span>:<span class="hljs-number">10</span>
+runtime.main
+        /usr/local/<span class="hljs-keyword">go</span>/src/runtime/proc.<span class="hljs-keyword">go</span>:<span class="hljs-number">204</span>
+runtime.goexit
+        /usr/local/<span class="hljs-keyword">go</span>/src/runtime/asm_amd64.s:<span class="hljs-number">1374</span></code></pre></div>
+<p>再看多处 wrap 的现象</p>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    fmt.Printf(<span class="hljs-string">"err: %+v"</span>, c())
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">a</span><span class="hljs-params">()</span> <span class="hljs-title">error</span></span> {
+    <span class="hljs-keyword">return</span> errors.Wrap(fmt.Errorf(<span class="hljs-string">"xxx"</span>), <span class="hljs-string">"a"</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">b</span><span class="hljs-params">()</span> <span class="hljs-title">error</span></span> {
+    <span class="hljs-keyword">return</span> errors.Wrap(a(), <span class="hljs-string">"b"</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">c</span><span class="hljs-params">()</span> <span class="hljs-title">error</span></span> {
+    <span class="hljs-keyword">return</span> errors.Wrap(b(), <span class="hljs-string">"c"</span>)
+}</code></pre></div>
+<p>可以看到每一处<code>wrap</code>都添加了一次堆栈信息</p>
+<div><pre class="hljs"><code>err: xxx
+a
+main.a
+        /home/ll/project/Go<span class="hljs-number">-000</span>/Week02/blog/wrap.<span class="hljs-keyword">go</span>:<span class="hljs-number">14</span>
+main.b
+        /home/ll/project/Go<span class="hljs-number">-000</span>/Week02/blog/wrap.<span class="hljs-keyword">go</span>:<span class="hljs-number">18</span>
+main.c
+        /home/ll/project/Go<span class="hljs-number">-000</span>/Week02/blog/wrap.<span class="hljs-keyword">go</span>:<span class="hljs-number">22</span>
+main.main
+        /home/ll/project/Go<span class="hljs-number">-000</span>/Week02/blog/wrap.<span class="hljs-keyword">go</span>:<span class="hljs-number">10</span>
+runtime.main
+        /usr/local/<span class="hljs-keyword">go</span>/src/runtime/proc.<span class="hljs-keyword">go</span>:<span class="hljs-number">204</span>
+runtime.goexit
+        /usr/local/<span class="hljs-keyword">go</span>/src/runtime/asm_amd64.s:<span class="hljs-number">1374</span>
+b
+main.b
+        /home/ll/project/Go<span class="hljs-number">-000</span>/Week02/blog/wrap.<span class="hljs-keyword">go</span>:<span class="hljs-number">18</span>
+main.c
+        /home/ll/project/Go<span class="hljs-number">-000</span>/Week02/blog/wrap.<span class="hljs-keyword">go</span>:<span class="hljs-number">22</span>
+main.main
+        /home/ll/project/Go<span class="hljs-number">-000</span>/Week02/blog/wrap.<span class="hljs-keyword">go</span>:<span class="hljs-number">10</span>
+runtime.main
+        /usr/local/<span class="hljs-keyword">go</span>/src/runtime/proc.<span class="hljs-keyword">go</span>:<span class="hljs-number">204</span>
+runtime.goexit
+        /usr/local/<span class="hljs-keyword">go</span>/src/runtime/asm_amd64.s:<span class="hljs-number">1374</span>
+c
+main.c
+        /home/ll/project/Go<span class="hljs-number">-000</span>/Week02/blog/wrap.<span class="hljs-keyword">go</span>:<span class="hljs-number">22</span>
+main.main
+        /home/ll/project/Go<span class="hljs-number">-000</span>/Week02/blog/wrap.<span class="hljs-keyword">go</span>:<span class="hljs-number">10</span>
+runtime.main
+        /usr/local/<span class="hljs-keyword">go</span>/src/runtime/proc.<span class="hljs-keyword">go</span>:<span class="hljs-number">204</span>
+runtime.goexit
+        /usr/local/<span class="hljs-keyword">go</span>/src/runtime/asm_amd64.s:<span class="hljs-number">1374</span></code></pre></div>
+<h2 id="标准库-errorsis-as-怎么判断错误">标准库 errors.Is / As 怎么判断错误</h2>
+<h3 id="errorsis">errors.Is</h3>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Is</span><span class="hljs-params">(err, target error)</span> <span class="hljs-title">bool</span></span> {
+    <span class="hljs-keyword">if</span> target == <span class="hljs-literal">nil</span> {
+        <span class="hljs-keyword">return</span> err == target
+    }
+    <span class="hljs-comment">// 通过反射判读 target 是否可以被比较</span>
+    isComparable := reflectlite.TypeOf(target).Comparable()
+    <span class="hljs-keyword">for</span> {
+        <span class="hljs-comment">// 循环判断是否相等</span>
+        <span class="hljs-keyword">if</span> isComparable &amp;&amp; err == target {
+            <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>
+        }
+        <span class="hljs-comment">// 判断是否实现了 is 接口，如果有实现就直接判断</span>
+        <span class="hljs-keyword">if</span> x, ok := err.(<span class="hljs-keyword">interface</span>{ Is(error) <span class="hljs-keyword">bool</span> }); ok &amp;&amp; x.Is(target) {
+            <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>
+        }
+
+        <span class="hljs-comment">// 去判断是否实现了 unwrap 的接口，如果实现了就进行 unwrap</span>
+        <span class="hljs-keyword">if</span> err = Unwrap(err); err == <span class="hljs-literal">nil</span> {
+            <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>
+        }
+    }
+}</code></pre></div>
+<h3 id="errorsas">errors.As</h3>
+<p>和 is 的逻辑类似，就是不断的进行 unwrap 进行比较，只要有一个相同就返回，如果一直到底都不行就返回 false</p>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">As</span><span class="hljs-params">(err error, target <span class="hljs-keyword">interface</span>{})</span> <span class="hljs-title">bool</span></span> {
+    <span class="hljs-keyword">if</span> target == <span class="hljs-literal">nil</span> {
+        <span class="hljs-built_in">panic</span>(<span class="hljs-string">"errors: target cannot be nil"</span>)
+    }
+    val := reflectlite.ValueOf(target)
+    typ := val.Type()
+    <span class="hljs-keyword">if</span> typ.Kind() != reflectlite.Ptr || val.IsNil() {
+        <span class="hljs-built_in">panic</span>(<span class="hljs-string">"errors: target must be a non-nil pointer"</span>)
+    }
+    <span class="hljs-keyword">if</span> e := typ.Elem(); e.Kind() != reflectlite.Interface &amp;&amp; !e.Implements(errorType) {
+        <span class="hljs-built_in">panic</span>(<span class="hljs-string">"errors: *target must be interface or implement error"</span>)
+    }
+    targetType := typ.Elem()
+    <span class="hljs-keyword">for</span> err != <span class="hljs-literal">nil</span> {
+        <span class="hljs-keyword">if</span> reflectlite.TypeOf(err).AssignableTo(targetType) {
+            val.Elem().Set(reflectlite.ValueOf(err))
+            <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>
+        }
+        <span class="hljs-keyword">if</span> x, ok := err.(<span class="hljs-keyword">interface</span>{ As(<span class="hljs-keyword">interface</span>{}) <span class="hljs-keyword">bool</span> }); ok &amp;&amp; x.As(target) {
+            <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>
+        }
+        err = Unwrap(err)
+    }
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>
+}</code></pre></div>
+]]></content:encoded>
+        </item>
         <item>
             <title><![CDATA[Golang项目目录结构]]></title>
             <guid>f2a72a9994004b52a6cf5ce91d394c31</guid>
