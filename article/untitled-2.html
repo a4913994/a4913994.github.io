@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+<link rel="stylesheet" href="/_assets/main.css" />
+
+    <title>如何大规模配置裸机电信云平台 - 刘宪东的笔记</title>
+  </head>
+  <body>
+    <div class="main">
+      <nav class="navigation">
+        <a href="/">刘宪东的笔记</a>
+      </nav>
+      <article>
+        <header>
+          <h1 class="article-title">如何大规模配置裸机电信云平台</h1>
+          <div class="article-info">
+            <div>
+              <span>创建时间：<time datetime="1675269575777">2023-02-02 00:39</time></span>
+              <span>更新时间：<time datetime="1675270917470">2023-02-02 01:01</time></span>
+              
+              <span>标签: <span class="keyword">云计算</span></span>
+              
+            </div>
+          </div>
+        </header>
+        <div class="article-content markdown-body"><blockquote>
+<p>使用通过 OpenShift 实施的 Kubernetes 大规模通过和配置裸机集群。</p>
+</blockquote>
+<p>自动化系统供应对于 IT 或网络系统管理员来说至关重要。许多技术和标准试图解决这个问题；有些是供应商中立的，有些是特定于供应商的。后者在无线网络中尤其如此，其中每个网络设备提供商都需要其关联的元素/网络管理系统来控制其网络元素。</p>
+<p>鉴于无线电接入网络 (RAN) 分解和解聚的兴起，Open RAN 等标准机构专注于定义 RAN 组件无线电单元 (RU)、分布式单元 (DU) 和中央单元 (CU) 之间的可互操作接口。与此同时，在 O-RAN 联盟的领导下，行业推动 RAN 组件虚拟化和云化，因此它们的生命周期可以独立于运行它们的平台进行管理。这种由商用现成 (COTS) 服务器组成的平台需要高度配置才能发挥 5G 的优势。</p>
+<p><img src="/_resources/480c1db4ac474a9fad80ca3db516e577.png" /></p>
+<center style="font-size:14px;color:#C0C0C0;text-decoration:underline" class="jop-noMdConv">Alexis de Talhouët &amp; Federico Rossi, CC BY-SA 4.0</center>
+<p>这带来的挑战之一是大规模供应和配置该平台的能力；一个电信服务提供商可能有数千个 RAN 部署。该平台包括服务器和管理程序或容器编排系统。</p>
+<p>本文将使用OpenShift实现的容器编排系统Kubernetes；特别是 Red Hat OpenShift 4.11。</p>
+<h2 id="解决方案概述">解决方案概述</h2>
+<p>与 Red Hat 和合作伙伴一起部署云原生 5G 开放式 RAN 提出了要求和高级方法。它包含三个主要元素：</p>
+<ul>
+<li>用于大规模部署的云原生平台</li>
+<li>GitOps 的自动化和操作</li>
+<li>蓬勃发展的合作伙伴生态系统</li>
+</ul>
+<p>该解决方案旨在通过利用 Red Hat OpenShift 提供的一组广为采用的通用 API（无论是在中央、区域还是边缘区域）在整个环境中提供相同的管理、操作和用户体验。该水平平台不一定是一个实例，而是一组共同管理的实例。</p>
+<p>这些 RAN 部署模型使用一个管理环境来控制其他模型，将它们视为牛而不是宠物。它被称为管理集群或中心集群。远程环境称为托管集群。</p>
+<p>下图描述了由 Red Hat Advanced Cluster Management (RHACM) 启用的中央实体如何配置和操作由以下任何一项组成的远程环境：</p>
+<ul>
+<li>一个完整的 OpenShift 集群（三个控制平面和至少两个计算节点）</li>
+<li>一个紧凑的 OpenShift 集群（三个节点同时充当控制和计算）</li>
+<li>由一个节点组成的单节点OpenShift</li>
+<li>远程工作节点（远程连接到控制平面，托管在管理集群中，或远程）</li>
+</ul>
+<p><img src="/_resources/95b6c8a6deb2409da084e89c743082a2.png" /></p>
+<p>最后，要定义一次，随处部署，并持续协调运行状态与真实来源，请遵循 GitOps 方法，例如 Red Hat OpenShift GitOps。</p>
+<p>大规模采用 GitOps 存在不同的实施模型，但这些不是本文的主题。</p>
+<p><img src="/_resources/84aa23769b3640ce89928c8fb45f5958.png" /></p>
+<h2 id="远程裸机集群生命周期管理">远程裸机集群生命周期管理</h2>
+<p>OpenStack 社区首先通过 Ironic 项目解决了这一需求。目标是通过通用（预引导执行环境 [PXE] 和智能平台管理接口 [IPMI]）和特定于供应商的远程管理协议（底板管理控制器 [BMC]）来管理硬件。该项目成为 <a title="https://metal3.io/" href="https://metal3.io/">Metal3</a> 的垫脚石，为 Kubernetes 启用了此类功能。</p>
+<p>使用<a title="https://console.redhat.com/openshift/assisted-installer/clusters" href="https://console.redhat.com/openshift/assisted-installer/clusters">红帽 SaaS 辅助安装程序平台</a>在红帽混合云控制台上部署第一个集群非常简单，即使您使用自己的映像注册表也是如此。阅读<a title="https://cloud.redhat.com/blog/making-openshift-on-bare-metal-easy" href="https://cloud.redhat.com/blog/making-openshift-on-bare-metal-easy">使裸机上的 OpenShift 变得简单</a>，以全面了解该过程。</p>
+<p>主要要求是出站互联网访问；不需要入站连接。辅助安装程序是一项服务：</p>
+<ul>
+<li>允许基础架构管理员生成发现图像</li>
+<li>发现基础架构管理员使用发现映像启动的主机</li>
+<li>允许集群创建者从可用主机定义集群</li>
+<li>在开始之前验证安装</li>
+<li>监控装置</li>
+<li>收集日志</li>
+<li>发布指标供内部使用</li>
+<li>允许集群创建者将主机添加到现有集群</li>
+</ul>
+<p>创建第一个集群后，您必须安装 RHACM 和 Red Hat OpenShift GitOps。接下来，您可以按照 GitOps 方法论来创建和配置后续集群。</p>
+<p><a title="https://cloud.redhat.com/blog/zero-touch-provisioning-for-factory-workflows" href="https://cloud.redhat.com/blog/zero-touch-provisioning-for-factory-workflows">工厂工作流程的零接触配置</a>是了解启用裸机服务器远程配置以实现全自动集群安装的策略的好方法。它在引擎盖下使用 Metal3 并严重依赖 BMC 和配置接口 MAC 地址。</p>
+<p>在高层次上，您将使用工厂集群部署一个独立的集群，如下所示：</p>
+<ol>
+<li>安装工厂集群：创建工厂集群（管理）创建OpenShift集群。</li>
+<li>创建边缘集群：使用工厂集群在 OEM 硬件上创建完全可操作的 OpenShift 集群（辐射）。</li>
+<li>配置边缘集群：在最终客户站点（边缘）解压并配置 OpenShift 集群。</li>
+</ol>
+<p>此外，RHACM 还提供站点规划和策略模板，支持大规模部署和配置集群。</p>
+<p>在<a title="https://docs.openshift.com/container-platform/4.11/scalability_and_performance/ztp-deploying-disconnected.html" href="https://docs.openshift.com/container-platform/4.11/scalability_and_performance/ztp-deploying-disconnected.html">文档</a>中查找更多详细信息。</p>
+<p><img src="/_resources/8c611371be344eb88c49de5a88b8fa5d.png" /></p>
+<p>##. 拓扑感知生命周期管理</p>
+<p>需要一个强大的基础设施生命周期管理工具来满足在整个生命周期内大规模管理基础设施的技术和业务需求。</p>
+<p>它应该考虑以下几点：</p>
+<ol>
+<li>定义最低可用性要求的服务级别协议 (SLA)</li>
+<li>需要逐步向队列推出的操作程序（例如，作为初始冒烟测试升级的金丝雀集群）</li>
+<li>大规模自动化要求</li>
+</ol>
+<p>拓扑感知生命周期操作员 （TALO） 在操作环境中大规模管理这些事件。</p>
+<p><a title="https://www.redhat.com/en/engage/discover-automating-edge-20220510?intcmp=7013a0000025wJwAAI" href="https://www.redhat.com/en/engage/discover-automating-edge-20220510?intcmp=7013a0000025wJwAAI">Automating the last mile: Ensuring consistency and scalability at the edge</a></p>
+<p>一个示例用例是具有 RAN 覆盖范围的大型集群 （DU） 队列。更新分波次应用，以确保保持足够的 RAN 覆盖范围。SLA 指定覆盖区域内维护事件期间不可用群集的最大数量。</p>
+<p><img src="/_resources/c3702dd1798242aebddf8376878c10df.png" /></p>
+<ul>
+<li>绿色和蓝色集群（集群组升级 [CGU] 1 和 CGU 2）配对以提供服务覆盖范围重叠。</li>
+<li>操作程序规定可以更新三个集群（最多）。</li>
+<li>CGU 1 以 3 个为批次更新绿色簇。</li>
+<li>CGU 2 与 CGU 1 链接，并在 CGU 1 完成时以三个为一组更新蓝色集群。</li>
+</ul>
+<p>TALO 通过提供集成的备份和恢复（回滚）功能，将维护窗口期间的风险降至最低。此功能可创建升级前备份，并提供在升级失败时快速恢复单节点 OpenShift （SNO） 的过程。如果升级失败，此功能允许将 SNO 恢复到以前版本的 OpenShift 的工作状态，而无需重新配置应用程序。</p>
+<p>群集升级需要在维护时段内完成。该窗口还需要包括解决失败升级的时间。必须将 OpenShift 版本工件下载到集群才能进行升级。某些群集托管注册表的中心群集的带宽可能有限，因此很难在所需时间内完成升级。在升级之前，群集上必须存在所需的项目，以确保升级适合维护时段。</p>
+<p>为了实现这些操作过程，TALO 以声明性方式管理一个或多个 OpenShift 集群的 RHACM 策略部署。</p>
+<h2 id="云原生平台配置">云原生平台配置</h2>
+<p>该方法可以大规模部署和管理群集。查看每个群集的较低级别组件以启用性能调整。这些是构成上述政策的要素。</p>
+<p>目标是使用 Kubernetes 资源模型完成 100% 的硬件配置，支持将预期配置声明为代码，并通过 GitOps 促进操作管理。</p>
+<p>下图显示了节点操作系统和所有支持的运算符，启用了特定的节点配置。</p>
+<p><img src="/_resources/fa48f03b23a94197ac92586764c46514.png" /></p>
+<p>以下是5G核心网应用最重要的运营商：</p>
+<ul>
+<li><a title="https://docs.openshift.com/container-platform/4.11/nodes/nodes/nodes-node-tuning-operator.html" href="https://docs.openshift.com/container-platform/4.11/nodes/nodes/nodes-node-tuning-operator.html">Node Tuning Operator</a>可用于优化基础操作系统以减少延迟。它使用性能配置文件，并负责：
+<ul>
+<li>HugePages</li>
+<li>Topology manager policy (NUMA)</li>
+<li>CPU reservation and isolation</li>
+<li>Power consumption scheme</li>
+<li>Real-time kernel</li>
+<li>Network interface controller (NIC) queues tuning (DPDK)</li>
+<li>IRQ dynamic load-balancing</li>
+</ul>
+</li>
+<li><a title="https://docs.openshift.com/container-platform/4.11/hardware_enablement/psap-special-resource-operator.html" href="https://docs.openshift.com/container-platform/4.11/hardware_enablement/psap-special-resource-operator.html">Special Resource Operator</a> 允许您加载特定的内核模块和设备驱动程序。此组件仍处于技术预览阶段，这意味着不应在生产中使用它。如果要使用它，建议获取指导。</li>
+<li><a title="https://docs.openshift.com/container-platform/4.11/networking/k8s_nmstate/k8s-nmstate-about-the-k8s-nmstate-operator.html" href="https://docs.openshift.com/container-platform/4.11/networking/k8s_nmstate/k8s-nmstate-about-the-k8s-nmstate-operator.html">NMState Operator</a> 启用接口配置，无论其类型如何。它通常用于定义绑定接口以及 VLAN 子接口。</li>
+<li><a title="https://docs.openshift.com/container-platform/4.11/networking/hardware_networks/about-sriov.html" href="https://docs.openshift.com/container-platform/4.11/networking/hardware_networks/about-sriov.html">SR-IOV Operator</a>允许通过 SriovNetworkNodePolicy 配置 SR-IOV 支持的网卡，该策略配置：
+<ul>
+<li>MTU</li>
+<li>Number of VFs</li>
+<li>NIC selector</li>
+<li>Device type (whether vfio-pci or netdev)<br />
+需要 SriovNetwork 才能使用创建的设备。这将产生一个 NetworkAttachmentDefinition，然后 Pod 可以通过注释使用该定义。</li>
+</ul>
+</li>
+</ul>
+<p>5G RAN 或其他类型的工作负载还有其他几个运营商，例如Precision Time Protocol Operator, Intel Device Plugin Operator, FEC Operator, NVIDIA GPU Operator, and Network Operator.。每个都旨在抽象特定于硬件的功能，并使用 Kubernetes 资源模型启用其配置。</p>
+<p>注意：许多operator支持告警、监控、服务保障、远程管理、证书管理等。</p>
+<p>按应用程序和基础架构类型定义性能配置文件是释放性能的关键。</p>
+<p>下图是 DU 性能配置文件所需的运算符示例。</p>
+<p><img src="/_resources/cb79ca5609c94a50b6850813dca7dd0b.png" /></p>
+<h2 id="展望未来">展望未来</h2>
+<p>大规模预置和配置裸机集群的能力现已成为现实。但其他挑战依然存在，包括：</p>
+<ul>
+<li>使用统一的管理平台观察所有这些环境进行操作</li>
+<li>实现自主系统（平台和网络），促进服务水平保证的可持续性</li>
+<li>用于无缝应用通信的多集群网络（跨中央和边缘集群的分布式 SBA 5G 核心网）</li>
+<li>增强调度能力，实现可持续计算</li>
+</ul>
+<p>请继续关注更多信息。同时，请随时查看我们在 <a title="https://www.redhat.com/en/events/red-hat-kubecon-cloudnativecon-na-2022" href="https://www.redhat.com/en/events/red-hat-kubecon-cloudnativecon-na-2022">KubeCon NA 2022</a> 上完成和展示的一些进展。</p>
+<p><a title="https://www.redhat.com/architect/cloud-provisioning-scale" href="https://www.redhat.com/architect/cloud-provisioning-scale">原文连接</a></p>
+</div>
+      </article>
+    </div>
+  </body>
+</html>
