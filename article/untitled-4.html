@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+<link rel="stylesheet" href="/_assets/main.css" />
+
+    <title>嵌入式时间序列数据库的具体时间 - 刘宪东的笔记</title>
+  <link rel="stylesheet" href="/_markdown_plugin_assets/highlight.js/atom-one-light.css" /></head>
+  <body>
+    <div class="main">
+      <nav class="navigation">
+        <a href="/">刘宪东的笔记</a>
+      </nav>
+      <article>
+        <header>
+          <h1 class="article-title">嵌入式时间序列数据库的具体时间</h1>
+          <div class="article-info">
+            <div>
+              <span>创建时间：<time datetime="1681221286773">2023-04-11 21:54</time></span>
+              <span>更新时间：<time datetime="1681222023293">2023-04-11 22:07</time></span>
+              
+            </div>
+          </div>
+        </header>
+        <div class="article-content markdown-body"><p>Here's an example of a simple embedded time series database using BoltDB as the storage engine in a Golang program:</p>
+<ol>
+<li>First, install the BoltDB package:</li>
+</ol>
+<div><pre class="hljs"><code>go get github.com/boltdb/bolt</code></pre></div>
+<ol start="2">
+<li>Create a new file, timeseries.go, and import the required packages:</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-keyword">package</span> main
+
+<span class="hljs-keyword">import</span> (
+    <span class="hljs-string">"bytes"</span>
+    <span class="hljs-string">"encoding/binary"</span>
+    <span class="hljs-string">"encoding/gob"</span>
+    <span class="hljs-string">"log"</span>
+    <span class="hljs-string">"time"</span>
+
+    <span class="hljs-string">"github.com/boltdb/bolt"</span>
+)</code></pre></div>
+<ol start="3">
+<li>Define the data structures for the time series data point:</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-keyword">type</span> DataPoint <span class="hljs-keyword">struct</span> {
+    Timestamp time.Time
+    Value     <span class="hljs-keyword">float64</span>
+}</code></pre></div>
+<ol start="4">
+<li>Initialize the BoltDB database:</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">initDB</span><span class="hljs-params">()</span> *<span class="hljs-title">bolt</span>.<span class="hljs-title">DB</span></span> {
+    db, err := bolt.Open(<span class="hljs-string">"timeseries.db"</span>, <span class="hljs-number">0600</span>, <span class="hljs-literal">nil</span>)
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        log.Fatal(err)
+    }
+    <span class="hljs-keyword">return</span> db
+}</code></pre></div>
+<ol start="5">
+<li>Create a bucket for storing time series data:</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">createBucket</span><span class="hljs-params">(db *bolt.DB, bucketName <span class="hljs-keyword">string</span>)</span></span> {
+    err := db.Update(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(tx *bolt.Tx)</span> <span class="hljs-title">error</span></span> {
+        _, err := tx.CreateBucketIfNotExists([]<span class="hljs-keyword">byte</span>(bucketName))
+        <span class="hljs-keyword">return</span> err
+    })
+
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        log.Fatal(err)
+    }
+}</code></pre></div>
+<ol start="6">
+<li>Implement the <code>writeDataPoint</code> function:</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">writeDataPoint</span><span class="hljs-params">(db *bolt.DB, bucketName <span class="hljs-keyword">string</span>, dataPoint DataPoint)</span></span> {
+    err := db.Update(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(tx *bolt.Tx)</span> <span class="hljs-title">error</span></span> {
+        b := tx.Bucket([]<span class="hljs-keyword">byte</span>(bucketName))
+
+        <span class="hljs-comment">// Serialize the DataPoint</span>
+        buf := bytes.NewBuffer(<span class="hljs-literal">nil</span>)
+        err := gob.NewEncoder(buf).Encode(dataPoint)
+        <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+            <span class="hljs-keyword">return</span> err
+        }
+
+        <span class="hljs-comment">// Write the serialized DataPoint to the bucket</span>
+        key := <span class="hljs-built_in">make</span>([]<span class="hljs-keyword">byte</span>, <span class="hljs-number">8</span>)
+        binary.BigEndian.PutUint64(key, <span class="hljs-keyword">uint64</span>(dataPoint.Timestamp.UnixNano()))
+        <span class="hljs-keyword">return</span> b.Put(key, buf.Bytes())
+    })
+
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        log.Fatal(err)
+    }
+}</code></pre></div>
+<ol start="7">
+<li>Implement the <code>readDataPoints</code> function:</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">readDataPoints</span><span class="hljs-params">(db *bolt.DB, bucketName <span class="hljs-keyword">string</span>)</span> []<span class="hljs-title">DataPoint</span></span> {
+    <span class="hljs-keyword">var</span> dataPoints []DataPoint
+
+    err := db.View(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(tx *bolt.Tx)</span> <span class="hljs-title">error</span></span> {
+        b := tx.Bucket([]<span class="hljs-keyword">byte</span>(bucketName))
+
+        c := b.Cursor()
+        <span class="hljs-keyword">for</span> k, v := c.First(); k != <span class="hljs-literal">nil</span>; k, v = c.Next() {
+            <span class="hljs-keyword">var</span> dataPoint DataPoint
+            err := gob.NewDecoder(bytes.NewReader(v)).Decode(&amp;dataPoint)
+            <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+                <span class="hljs-keyword">return</span> err
+            }
+            dataPoints = <span class="hljs-built_in">append</span>(dataPoints, dataPoint)
+        }
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>
+    })
+
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        log.Fatal(err)
+    }
+
+    <span class="hljs-keyword">return</span> dataPoints
+}</code></pre></div>
+<ol start="8">
+<li>Use the database in the <code>main</code> function:</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    db := initDB()
+    <span class="hljs-keyword">defer</span> db.Close()
+
+    bucketName := <span class="hljs-string">"timeseries"</span>
+
+    createBucket(db, bucketName)
+
+    dataPoint := DataPoint{
+        Timestamp: time.Now(),
+        Value:     <span class="hljs-number">42.0</span>,
+    }
+    writeDataPoint(db, bucketName, dataPoint)
+
+    dataPoints := readDataPoints(db, bucketName)
+    log.Println(dataPoints)
+}</code></pre></div>
+<p>This example demonstrates a very basic embedded time series database in Golang using BoltDB. You can extend this code to implement more advanced features like data partitioning, indexing, querying capabilities, and data management strategies as needed.</p>
+<h2 id="索引的设计">索引的设计</h2>
+<p>为时间序列数据库设计索引有助于提高数据检索效率和查询性能。在提供的使用BoltDB的示例中，您可以使用时间戳本身作为键，这已经提供了一种简单的索引形式。然而，如果你需要更高级的索引策略，你可以考虑以下方法:</p>
+<ol>
+<li>Time-based partitioning:<br />
+根据时间戳将时间序列数据划分为更小的分区或bucket。每个分区可以表示一个固定的时间范围，例如一个小时、一天或一周。将每个分区单独存储在一个BoltDB桶中，可以提高数据的组织性和查询性能。</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">partitionKey</span><span class="hljs-params">(timestamp time.Time)</span> <span class="hljs-title">string</span></span> {
+    <span class="hljs-comment">// Example: create partitions by day</span>
+    <span class="hljs-keyword">return</span> timestamp.Format(<span class="hljs-string">"2006-01-02"</span>)
+}</code></pre></div>
+<ol start="2">
+<li>Secondary indexing:<br />
+如果时间序列数据具有附加属性，例如标记或标签，则可以创建辅助索引以加快基于这些属性的查询速度。要实现二级索引，您可以创建额外的BoltDB桶来存储对主数据点的引用。</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">writeSecondaryIndex</span><span class="hljs-params">(db *bolt.DB, indexBucketName <span class="hljs-keyword">string</span>, dataPointKey []<span class="hljs-keyword">byte</span>, indexValue <span class="hljs-keyword">string</span>)</span></span> {
+    err := db.Update(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(tx *bolt.Tx)</span> <span class="hljs-title">error</span></span> {
+        b := tx.Bucket([]<span class="hljs-keyword">byte</span>(indexBucketName))
+
+        <span class="hljs-comment">// Store the data point key with the index value</span>
+        <span class="hljs-keyword">return</span> b.Put([]<span class="hljs-keyword">byte</span>(indexValue), dataPointKey)
+    })
+
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        log.Fatal(err)
+    }
+}</code></pre></div>
+<ol start="3">
+<li>Time-based indexing:<br />
+创建一个额外的索引，以加快需要特定时间范围或聚合的查询。例如，您可以创建一个索引来存储每个分区的最小值、最大值或平均值。这有助于加快需要在给定时间范围内计算汇总统计信息的查询。</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-keyword">type</span> TimeRangeSummary <span class="hljs-keyword">struct</span> {
+    Min <span class="hljs-keyword">float64</span>
+    Max <span class="hljs-keyword">float64</span>
+    Avg <span class="hljs-keyword">float64</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">writeTimeRangeIndex</span><span class="hljs-params">(db *bolt.DB, indexBucketName <span class="hljs-keyword">string</span>, partitionKey <span class="hljs-keyword">string</span>, summary TimeRangeSummary)</span></span> {
+    err := db.Update(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(tx *bolt.Tx)</span> <span class="hljs-title">error</span></span> {
+        b := tx.Bucket([]<span class="hljs-keyword">byte</span>(indexBucketName))
+
+        <span class="hljs-comment">// Serialize the summary</span>
+        buf := bytes.NewBuffer(<span class="hljs-literal">nil</span>)
+        err := gob.NewEncoder(buf).Encode(summary)
+        <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+            <span class="hljs-keyword">return</span> err
+        }
+
+        <span class="hljs-comment">// Write the serialized summary to the index bucket</span>
+        <span class="hljs-keyword">return</span> b.Put([]<span class="hljs-keyword">byte</span>(partitionKey), buf.Bytes())
+    })
+
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        log.Fatal(err)
+    }
+}</code></pre></div>
+<ol start="4">
+<li>Updating and maintaining indexes:<br />
+在添加新数据点或修改现有数据点时，请确保相应更新相应的索引。这可能需要更新二级索引或基于时间的索引结构，例如时间范围摘要统计信息。</li>
+</ol>
+<p>记住，建立索引是有代价的。虽然它可以显著提高查询性能，但也会增加数据库设计的复杂性，并增加写入操作的开销。必须分析应用程序的查询模式和需求，以确定最合适的索引策略。</p>
+</div>
+      </article>
+    </div>
+  </body>
+</html>

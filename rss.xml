@@ -4,9 +4,258 @@
         <title></title>
         <link>undefined</link>
         <description>undefined</description>
-        <lastBuildDate>Tue, 11 Apr 2023 14:11:57 GMT</lastBuildDate>
+        <lastBuildDate>Tue, 11 Apr 2023 14:13:20 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>Joplin Pages Publisher</generator>
+        <item>
+            <title><![CDATA[嵌入式时间序列数据库的具体时间]]></title>
+            <guid>d13a4eb729314e1bb452bd2842e9f785</guid>
+            <pubDate>Tue, 11 Apr 2023 13:54:46 GMT</pubDate>
+            <content:encoded><![CDATA[<p>Here's an example of a simple embedded time series database using BoltDB as the storage engine in a Golang program:</p>
+<ol>
+<li>First, install the BoltDB package:</li>
+</ol>
+<div><pre class="hljs"><code>go get github.com/boltdb/bolt</code></pre></div>
+<ol start="2">
+<li>Create a new file, timeseries.go, and import the required packages:</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-keyword">package</span> main
+
+<span class="hljs-keyword">import</span> (
+    <span class="hljs-string">"bytes"</span>
+    <span class="hljs-string">"encoding/binary"</span>
+    <span class="hljs-string">"encoding/gob"</span>
+    <span class="hljs-string">"log"</span>
+    <span class="hljs-string">"time"</span>
+
+    <span class="hljs-string">"github.com/boltdb/bolt"</span>
+)</code></pre></div>
+<ol start="3">
+<li>Define the data structures for the time series data point:</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-keyword">type</span> DataPoint <span class="hljs-keyword">struct</span> {
+    Timestamp time.Time
+    Value     <span class="hljs-keyword">float64</span>
+}</code></pre></div>
+<ol start="4">
+<li>Initialize the BoltDB database:</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">initDB</span><span class="hljs-params">()</span> *<span class="hljs-title">bolt</span>.<span class="hljs-title">DB</span></span> {
+    db, err := bolt.Open(<span class="hljs-string">"timeseries.db"</span>, <span class="hljs-number">0600</span>, <span class="hljs-literal">nil</span>)
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        log.Fatal(err)
+    }
+    <span class="hljs-keyword">return</span> db
+}</code></pre></div>
+<ol start="5">
+<li>Create a bucket for storing time series data:</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">createBucket</span><span class="hljs-params">(db *bolt.DB, bucketName <span class="hljs-keyword">string</span>)</span></span> {
+    err := db.Update(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(tx *bolt.Tx)</span> <span class="hljs-title">error</span></span> {
+        _, err := tx.CreateBucketIfNotExists([]<span class="hljs-keyword">byte</span>(bucketName))
+        <span class="hljs-keyword">return</span> err
+    })
+
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        log.Fatal(err)
+    }
+}</code></pre></div>
+<ol start="6">
+<li>Implement the <code>writeDataPoint</code> function:</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">writeDataPoint</span><span class="hljs-params">(db *bolt.DB, bucketName <span class="hljs-keyword">string</span>, dataPoint DataPoint)</span></span> {
+    err := db.Update(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(tx *bolt.Tx)</span> <span class="hljs-title">error</span></span> {
+        b := tx.Bucket([]<span class="hljs-keyword">byte</span>(bucketName))
+
+        <span class="hljs-comment">// Serialize the DataPoint</span>
+        buf := bytes.NewBuffer(<span class="hljs-literal">nil</span>)
+        err := gob.NewEncoder(buf).Encode(dataPoint)
+        <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+            <span class="hljs-keyword">return</span> err
+        }
+
+        <span class="hljs-comment">// Write the serialized DataPoint to the bucket</span>
+        key := <span class="hljs-built_in">make</span>([]<span class="hljs-keyword">byte</span>, <span class="hljs-number">8</span>)
+        binary.BigEndian.PutUint64(key, <span class="hljs-keyword">uint64</span>(dataPoint.Timestamp.UnixNano()))
+        <span class="hljs-keyword">return</span> b.Put(key, buf.Bytes())
+    })
+
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        log.Fatal(err)
+    }
+}</code></pre></div>
+<ol start="7">
+<li>Implement the <code>readDataPoints</code> function:</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">readDataPoints</span><span class="hljs-params">(db *bolt.DB, bucketName <span class="hljs-keyword">string</span>)</span> []<span class="hljs-title">DataPoint</span></span> {
+    <span class="hljs-keyword">var</span> dataPoints []DataPoint
+
+    err := db.View(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(tx *bolt.Tx)</span> <span class="hljs-title">error</span></span> {
+        b := tx.Bucket([]<span class="hljs-keyword">byte</span>(bucketName))
+
+        c := b.Cursor()
+        <span class="hljs-keyword">for</span> k, v := c.First(); k != <span class="hljs-literal">nil</span>; k, v = c.Next() {
+            <span class="hljs-keyword">var</span> dataPoint DataPoint
+            err := gob.NewDecoder(bytes.NewReader(v)).Decode(&amp;dataPoint)
+            <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+                <span class="hljs-keyword">return</span> err
+            }
+            dataPoints = <span class="hljs-built_in">append</span>(dataPoints, dataPoint)
+        }
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>
+    })
+
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        log.Fatal(err)
+    }
+
+    <span class="hljs-keyword">return</span> dataPoints
+}</code></pre></div>
+<ol start="8">
+<li>Use the database in the <code>main</code> function:</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    db := initDB()
+    <span class="hljs-keyword">defer</span> db.Close()
+
+    bucketName := <span class="hljs-string">"timeseries"</span>
+
+    createBucket(db, bucketName)
+
+    dataPoint := DataPoint{
+        Timestamp: time.Now(),
+        Value:     <span class="hljs-number">42.0</span>,
+    }
+    writeDataPoint(db, bucketName, dataPoint)
+
+    dataPoints := readDataPoints(db, bucketName)
+    log.Println(dataPoints)
+}</code></pre></div>
+<p>This example demonstrates a very basic embedded time series database in Golang using BoltDB. You can extend this code to implement more advanced features like data partitioning, indexing, querying capabilities, and data management strategies as needed.</p>
+<h2 id="索引的设计">索引的设计</h2>
+<p>为时间序列数据库设计索引有助于提高数据检索效率和查询性能。在提供的使用BoltDB的示例中，您可以使用时间戳本身作为键，这已经提供了一种简单的索引形式。然而，如果你需要更高级的索引策略，你可以考虑以下方法:</p>
+<ol>
+<li>Time-based partitioning:<br />
+根据时间戳将时间序列数据划分为更小的分区或bucket。每个分区可以表示一个固定的时间范围，例如一个小时、一天或一周。将每个分区单独存储在一个BoltDB桶中，可以提高数据的组织性和查询性能。</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">partitionKey</span><span class="hljs-params">(timestamp time.Time)</span> <span class="hljs-title">string</span></span> {
+    <span class="hljs-comment">// Example: create partitions by day</span>
+    <span class="hljs-keyword">return</span> timestamp.Format(<span class="hljs-string">"2006-01-02"</span>)
+}</code></pre></div>
+<ol start="2">
+<li>Secondary indexing:<br />
+如果时间序列数据具有附加属性，例如标记或标签，则可以创建辅助索引以加快基于这些属性的查询速度。要实现二级索引，您可以创建额外的BoltDB桶来存储对主数据点的引用。</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">writeSecondaryIndex</span><span class="hljs-params">(db *bolt.DB, indexBucketName <span class="hljs-keyword">string</span>, dataPointKey []<span class="hljs-keyword">byte</span>, indexValue <span class="hljs-keyword">string</span>)</span></span> {
+    err := db.Update(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(tx *bolt.Tx)</span> <span class="hljs-title">error</span></span> {
+        b := tx.Bucket([]<span class="hljs-keyword">byte</span>(indexBucketName))
+
+        <span class="hljs-comment">// Store the data point key with the index value</span>
+        <span class="hljs-keyword">return</span> b.Put([]<span class="hljs-keyword">byte</span>(indexValue), dataPointKey)
+    })
+
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        log.Fatal(err)
+    }
+}</code></pre></div>
+<ol start="3">
+<li>Time-based indexing:<br />
+创建一个额外的索引，以加快需要特定时间范围或聚合的查询。例如，您可以创建一个索引来存储每个分区的最小值、最大值或平均值。这有助于加快需要在给定时间范围内计算汇总统计信息的查询。</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-keyword">type</span> TimeRangeSummary <span class="hljs-keyword">struct</span> {
+    Min <span class="hljs-keyword">float64</span>
+    Max <span class="hljs-keyword">float64</span>
+    Avg <span class="hljs-keyword">float64</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">writeTimeRangeIndex</span><span class="hljs-params">(db *bolt.DB, indexBucketName <span class="hljs-keyword">string</span>, partitionKey <span class="hljs-keyword">string</span>, summary TimeRangeSummary)</span></span> {
+    err := db.Update(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(tx *bolt.Tx)</span> <span class="hljs-title">error</span></span> {
+        b := tx.Bucket([]<span class="hljs-keyword">byte</span>(indexBucketName))
+
+        <span class="hljs-comment">// Serialize the summary</span>
+        buf := bytes.NewBuffer(<span class="hljs-literal">nil</span>)
+        err := gob.NewEncoder(buf).Encode(summary)
+        <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+            <span class="hljs-keyword">return</span> err
+        }
+
+        <span class="hljs-comment">// Write the serialized summary to the index bucket</span>
+        <span class="hljs-keyword">return</span> b.Put([]<span class="hljs-keyword">byte</span>(partitionKey), buf.Bytes())
+    })
+
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        log.Fatal(err)
+    }
+}</code></pre></div>
+<ol start="4">
+<li>Updating and maintaining indexes:<br />
+在添加新数据点或修改现有数据点时，请确保相应更新相应的索引。这可能需要更新二级索引或基于时间的索引结构，例如时间范围摘要统计信息。</li>
+</ol>
+<p>记住，建立索引是有代价的。虽然它可以显著提高查询性能，但也会增加数据库设计的复杂性，并增加写入操作的开销。必须分析应用程序的查询模式和需求，以确定最合适的索引策略。</p>
+]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[如何设计嵌入式时间序列数据库]]></title>
+            <guid>e51232f5bfe94e348d8ed41115243834</guid>
+            <pubDate>Tue, 11 Apr 2023 13:48:29 GMT</pubDate>
+            <content:encoded><![CDATA[<p>在Golang程序中设计嵌入式时间序列数据库涉及一系列步骤，从选择合适的存储引擎到实现数据管理策略。下面是一个高级指南，帮助您在Golang中设计和实现嵌入式时间序列数据库:</p>
+<ul>
+<li>
+<p>选择存储引擎: 对于嵌入式时间序列数据库，可以考虑使用嵌入式键值存储引擎，如BoltDB、Badger或LevelDB。这些引擎轻量级、快速且易于集成到Golang应用程序中。</p>
+</li>
+<li>
+<p>定义数据模型: 设计一个有效地表示时间序列数据的数据模型。使用<code>structs</code>或<code>protobuf</code>这样的结构来定义数据模式。考虑使用时间戳作为键，使用序列化的数据点作为值，以实现高效的存储和检索。</p>
+</li>
+<li>
+<p>设置存储引擎:</p>
+<ul>
+<li>将选择的存储引擎库导入到Golang程序中。</li>
+<li>配置和初始化存储引擎，创建数据库实例。</li>
+<li>实现打开、关闭和管理数据库连接的方法。</li>
+</ul>
+</li>
+<li>
+<p>实现数据存储和检索:</p>
+<ul>
+<li>创建从存储引擎写入和读取数据点的方法。</li>
+<li>使用编码技术(如协议缓冲区、JSON或MessagePack)序列化和反序列化数据点。</li>
+<li>使用批写和压缩优化存储和写性能。</li>
+</ul>
+</li>
+<li>
+<p>设计索引和分区:</p>
+<ul>
+<li>通过根据数据点的时间戳将数据点分组到桶中，实现基于时间的分区。</li>
+<li>创建索引以实现高效的数据检索和查询。</li>
+<li>利用存储引擎的内置索引功能或实现自定义索引解决方案。</li>
+</ul>
+</li>
+<li>
+<p>实现查询功能:</p>
+<ul>
+<li>设计一个简单的查询API或语言来与时间序列数据交互。</li>
+<li>实现过滤、聚合和基于时间的操作的查询功能。</li>
+<li>使用缓存、物化视图或预计算聚合优化查询性能。</li>
+</ul>
+</li>
+<li>
+<p>数据管理策略:</p>
+<ul>
+<li>实现数据保留策略，自动删除旧数据点或downsample数据，节省存储空间。</li>
+<li>使用数据压缩技术可以减小存储空间大小并提高性能。</li>
+</ul>
+</li>
+<li>
+<p>测试和基准测试:</p>
+<ul>
+<li>为所有主要功能编写测试，以确保嵌入式时间序列数据库的正确性和可靠性。</li>
+<li>对时间序列数据库的性能进行基准测试，以确定潜在的瓶颈和需要改进的领域。</li>
+</ul>
+</li>
+</ul>
+<p>通过执行这些步骤，您可以在Golang程序中设计和实现高效的嵌入式时间序列数据库。确保持续监控、优化和维护数据库，以确保其可靠性和性能</p>
+]]></content:encoded>
+        </item>
         <item>
             <title><![CDATA[如何大规模配置裸机电信云平台]]></title>
             <guid>df4af15487b943e5938ac6f9cfc97490</guid>
@@ -923,424 +1172,6 @@ runtime.goexit
     }
     <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>
 }</code></pre></div>
-]]></content:encoded>
-        </item>
-        <item>
-            <title><![CDATA[Golang项目目录结构]]></title>
-            <guid>f2a72a9994004b52a6cf5ce91d394c31</guid>
-            <pubDate>Mon, 30 Jan 2023 02:30:43 GMT</pubDate>
-            <content:encoded><![CDATA[<p>这是 Go 应用程序项目的基本布局。它不是核心 Go 开发团队定义的官方标准；然而，它是 Go 生态系统中一组常见的老项目和新项目的布局模式。其中一些模式比其他模式更受欢迎。它还具有许多小的增强，以及对任何足够大的实际应用程序通用的几个支持目录。</p>
-<p>如果你尝试学习 Go，或者你正在为自己建立一个 PoC 或一个玩具项目，这个项目布局是没啥必要的。从一些非常简单的事情开始(一个 <code>main.go</code> 文件绰绰有余)。随着项目的增长，请记住保持代码结构良好非常重要，否则你最终会得到一个凌乱的代码，这其中就包含大量隐藏的依赖项和全局状态。当有更多的人参与这个项目时，你将需要更多的结构。这时候，介绍一种管理包/库的通用方法是很重要的。当你有一个开源项目时，或者当你知道其他项目从你的项目存储库中导入代码时，这时候拥有私有(又名 <code>internal</code>)包和代码就很重要。克隆存储库，保留你需要的内容，删除其他所有的内容!仅仅因为它在那里并不意味着你必须全部使用它。这些模式都没有在每个项目中使用。甚至 <code>vendor</code> 模式也不是通用的。</p>
-<p>Go 1.14 <a title="https://github.com/golang/go/wiki/Modules" href="https://github.com/golang/go/wiki/Modules"><code>Go Modules</code></a> 终于可以投入生产了。除非你有特定的理由不使用它们，否则使用 <a title="https://blog.golang.org/using-go-modules" href="https://blog.golang.org/using-go-modules"><code>Go Modules</code></a> 。如果你使用，就无需担心 $GOPATH 以及项目放置的位置。存储库中的 <code>go.mod</code> 文件基本假定你的项目托管在 Github 上，但这不是要求。模块路径可以是任何地方，尽管第一个模块路径组件的名称中应该有一个点（当前版本的 Go 不再强制使用该模块，但如果使用稍旧的版本，如果没有 <code>mod</code> 文件构建失败的话 ，不要惊讶）。如果你想知道更多信息，请参阅 Issues <a title="https://github.com/golang/go/issues/37554" href="https://github.com/golang/go/issues/37554"><code>37554</code></a> 和 <a title="https://github.com/golang/go/issues/32819" href="https://github.com/golang/go/issues/32819"><code>32819</code></a> 。</p>
-<p>此项目布局是通用的，并且不会尝试强加一个特定的 Go 包结构。</p>
-<p>这是社区的努力。 如果看到新的模式，或者认为一个现有的模式需要更新，请提一个 issue。</p>
-<p>如果需要命名、格式和样式方面的帮助，请运行 <a title="https://golang.org/cmd/gofmt/" href="https://golang.org/cmd/gofmt/"><code>gofmt</code></a> 和 <a title="https://github.com/golang/lint" href="https://github.com/golang/lint"><code>golint</code></a> 。还要确保阅读这些 Go 代码风格的指导方针和建议:</p>
-<ul>
-<li><a title="https://talks.golang.org/2014/names.slide" href="https://talks.golang.org/2014/names.slide">https://talks.golang.org/2014/names.slide</a></li>
-<li><a title="https://golang.org/doc/effective_go.html#names" href="https://golang.org/doc/effective_go.html#names">https://golang.org/doc/effective_go.html#names</a></li>
-<li><a title="https://blog.golang.org/package-names" href="https://blog.golang.org/package-names">https://blog.golang.org/package-names</a></li>
-<li><a title="https://github.com/golang/go/wiki/CodeReviewComments" href="https://github.com/golang/go/wiki/CodeReviewComments">https://github.com/golang/go/wiki/CodeReviewComments</a></li>
-<li><a title="https://rakyll.org/style-packages" href="https://rakyll.org/style-packages">Style guideline for Go packages</a> (rakyll/JBD)</li>
-</ul>
-<p>参见 <a title="https://medium.com/golang-learn/go-project-layout-e5213cdcfaa2" href="https://medium.com/golang-learn/go-project-layout-e5213cdcfaa2"><code>Go Project Layout</code></a> 了解更多的背景信息。</p>
-<p>更多关于包的命名和组织以及其他代码结构的建议:</p>
-<ul>
-<li><a title="https://www.youtube.com/watch?v=PTE4VJIdHPg" href="https://www.youtube.com/watch?v=PTE4VJIdHPg">GopherCon EU 2018: Peter Bourgon - Best Practices for Industrial Programming</a></li>
-<li><a title="https://www.youtube.com/watch?v=MzTcsI6tn-0" href="https://www.youtube.com/watch?v=MzTcsI6tn-0">GopherCon Russia 2018: Ashley McNamara + Brian Ketelsen - Go best practices.</a></li>
-<li><a title="https://www.youtube.com/watch?v=ltqV6pDKZD8" href="https://www.youtube.com/watch?v=ltqV6pDKZD8">GopherCon 2017: Edward Muller - Go Anti-Patterns</a></li>
-<li><a title="https://www.youtube.com/watch?v=oL6JBUk6tj0" href="https://www.youtube.com/watch?v=oL6JBUk6tj0">GopherCon 2018: Kat Zien - How Do You Structure Your Go Apps</a></li>
-</ul>
-<h2 id="go-目录">Go 目录</h2>
-<h3 id="cmd"><code>/cmd</code></h3>
-<p>本项目的主干。</p>
-<p>每个应用程序的目录名应该与你想要的可执行文件的名称相匹配(例如，<code>/cmd/myapp</code>)。</p>
-<p>不要在这个目录中放置太多代码。如果你认为代码可以导入并在其他项目中使用，那么它应该位于 <code>/pkg</code> 目录中。如果代码不是可重用的，或者你不希望其他人重用它，请将该代码放到 <code>/internal</code> 目录中。你会惊讶于别人会怎么做，所以要明确你的意图!</p>
-<p>通常有一个小的 <code>main</code> 函数，从 <code>/internal</code> 和 <code>/pkg</code> 目录导入和调用代码，除此之外没有别的东西。</p>
-<p>有关示例，请参阅 <a title="cmd/README.md" href="cmd/README.md"><code>/cmd</code></a> 目录。</p>
-<h3 id="internal"><code>/internal</code></h3>
-<p>私有应用程序和库代码。这是你不希望其他人在其应用程序或库中导入代码。请注意，这个布局模式是由 Go 编译器本身执行的。有关更多细节，请参阅Go 1.4 <a title="https://golang.org/doc/go1.4#internalpackages" href="https://golang.org/doc/go1.4#internalpackages"><code>release notes</code></a> 。注意，你并不局限于顶级 <code>internal</code> 目录。在项目树的任何级别上都可以有多个内部目录。</p>
-<p>你可以选择向 internal 包中添加一些额外的结构，以分隔共享和非共享的内部代码。这不是必需的(特别是对于较小的项目)，但是最好有有可视化的线索来显示预期的包的用途。你的实际应用程序代码可以放在 <code>/internal/app</code> 目录下(例如 <code>/internal/app/myapp</code>)，这些应用程序共享的代码可以放在 <code>/internal/pkg</code> 目录下(例如 <code>/internal/pkg/myprivlib</code>)。</p>
-<h3 id="pkg"><code>/pkg</code></h3>
-<p>外部应用程序可以使用的库代码(例如 <code>/pkg/mypubliclib</code>)。其他项目会导入这些库，希望它们能正常工作，所以在这里放东西之前要三思:-)注意，<code>internal</code> 目录是确保私有包不可导入的更好方法，因为它是由 Go 强制执行的。<code>/pkg</code> 目录仍然是一种很好的方式，可以显式地表示该目录中的代码对于其他人来说是安全使用的好方法。由 Travis Jeffery  撰写的 <a title="https://travisjeffery.com/b/2019/11/i-ll-take-pkg-over-internal/" href="https://travisjeffery.com/b/2019/11/i-ll-take-pkg-over-internal/"><code>I'll take pkg over internal</code></a> 博客文章提供了 <code>pkg</code> 和 <code>internal</code> 目录的一个很好的概述，以及什么时候使用它们是有意义的。</p>
-<p>当根目录包含大量非 Go 组件和目录时，这也是一种将 Go 代码分组到一个位置的方法，这使得运行各种 Go 工具变得更加容易（正如在这些演讲中提到的那样: 来自 GopherCon EU 2018 的 <a title="https://www.youtube.com/watch?v=PTE4VJIdHPg" href="https://www.youtube.com/watch?v=PTE4VJIdHPg"><code>Best Practices for Industrial Programming</code></a> , <a title="https://www.youtube.com/watch?v=oL6JBUk6tj0" href="https://www.youtube.com/watch?v=oL6JBUk6tj0">GopherCon 2018: Kat Zien - How Do You Structure Your Go Apps</a> 和 <a title="https://www.youtube.com/watch?v=3gQa1LWwuzk" href="https://www.youtube.com/watch?v=3gQa1LWwuzk">GoLab 2018 - Massimiliano Pippi - Project layout patterns in Go</a> ）。</p>
-<p>如果你想查看哪个流行的 Go 存储库使用此项目布局模式，请查看 <a title="pkg/README.md" href="pkg/README.md"><code>/pkg</code></a> 目录。这是一种常见的布局模式，但并不是所有人都接受它，一些 Go 社区的人也不推荐它。</p>
-<p>如果你的应用程序项目真的很小，并且额外的嵌套并不能增加多少价值(除非你真的想要:-)，那就不要使用它。当它变得足够大时，你的根目录会变得非常繁琐时(尤其是当你有很多非 Go 应用组件时)，请考虑一下。</p>
-<p>可以参考的开源项目<a title="https://github.com/go-kit/kit" href="https://github.com/go-kit/kit">go-kit</a></p>
-<h3 id="vendor"><code>/vendor</code></h3>
-<p>应用程序依赖项(手动管理或使用你喜欢的依赖项管理工具，如新的内置 <a title="https://github.com/golang/go/wiki/Modules" href="https://github.com/golang/go/wiki/Modules"><code>Go Modules</code></a> 功能)。<code>go mod vendor</code> 命令将为你创建 <code>/vendor</code> 目录。请注意，如果未使用默认情况下处于启用状态的 Go 1.14，则可能需要在 <code>go build</code> 命令中添加 <code>-mod=vendor</code> 标志。</p>
-<p>如果你正在构建一个库，那么不要提交你的应用程序依赖项。</p>
-<p>注意，自从 <a title="https://golang.org/doc/go1.13#modules" href="https://golang.org/doc/go1.13#modules"><code>1.13</code></a> 以后，Go 还启用了模块代理功能(默认使用 <a title="https://proxy.golang.org" href="https://proxy.golang.org"><code>https://proxy.golang.org</code></a> 作为他们的模块代理服务器)。在<a title="https://blog.golang.org/module-mirror-launch" href="https://blog.golang.org/module-mirror-launch"><code>here</code></a> 阅读更多关于它的信息，看看它是否符合你的所有需求和约束。如果需要，那么你根本不需要 <code>vendor</code> 目录。</p>
-<p>国内模块代理功能默认是被墙的，七牛云有维护专门的的<a title="https://github.com/goproxy/goproxy.cn/blob/master/README.zh-CN.md" href="https://github.com/goproxy/goproxy.cn/blob/master/README.zh-CN.md"><code>模块代理</code></a> 。</p>
-<h2 id="服务应用程序目录">服务应用程序目录</h2>
-<h3 id="api"><code>/api</code></h3>
-<p>OpenAPI/Swagger 规范，JSON 模式文件，协议定义文件。</p>
-<p>有关示例，请参见 <a title="api/README.md" href="api/README.md"><code>/api</code></a> 目录。</p>
-<h2 id="web-应用程序目录">Web 应用程序目录</h2>
-<h3 id="web"><code>/web</code></h3>
-<p>特定于 Web 应用程序的组件:静态 Web 资产、服务器端模板和 SPAs。</p>
-<h2 id="通用应用目录">通用应用目录</h2>
-<h3 id="configs"><code>/configs</code></h3>
-<p>配置文件模板或默认配置。</p>
-<p>将你的 <code>confd</code> 或 <code>consul-template</code> 模板文件放在这里。</p>
-<h3 id="init"><code>/init</code></h3>
-<p>System init（systemd，upstart，sysv）和 process manager/supervisor（runit，supervisor）配置。</p>
-<h3 id="scripts"><code>/scripts</code></h3>
-<p>执行各种构建、安装、分析等操作的脚本。</p>
-<p>这些脚本保持了根级别的 Makefile 变得小而简单(例如， <a title="https://github.com/hashicorp/terraform/blob/master/Makefile" href="https://github.com/hashicorp/terraform/blob/master/Makefile"><code>https://github.com/hashicorp/terraform/blob/master/Makefile</code></a> )。</p>
-<p>有关示例，请参见  <a title="scripts/README.md" href="scripts/README.md"><code>/scripts</code></a> 目录。</p>
-<h3 id="build"><code>/build</code></h3>
-<p>打包和持续集成。</p>
-<p>将你的云( AMI )、容器( Docker )、操作系统( deb、rpm、pkg )包配置和脚本放在 <code>/build/package</code> 目录下。</p>
-<p>将你的 CI (travis、circle、drone)配置和脚本放在 <code>/build/ci</code> 目录中。请注意，有些 CI 工具(例如 Travis CI)对配置文件的位置非常挑剔。尝试将配置文件放在 <code>/build/ci</code> 目录中，将它们链接到 CI 工具期望它们的位置(如果可能的话)。</p>
-<h3 id="deployments"><code>/deployments</code></h3>
-<p>IaaS、PaaS、系统和容器编排部署配置和模板(docker-compose、kubernetes/helm、mesos、terraform、bosh)。注意，在一些存储库中(特别是使用 kubernetes 部署的应用程序)，这个目录被称为 <code>/deploy</code>。</p>
-<h3 id="test"><code>/test</code></h3>
-<p>额外的外部测试应用程序和测试数据。你可以随时根据需求构造 <code>/test</code> 目录。对于较大的项目，有一个数据子目录是有意义的。例如，你可以使用 <code>/test/data</code> 或 <code>/test/testdata</code> (如果你需要忽略目录中的内容)。请注意，Go 还会忽略以“.”或“_”开头的目录或文件，因此在如何命名测试数据目录方面有更大的灵活性。</p>
-<p>有关示例，请参见  <a title="test/README.md" href="test/README.md"><code>/test</code></a> 目录。</p>
-<h2 id="其他目录">其他目录</h2>
-<h3 id="docs"><code>/docs</code></h3>
-<p>设计和用户文档(除了 godoc 生成的文档之外)。</p>
-<p>有关示例，请参阅 <a title="docs/README.md" href="docs/README.md"><code>/docs</code></a> 目录。</p>
-<h3 id="tools"><code>/tools</code></h3>
-<p>这个项目的支持工具。注意，这些工具可以从 <code>/pkg</code> 和 <code>/internal</code> 目录导入代码。</p>
-<p>有关示例，请参见 <a title="tools/README.md" href="tools/README.md"><code>/tools</code></a> 目录。</p>
-<h3 id="examples"><code>/examples</code></h3>
-<p>你的应用程序和/或公共库的示例。</p>
-<p>有关示例，请参见 <a title="examples/README.md" href="examples/README.md"><code>/examples</code></a> 目录。</p>
-<h3 id="third_party"><code>/third_party</code></h3>
-<p>外部辅助工具，分叉代码和其他第三方工具(例如 Swagger UI)。</p>
-<h3 id="githooks"><code>/githooks</code></h3>
-<p>Git hooks。</p>
-<h3 id="assets"><code>/assets</code></h3>
-<p>与存储库一起使用的其他资产(图像、徽标等)。</p>
-<h3 id="website"><code>/website</code></h3>
-<p>如果你不使用 Github 页面，则在这里放置项目的网站数据。</p>
-<p>有关示例，请参见 <a title="website/README.md" href="website/README.md"><code>/website</code></a> 目录。</p>
-<h2 id="你不应该拥有的目录">你不应该拥有的目录</h2>
-<h3 id="src"><code>/src</code></h3>
-<p>有些 Go 项目确实有一个 <code>src</code> 文件夹，但这通常发生在开发人员有 Java 背景，在那里它是一种常见的模式。如果可以的话，尽量不要采用这种 Java 模式。你真的不希望你的 Go 代码或 Go 项目看起来像 Java:-)</p>
-<p>不要将项目级别 <code>src</code> 目录与 Go 用于其工作空间的 <code>src</code> 目录(如 <a title="https://golang.org/doc/code.html" href="https://golang.org/doc/code.html"><code>How to Write Go Code</code></a> 中所述)混淆。<code>$GOPATH</code> 环境变量指向你的(当前)工作空间(默认情况下，它指向非 windows 系统上的 <code>$HOME/go</code>)。这个工作空间包括顶层 <code>/pkg</code>, <code>/bin</code> 和 <code>/src</code> 目录。你的实际项目最终是 <code>/src</code> 下的一个子目录，因此，如果你的项目中有 <code>/src</code> 目录，那么项目路径将是这样的: <code>/some/path/to/workspace/src/your_project/src/your_code.go</code>。注意，在 Go 1.11 中，可以将项目放在 <code>GOPATH</code> 之外，但这并不意味着使用这种布局模式是一个好主意。</p>
-<h3 id="utilscommon"><code>/utils，/common</code></h3>
-<p>不要在项目中出现 utils 和 common 这种包，如果出现这种包，因为我们并不能从包中知道你这个包的作用，长久之后这个包就会变成一个大杂烩，所有东西都往这里面扔。</p>
-<p>举个例子，我们当前使用<code>gin</code>作为路由框架，但是<code>gin</code>的 <code>handler</code> 注册其实不是很方便，所以我们做了一层封装，这个时候这个工具方法我们一般放在<code> /pkg/ginx</code> 目录下，表示这个是对<code>gin</code>增强的包，不直接使用<code>gin</code>作为包名的原因是因为我们在项目中也会引用<code>gin</code>相同的命名一个是会导致误解，另一个是在同时导入的时候也会需要去进行重命名会比较麻烦</p>
-]]></content:encoded>
-        </item>
-        <item>
-            <title><![CDATA[BTFGen: 让 eBPF 程序可移植发布更近一步]]></title>
-            <guid>f14b5b38df1f4a5d8ad1745dbfde1eb1</guid>
-            <pubDate>Fri, 06 Jan 2023 02:28:46 GMT</pubDate>
-            <content:encoded><![CDATA[<nav class="table-of-contents"><ul><li><a href="#1-问题所在">1. 问题所在</a></li><li><a href="#2-co-re-一次编译-到处运行">2. CO-RE (一次编译 - 到处运行)</a></li><li><a href="#3-btfhub">3. BTFHub</a></li><li><a href="#4-btfgen">4. BTFGen</a><ul><li><a href="#41-内部实现细节">4.1 内部实现细节</a></li></ul></li><li><a href="#42-如何使用">4.2 如何使用?</a><ul><li><a href="#安装-bpftool-工具">安装 bpftool 工具</a></li><li><a href="#从-bfthub-获取内核对应的-btf-文件">从 BFThub 获取内核对应的 BTF 文件</a></li><li><a href="#下载-修改和编译-bcc-libbpf-工具">下载、修改和编译 BCC libbpf 工具</a></li><li><a href="#生成-精简版-btf-文件">生成 “精简版” BTF 文件</a></li><li><a href="#验证">验证</a></li><li><a href="#43-集成样例">4.3 集成样例</a><ul><li><a href="#inspektor-gadget">Inspektor Gadget</a></li><li><a href="#tracee">Tracee</a></li></ul></li><li><a href="#44-限制">4.4 限制</a></li><li><a href="#45-未来发展">4.5 未来发展</a><ul><li><a href="#与其他项目的整合">与其他项目的整合</a></li><li><a href="#删除重复的文件">删除重复的文件</a></li><li><a href="#在线-api">在线 API</a></li></ul></li></ul></li><li><a href="#5-更多信息">5. 更多信息</a></li><li><a href="#6-致谢">6. 致谢</a></li></ul></nav><p>eBPF 是一项广为人知的技术，已经在可观测、网络和安全领域领域得到广泛应用。Linux 操作系统提供了虚拟机，可用于安全和高效的方式运行 eBPF 程序【译者注：如果是 JIT 模式则会直接翻译成本地 CPU 指令，则不需要虚拟机】。eBPF 程序挂载在操作系统提供的钩子上，使其能够在内核中发生特定事件时过滤和提取感兴趣的信息。</p>
-<p>在本文中，我们将介绍助力 eBPF 程序移植的工具 BTFGen，以及其如何被集成到其他项目中，主要的内容如下：</p>
-<ul>
-<li>在不同的目标机器上运行 eBPF 程序的挑战；</li>
-<li>传统上如何通过在加载程序之前通过编译解决的；</li>
-<li>解决挑战对应的的机制/工具（如 CO-RE 一次编译 - 到处运行）；</li>
-<li>BTFHub 工具如何尝试解决这些挑战。</li>
-</ul>
-<h2 id="1-问题所在">1. 问题所在</h2>
-<p>eBPF 程序需要访问内核结构来获取需要的数据，因此依赖于内核结构的布局。为特定内核版本编译的 eBPF 程序通常不能在另一个内核版本上工作，这是因为相关的内核数据结构布局可能会发生了变化：比如字段添加、删除，或类型被改变，甚至内核编译配置的改变也会改变整个结构布局。例如，禁用 <code>CONFIG_THREAD_INFO_IN_TASK</code> 会改变 <a title="https://github.com/torvalds/linux/blob/v5.16/include/linux/sched.h#L723" href="https://github.com/torvalds/linux/blob/v5.16/include/linux/sched.h#L723">task_struct</a> 的所有成员变量的偏移：</p>
-<div><pre class="hljs"><code><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">task_struct</span> {</span>
-<span class="hljs-meta">#<span class="hljs-keyword">ifdef</span> CONFIG_THREAD_INFO_IN_TASK</span>
-    <span class="hljs-comment">/*
-     * For reasons of header soup (see current_thread_info()), this
-     * must be the first element of task_struct.
-     */</span>
-    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">thread_info</span>		<span class="hljs-title">thread_info</span>;</span>
-<span class="hljs-meta">#<span class="hljs-keyword">endif</span></span>
-    <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span>			__state;
-
-<span class="hljs-meta">#<span class="hljs-keyword">ifdef</span> CONFIG_PREEMPT_RT</span>
-    <span class="hljs-comment">/* saved state for "spinlock sleepers" */</span>
-    <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span>			saved_state;
-<span class="hljs-meta">#<span class="hljs-keyword">endif</span></span>
-...</code></pre></div>
-<p>该问题的解决通常是在目标机器使用内核头文件编译 eBPF 程序并进行加载，<a title="https://github.com/iovisor/bcc/" href="https://github.com/iovisor/bcc/">BCC</a> 项目所使用的正是这种方式。但该方法存在以下问题：</p>
-<ol>
-<li>必须在目标机器上安装占用大量空间的编译器；</li>
-<li>编译程序时需要资源，在某些情况下可能会影响工作负载的调度；</li>
-<li>编译需要相当长的时间，因此事件采集会存在一些延迟；</li>
-<li>依赖于目标机器上安装内核头文件包。</li>
-</ol>
-<h2 id="2-co-re-一次编译-到处运行">2. CO-RE (一次编译 - 到处运行)</h2>
-<p>CO-RE 机制正是为解决上述问题提出的方案。在该方案中，eBPF 程序一次编译，然后在运行时进行更新（patched）：基于运行的机器的内核结构布局更新运行指令。<a title="https://nakryiko.com/posts/bpf-portability-and-co-re" href="https://nakryiko.com/posts/bpf-portability-and-co-re">BPF CO-RE (Compile Once - Run Everywhere)</a> 介绍了该技术背后的所有细节。对于本文，需要理解的是 CO-RE 需要有目标内核的 BTF 信息（BPF Type Format 类型格式）。BTF 信息由内核本身提供的，这需要在内核编译时设置 <code>CONFIG_DEBUG_INFO_BTF=y</code> 选项 。该选项在<a title="https://github.com/torvalds/linux/commit/e83b9f55448afce3fe1abcd1d10db9584f8042a6" href="https://github.com/torvalds/linux/commit/e83b9f55448afce3fe1abcd1d10db9584f8042a6">Linux 内核 5.2</a> 中引入的，许多流行的 Linux 发行版在其后的部分内核版本才默认启用。这意味着有很多用户运行的内核并没有导出 BTF 信息，因此不能使用基于 CO-RE 的工具。</p>
-<h2 id="3-btfhub">3. BTFHub</h2>
-<p><a title="https://github.com/aquasecurity/btfhub" href="https://github.com/aquasecurity/btfhub">BTFHub</a> 是 Aqua Security 公司的一个项目，其可为不导出 BTF 信息的流行发行版内核提供BTF 信息补充。目标内核的 BTF 文件可以在运行时下载，然后与加载库（libbpf、cilium/ebpf 或其他）配合，加载库基于 BTF 文件对程序进行相应的更新（patch）。</p>
-<p>尽管 BTFHub 做了很大的改进，但是它仍然面临着一些挑战：每个 BTF 文件有数 MB 大小，因此不可能把所有内核的 BTF 文件和应用程序一起打包，因为这可能需要数 GB 的空间占用。另一种方法是在运行时下载当前内核的所需 BTF，但这也带来了一些问题：延迟 eBPF 程序启动，而且在某些情况下，连接到外部主机下载文件也不可行。</p>
-<h2 id="4-btfgen">4. BTFGen</h2>
-<p>其实，通常我们并不需要提供描述所有内核类型的完整 BTF 文件，因为 eBPF 程序通常只需要访问其中的少数类型。一个 “精简版” 的 BTF 文件，只需要提供程序使用类型的信息就足够了。这就是工具 BTFGen 发挥作用：其可以生成一组 eBPF 程序所需的精简的 BTF ，通过该方式生成的 BTF 文件只有数 KB 大小，将其与应用程序打包交付变成了可能。</p>
-<p>BTFGen 并不是单独提供能力的。它需要具有不同 Linux 发行版的所有内核类型的源 BTF 文件（由 BTFHub 提供），并且 CO-RE 机制（在libbpf、Linux内核或另一个加载库中）在加载程序时通过打补丁方式更新 eBPF 程序。</p>
-<p>使用 BTFGen 的主要流程如下：</p>
-<ol>
-<li>开发人员编写<a title="https://nakryiko.com/posts/bpf-core-reference-guide/" href="https://nakryiko.com/posts/bpf-core-reference-guide/">基于 CO-RE</a> 的 eBPF 程序，并通过 llvm/clang 编译成对象文件；</li>
-<li>从 BTFHub 或其他来源收集不同 Linux 内核发行版的 BTF 源文件；</li>
-<li>使用 BTFGen 生成精简版的 BTF 文件；</li>
-<li>将精简版的 BTF 文件与应用程序打包分发。</li>
-</ol>
-<p><img src="/_resources/74c0a8490488473eaa2b1495f5cb1bf7.png" /></p>
-<h3 id="41-内部实现细节">4.1 内部实现细节</h3>
-<p>BTFGen 在 bpftool 工具中实现，其使用 libbpf CO-RE 逻辑来解决重定位问题。有了这些信息，它就能挑选出重新定位所涉及的类型来生成 “精简版” 的 BTF 文件。这篇文章的目的不是要解释所有的内部实现细节。如果你想知道更多，你可以查看 BTFHub 仓库中的<a title="https://github.com/aquasecurity/btfhub/blob/main/docs/btfgen-internals.md" href="https://github.com/aquasecurity/btfhub/blob/main/docs/btfgen-internals.md">这个文档</a>或实现它的<a title="https://lore.kernel.org/bpf/164503621150.2935.6634904664671748900.git-patchwork-notify@kernel.org/T/#mdd100ccbc95947c8fe6be74db66002e273a29abd" href="https://lore.kernel.org/bpf/164503621150.2935.6634904664671748900.git-patchwork-notify@kernel.org/T/#mdd100ccbc95947c8fe6be74db66002e273a29abd">补丁</a>。</p>
-<h2 id="42-如何使用">4.2 如何使用?</h2>
-<p>本节提供了 BTFGen 工具使用的更多细节。在本例中，我们将使用 BTFGen 来实现内核未启用 CONFIG_DEBUG_INFO_BTF 选项的机器上运行特定的 <a title="https://github.com/iovisor/bcc/tree/v0.24.0/libbpf-tools" href="https://github.com/iovisor/bcc/tree/v0.24.0/libbpf-tools">BCC libbpf-tools</a> 工具。其他 eBPF 应用程序集成的方式也是类似。</p>
-<p>为了实现上述的目的，我们需要以下流程：</p>
-<ol>
-<li>下载、编译和安装支持 BTFGen 的 bpftool 版本；</li>
-<li>从 BTFHub 下载所需的 BTF 文件；</li>
-<li>下载和编译 BCC 工具；</li>
-<li>使用 BTFGen 为特定的 BCC 工具生成 “精简版” BTF 文件；</li>
-<li>调整 BCC 工具代码，使其可以从自定义路径加载 BTF 文件；</li>
-<li>最后进行验证。</li>
-</ol>
-<p>首先，我们为该演示创建一个临时目录：</p>
-<div><pre class="hljs"><code>$ mkdir /tmp/btfgendemo</code></pre></div>
-<h4 id="安装-bpftool-工具">安装 bpftool 工具</h4>
-<p>BTFGen 刚刚被合入 bpftool。在 BTFGen 未被包含在不同发行版的软件包之前，我们需要从源代码进行编译：</p>
-<div><pre class="hljs"><code>$ <span class="hljs-built_in">cd</span> /tmp/btfgendemo
-$ git <span class="hljs-built_in">clone</span> --recurse-submodules https://github.com/libbpf/bpftool.git
-$ <span class="hljs-built_in">cd</span> bpftool/src
-$ make
-$ sudo make install</code></pre></div>
-<h4 id="从-bfthub-获取内核对应的-btf-文件">从 BFThub 获取内核对应的 BTF 文件</h4>
-<p>这里为简洁起见，我们只考虑 Ubuntu Focal 系统中使用的场景，该方式也完全适用于 BTFHub 支持的其他发行版本。</p>
-<div><pre class="hljs"><code>$ <span class="hljs-built_in">cd</span> /tmp/btfgendemo
-$ git <span class="hljs-built_in">clone</span> https://github.com/aquasecurity/btfhub-archive
-$ <span class="hljs-built_in">cd</span> btfhub-archive/ubuntu/focal/x86_64/
-$ <span class="hljs-keyword">for</span> f <span class="hljs-keyword">in</span> *.tar.xz; <span class="hljs-keyword">do</span> tar -xf <span class="hljs-string">"<span class="hljs-variable">$f</span>"</span>; <span class="hljs-keyword">done</span>
-$ ls -lhn *.btf | head
--rw-r----- 1 1000 1000 4,5M Sep 29 13:36 5.11.0-1007-azure.btf
--rw-r----- 1 1000 1000 4,8M Aug 10 23:33 5.11.0-1009-aws.btf
--rw-r----- 1 1000 1000 4,8M Jan 22 12:29 5.11.0-1009-gcp.btf
--rw-r----- 1 1000 1000 4,5M Sep 29 13:38 5.11.0-1012-azure.btf
--rw-r----- 1 1000 1000 4,5M Sep 29 13:40 5.11.0-1013-azure.btf
--rw-r----- 1 1000 1000 4,8M Aug 10 23:39 5.11.0-1014-aws.btf
--rw-r----- 1 1000 1000 4,8M Jan 22 12:32 5.11.0-1014-gcp.btf
--rw-r----- 1 1000 1000 4,5M Sep 29 13:43 5.11.0-1015-azure.btf
--rw-r----- 1 1000 1000 4,8M Sep 7 22:52 5.11.0-1016-aws.btf
--rw-r----- 1 1000 1000 4,8M Sep 7 22:57 5.11.0-1017-aws.btf</code></pre></div>
-<p>如上述显示，我们可以看到每个内核对应的 BTF 文件的大小约为 4MB。</p>
-<div><pre class="hljs"><code>$ find . -name <span class="hljs-string">"*.btf"</span> | xargs du -ch | tail -n 1
-944M	total</code></pre></div>
-<p>但是汇总起来看，仅 Ubuntu Focal 就有~944MB 的大小，将其与应用程序一起打包显然不太可行。</p>
-<h4 id="下载-修改和编译-bcc-libbpf-工具">下载、修改和编译 BCC libbpf 工具</h4>
-<p>我们从 BCC v0.24.0 标签上克隆仓库代码：</p>
-<div><pre class="hljs"><code>$ <span class="hljs-built_in">cd</span> /tmp/btfgendemo
-$ git <span class="hljs-built_in">clone</span> https://github.com/iovisor/bcc -b v0.24.0 --recursive</code></pre></div>
-<p>默认情况下，不同的 BCC 工具会尝试从<a title="https://github.com/libbpf/libbpf/blob/22411acc4b2c846868fd570b2d9f3b016d2af2cb/src/btf.c#L4631-L4639" href="https://github.com/libbpf/libbpf/blob/22411acc4b2c846868fd570b2d9f3b016d2af2cb/src/btf.c#L4631-L4639">约定目录</a>中加载 BTF 信息。正常情况下，我们不能直接覆盖对应的文件，因为它们极有可能也会被其他工具所依赖。相反，我们可以修改 BCC 工具源码，让其从一个自定义的路径加载 BTF 文件。我们可以使用 LIBBPF_OPTS() 来声明一个 bpf_object_open_opts 结构，将其中的 btf_custom_path 字段设置为自定义 BTF 所在的路径，并将其传递给 TOOL_bpf__open_opts()函数。我们尝试使用如下的补丁来修改 opennoop、execsnoop 和 bindsnoop 工具。</p>
-<p>译者注，约定的加载 BTF 目录如下：</p>
-<div><pre class="hljs"><code>    { <span class="hljs-string">"/sys/kernel/btf/vmlinux"</span>, <span class="hljs-literal">true</span> /* raw BTF */ },
-    { <span class="hljs-string">"/boot/vmlinux-%1<span class="hljs-variable">$s</span>"</span> },
-    { <span class="hljs-string">"/lib/modules/%1<span class="hljs-variable">$s</span>/vmlinux-%1<span class="hljs-variable">$s</span>"</span> },
-    { <span class="hljs-string">"/lib/modules/%1<span class="hljs-variable">$s</span>/build/vmlinux"</span> },
-    { <span class="hljs-string">"/usr/lib/modules/%1<span class="hljs-variable">$s</span>/kernel/vmlinux"</span> },
-    { <span class="hljs-string">"/usr/lib/debug/boot/vmlinux-%1<span class="hljs-variable">$s</span>"</span> },
-    { <span class="hljs-string">"/usr/lib/debug/boot/vmlinux-%1<span class="hljs-variable">$s</span>.debug"</span> },
-    { <span class="hljs-string">"/usr/lib/debug/lib/modules/%1<span class="hljs-variable">$s</span>/vmlinux"</span> },</code></pre></div>
-<div><pre class="hljs"><code><span class="hljs-comment"># /tmp/btfgendemo/bcc.patch</span>
-diff --git a/libbpf-tools/bindsnoop.c b/libbpf-tools/bindsnoop.c
-index 5d87d484..a336747e 100644
---- a/libbpf-tools/bindsnoop.c
-+++ b/libbpf-tools/bindsnoop.c
-@@ -187,7 +187,8 @@ int main(int argc, char **argv)
- 	libbpf_set_strict_mode(LIBBPF_STRICT_ALL);
- 	libbpf_set_print(libbpf_print_fn);
-
--	obj = bindsnoop_bpf__open();
-+	LIBBPF_OPTS(bpf_object_open_opts, opts, .btf_custom_path = <span class="hljs-string">"/tmp/vmlinux.btf"</span>);
-+	obj = bindsnoop_bpf__open_opts(&amp;opts);
- 	<span class="hljs-keyword">if</span> (!obj) {
- 		warn(<span class="hljs-string">"failed to open BPF object\n"</span>);
- 		<span class="hljs-built_in">return</span> 1;
-diff --git a/libbpf-tools/execsnoop.c b/libbpf-tools/execsnoop.c
-index 38294816..9bd0d077 100644
---- a/libbpf-tools/execsnoop.c
-+++ b/libbpf-tools/execsnoop.c
-@@ -274,7 +274,8 @@ int main(int argc, char **argv)
- 	libbpf_set_strict_mode(LIBBPF_STRICT_ALL);
- 	libbpf_set_print(libbpf_print_fn);
-
--	obj = execsnoop_bpf__open();
-+	LIBBPF_OPTS(bpf_object_open_opts, opts, .btf_custom_path = <span class="hljs-string">"/tmp/vmlinux.btf"</span>);
-+	obj = execsnoop_bpf__open_opts(&amp;opts);
- 	<span class="hljs-keyword">if</span> (!obj) {
- 		fprintf(stderr, <span class="hljs-string">"failed to open BPF object\n"</span>);
- 		<span class="hljs-built_in">return</span> 1;
-diff --git a/libbpf-tools/opensnoop.c b/libbpf-tools/opensnoop.c
-index 557a63cd..cf2c5db6 100644
---- a/libbpf-tools/opensnoop.c
-+++ b/libbpf-tools/opensnoop.c
-@@ -231,7 +231,8 @@ int main(int argc, char **argv)
- 	libbpf_set_strict_mode(LIBBPF_STRICT_ALL);
- 	libbpf_set_print(libbpf_print_fn);
-
--	obj = opensnoop_bpf__open();
-+	LIBBPF_OPTS(bpf_object_open_opts, opts, .btf_custom_path = <span class="hljs-string">"/tmp/vmlinux.btf"</span>);
-+	obj = opensnoop_bpf__open_opts(&amp;opts);
- 	<span class="hljs-keyword">if</span> (!obj) {
- 		fprintf(stderr, <span class="hljs-string">"failed to open BPF object\n"</span>);
- 		<span class="hljs-built_in">return</span> 1;
-$ <span class="hljs-built_in">cd</span> bcc
-$ git apply /tmp/btfgendemo/bcc.patch
-$ <span class="hljs-built_in">cd</span> libbpf-tools/
-$ make -j$(nproc)</code></pre></div>
-<h4 id="生成-精简版-btf-文件">生成 “精简版” BTF 文件</h4>
-<p>这里，我们将使用<code> bpftool gen min_core_btf</code> 命令为 BCC 工具中的 bindsnoop、execsnoop 和opensnoop 同时生成精简的 BTF 文件。下述的命令对目录中存在的每个 BTF 文件逐次调用 bpftool 工具进行精简。</p>
-<div><pre class="hljs"><code>$ OBJ1=/tmp/btfgendemo/bcc/libbpf-tools/.output/bindsnoop.bpf.o
-$ OBJ2=/tmp/btfgendemo/bcc/libbpf-tools/.output/execsnoop.bpf.o
-$ OBJ3=/tmp/btfgendemo/bcc/libbpf-tools/.output/opensnoop.bpf.o
-
-$ mkdir -p /tmp/btfgendemo/btfs
-$ <span class="hljs-built_in">cd</span> /tmp/btfgendemo/btfhub-archive/ubuntu/focal/x86_64/
-
-$ <span class="hljs-keyword">for</span> f <span class="hljs-keyword">in</span> *.btf; <span class="hljs-keyword">do</span> bpftool gen min_core_btf <span class="hljs-string">"<span class="hljs-variable">$f</span>"</span> \
-  /tmp/btfgendemo/btfs/$(basename <span class="hljs-string">"<span class="hljs-variable">$f</span>"</span>) <span class="hljs-variable">$OBJ1</span> <span class="hljs-variable">$OBJ2</span> <span class="hljs-variable">$OBJ3</span>; \
-<span class="hljs-keyword">done</span>
-
-$ ls -lhn /tmp/btfgendemo/btfs | head
-total 864K
--rw-r--r-- 1 1000 1000 1,1K Feb 8 14:46 5.11.0-1007-azure.btf
--rw-r--r-- 1 1000 1000 1,1K Feb 8 14:46 5.11.0-1009-aws.btf
--rw-r--r-- 1 1000 1000 1,1K Feb 8 14:46 5.11.0-1009-gcp.btf
--rw-r--r-- 1 1000 1000 1,1K Feb 8 14:46 5.11.0-1012-azure.btf
--rw-r--r-- 1 1000 1000 1,1K Feb 8 14:46 5.11.0-1013-azure.btf
--rw-r--r-- 1 1000 1000 1,1K Feb 8 14:46 5.11.0-1014-aws.btf
--rw-r--r-- 1 1000 1000 1,1K Feb 8 14:46 5.11.0-1014-gcp.btf
--rw-r--r-- 1 1000 1000 1,1K Feb 8 14:46 5.11.0-1015-azure.btf
--rw-r--r-- 1 1000 1000 1,1K Feb 8 14:46 5.11.0-1016-aws.btf</code></pre></div>
-<p>精简后生成的 BTF 文件大约为 1.1KB，Ubuntu Focal 对应的所有文件的大小为 864KB，将其与程序一起打包完全可行。</p>
-<p>如果我们对生成的文件进一步进行压缩，其大小还可以大幅缩减：</p>
-<div><pre class="hljs"><code>$ <span class="hljs-built_in">cd</span> /tmp/btfgendemo/btfs
-$ tar cvfJ compressed.tar.xz *.btf
-$ ls -lhn compressed.tar.xz
--rw-r--r-- 1 1000 1000 2,5K Feb 17 15:19 compressed.tar.xz</code></pre></div>
-<p>压缩率如此之高是因为许多生成的文件相同，我们将在下文中进一步讨论。</p>
-<h4 id="验证">验证</h4>
-<p>为了验证，我们需要运行一台装有 Ubuntu Focal 的机器。这里提供的 Vagrant 文件可以用来创建对应的虚拟机。请注意，Ubuntu Focal 从内核 5.4.0-92-generic 版本开始启用 BTF 支持，所以我们需要运行其早期的版本进行验证。我们使用 <code>bento/ubuntu-20.04 Vagrant</code> 虚拟机中的 <code>202012.21.0</code> 版本，内核为 5.4.0-58-generic。</p>
-<p>本文使用 <code>sshfs</code> 在主机和虚拟机之间共享文件，需要我们确保已经安装了 <a title="https://github.com/dustymabe/vagrant-sshfs" href="https://github.com/dustymabe/vagrant-sshfs">vagrant-sshfs</a> 插件。</p>
-<div><pre class="hljs"><code>$ sudo vagrant plugin install vagrant-sshfs</code></pre></div>
-<div><pre class="hljs"><code><span class="hljs-comment"># /tmp/btfgendemo/Vagrantfile</span>
-Vagrant.configure(<span class="hljs-string">"2"</span>) <span class="hljs-keyword">do</span> | config |
-  config.vm.box = <span class="hljs-string">"bento/ubuntu-20.04"</span>
-  config.vm.box_version = <span class="hljs-string">"= 202012.21.0"</span>
-  config.vm.synced_folder <span class="hljs-string">"/tmp/btfgendemo"</span>, <span class="hljs-string">"/btfgendemo"</span>, <span class="hljs-built_in">type</span>: <span class="hljs-string">"sshfs"</span>
-
-  config.vm.provider <span class="hljs-string">"virtualbox"</span> <span class="hljs-keyword">do</span> | vb |
-    vb.gui = <span class="hljs-literal">false</span>
-    vb.cpus = 4
-    vb.memory = <span class="hljs-string">"4096"</span>
-  end
-end</code></pre></div>
-<p>启动虚拟机并使用 ssh 登录：</p>
-<div><pre class="hljs"><code>$ vagrant up
-$ vagrant ssh</code></pre></div>
-<p>后续的命令必须在虚拟机内执行。检查内核版本：</p>
-<div><pre class="hljs"><code>$ uname -a
-Linux vagrant 5.4.0-58-generic <span class="hljs-comment">#64-Ubuntu SMP Wed Dec 9 08:16:25 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux</span>
-</code></pre></div>
-<p>让我们检查内核是否启用了<code>CONFIG_DEBUG_INFO_BTF</code>：</p>
-<div><pre class="hljs"><code>$ cat /boot/config-$(uname -r) | grep CONFIG_DEBUG_INFO_BTF
-CONFIG_DEBUG_INFO_BTF is not <span class="hljs-built_in">set</span></code></pre></div>
-<p>在把 BTF 文件复制到正确路径之前，我们尝试运行以下这些工具：</p>
-<div><pre class="hljs"><code>$ sudo /btfgendemo/bcc/libbpf-tools/execsnoop
-libbpf: failed to parse target BTF: -2
-libbpf: failed to perform CO-RE relocations: -2
-libbpf: failed to load object <span class="hljs-string">'execsnoop_bpf'</span>
-libbpf: failed to load BPF skeleton <span class="hljs-string">'execsnoop_bpf'</span>: -2
-failed to load BPF object: -2</code></pre></div>
-<p>正如预期，我们运行工具失败，因为工具不能找到执行 CO-RE 重定位所需的 BTF 信息。</p>
-<p>接着，我们将该内核版本的 BTF 文件复制到对应目录：</p>
-<div><pre class="hljs"><code>$ cp /btfgendemo/btfs/$(uname -r).btf /tmp/vmlinux.btf</code></pre></div>
-<p>将复制 BTF 到指定目录后，工具运行正常：</p>
-<div><pre class="hljs"><code>
-$ sudo /btfgendemo/bcc/libbpf-tools/execsnoop
-PCOMM PID PPID RET ARGS
-^C
-
-$ sudo /btfgendemo/bcc/libbpf-tools/bindsnoop
-PID COMM RET PROTO OPTS IF PORT ADDR
-^C
-
-$ sudo /btfgendemo/bcc/libbpf-tools/opensnoop
-PID COMM FD ERR PATH
-^C</code></pre></div>
-<p>当然这只是为了演示工具工作流程的样例。真正的集成需要负责基于主机的内核版本自动提供对应的 BTF 文件。下面的部分通过两个例子展示了对应的集成。</p>
-<h3 id="43-集成样例">4.3 集成样例</h3>
-<p>在本节中，我们将介绍 Inspektor Gadget 和 Tracee 项目是如何使用 BTFGen。</p>
-<h4 id="inspektor-gadget">Inspektor Gadget</h4>
-<p><a title="https://github.com/kinvolk/inspektor-gadget" href="https://github.com/kinvolk/inspektor-gadget">Inspektor Gadget</a> 是一个用于调试/检查 Kubernetes 资源和应用程序的工具集。由于Inspektor Gadget 是以容器镜像的形式发布的，我们选择在其中为不同的 Linux发行版搭载 BTF 文件。我们在 Docker 文件中添加了一个<a title="https://github.com/kinvolk/inspektor-gadget/blob/v0.4.2/gadget.Dockerfile#L42-L46" href="https://github.com/kinvolk/inspektor-gadget/blob/v0.4.2/gadget.Dockerfile#L42-L46">步骤</a>，使其可以在构建容器镜像时生成 BTF 文件：</p>
-<div><pre class="hljs"><code>RUN <span class="hljs-built_in">set</span> -ex; \
-    <span class="hljs-keyword">if</span> [ <span class="hljs-string">"<span class="hljs-variable">$ENABLE_BTFGEN</span>"</span> = <span class="hljs-literal">true</span> ]; <span class="hljs-keyword">then</span> \
-        <span class="hljs-built_in">cd</span> /btf-tools &amp;&amp; \
-        LIBBPFTOOLS=/objs BTFHUB=/tmp/btfhub INSPEKTOR_GADGET=/gadget ./btfgen.sh; \
-    <span class="hljs-keyword">fi</span></code></pre></div>
-<p>辅助脚本 <a title="https://github.com/kinvolk/inspektor-gadget/blob/v0.4.2/tools/btfgen.sh" href="https://github.com/kinvolk/inspektor-gadget/blob/v0.4.2/tools/btfgen.sh">btfgen.sh</a> 调用 bpftool 为 BTFHub 支持的所有内核生成 BTF 文件。</p>
-<p>我们修改 <a title="https://github.com/kinvolk/inspektor-gadget/blob/v0.4.2/gadget-container/entrypoint.sh#L149-L154" href="https://github.com/kinvolk/inspektor-gadget/blob/v0.4.2/gadget-container/entrypoint.sh#L149-L154">entrypoint</a> 脚本，在容器文件系统上安装正确的 BTF 文件，使对应的工具都能运行。Inspektor 工具被设计成总是在容器中运行，因此我们可以将 BTF 文件安装在系统路径（<code>/boot/vmlinux-$(uname -r)</code>），而不影响主机。通过这样做，我们还可以避免修改不同的 BCC 工具的源代码（就像我们在上面的例子中做的那样）：</p>
-<div><pre class="hljs"><code>
-<span class="hljs-built_in">echo</span> <span class="hljs-string">"Kernel provided BTF is not available: Trying shipped BTF files"</span>
-SOURCE_BTF=/btfs/<span class="hljs-variable">$ID</span>/<span class="hljs-variable">$VERSION_ID</span>/<span class="hljs-variable">$ARCH</span>/<span class="hljs-variable">$KERNEL</span>.btf
-<span class="hljs-keyword">if</span> [-f <span class="hljs-variable">$SOURCE_BTF</span>]; <span class="hljs-keyword">then</span>
-        objcopy --input binary --output elf64-little --rename-section .data=.BTF <span class="hljs-variable">$SOURCE_BTF</span> /boot/vmlinux-<span class="hljs-variable">$KERNEL</span>
-        <span class="hljs-built_in">echo</span> <span class="hljs-string">"shipped BTF available. Installed at /boot/vmlinux-<span class="hljs-variable">$KERNEL</span>"</span>
-<span class="hljs-keyword">else</span>
-...</code></pre></div>
-<p>PR 完整实现参见 <a title="https://github.com/kinvolk/inspektor-gadget/pull/387" href="https://github.com/kinvolk/inspektor-gadget/pull/387">inspektor-gadget/pull/387</a></p>
-<h4 id="tracee">Tracee</h4>
-<p><a title="https://github.com/aquasecurity/tracee" href="https://github.com/aquasecurity/tracee">Tracee</a> 是用于 Linux 的运行时安全和取证工具。这里，生成的 BTF 文件可被嵌入到应用程序的二进制文件中。Makefile 有一个 <a title="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/Makefile.one#L507" href="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/Makefile.one#L507">btfhub</a> 目标，然后调用 <a title="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/3rdparty/btfhub.sh#L1" href="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/3rdparty/btfhub.sh#L1">btfhub.sh</a>。脚本克隆 BTFHub 仓库，并调用<a title="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/3rdparty/btfhub.sh#L112" href="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/3rdparty/btfhub.sh#L112">btfgen.sh</a>  来生成 BTF 文件。这些文件被移到 ./dist/btfhub 目录中。</p>
-<div><pre class="hljs"><code><span class="hljs-comment"># generate tailored BTFs</span>
-
-[ ! -f ./tools/btfgen.sh ] &amp;&amp; die <span class="hljs-string">"could not find btfgen.sh"</span>
-./tools/btfgen.sh -a <span class="hljs-variable">${ARCH}</span> -o <span class="hljs-variable">$TRACEE_BPF_CORE</span>
-
-<span class="hljs-comment"># move tailored BTFs to dist</span>
-
-[ ! -d <span class="hljs-variable">${BASEDIR}</span>/dist ] &amp;&amp; die <span class="hljs-string">"could not find dist directory"</span>
-[ ! -d <span class="hljs-variable">${BASEDIR}</span>/dist/btfhub ] &amp;&amp; mkdir <span class="hljs-variable">${BASEDIR}</span>/dist/btfhub
-
-rm -rf <span class="hljs-variable">${BASEDIR}</span>/dist/btfhub/*
-mv ./custom-archive/* <span class="hljs-variable">${BASEDIR}</span>/dist/btfhub</code></pre></div>
-<p>然后，使用 <a title="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/embedded-ebpf.go#L11" href="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/embedded-ebpf.go#L11">go:embed</a> 指令将 BTF 文件嵌入到 Go 二进制中。</p>
-<div><pre class="hljs"><code><span class="hljs-comment">//go:build ebpf</span>
-<span class="hljs-comment">// +build ebpf</span>
-
-<span class="hljs-keyword">package</span> tracee
-
-<span class="hljs-keyword">import</span> (
-    <span class="hljs-string">"embed"</span>
-)
-
-<span class="hljs-comment">//go:embed "dist/tracee.bpf.core.o"</span>
-<span class="hljs-comment">//go:embed "dist/btfhub/*"</span>
-
-<span class="hljs-keyword">var</span> BPFBundleInjected embed.FS</code></pre></div>
-<p>在运行时，当前内核的对应的 BTF文件被<a title="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/cmd/tracee-ebpf/main.go#L367" href="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/cmd/tracee-ebpf/main.go#L367">解压</a>，其路径传递给 <a title="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/cmd/tracee-ebpf/main.go#L373" href="https://github.com/aquasecurity/tracee/blob/add1efa7934dcf46be67ea2be54ac0d139a94804/cmd/tracee-ebpf/main.go#L373">libbpf-go</a>，用于 CO-RE 重定位。</p>
-<h3 id="44-限制">4.4 限制</h3>
-<p>内核中的 BTF 支持不仅仅是关于导出 BTF 类型。部分 eBPF 程序如 fentry/fexit 和 LSM 钩子需要内核导出 BTF 信息。这些程序将不能使用 BTFGen，唯一的选择是启用 CONFIG_DEBUG_INFO_BTF 的内核。</p>
-<h3 id="45-未来发展">4.5 未来发展</h3>
-<p>当然，我们知道 BTFGen 是一个临时的解决方案，直到大多数系统更新到默认导出 BTF 信息的内核版本。然而，我们认为这需要几年的时间，在这期间，BTFGen 可以帮助填补这一空白。</p>
-<p>以下是我们可以近期考虑的一些改进。</p>
-<h4 id="与其他项目的整合">与其他项目的整合</h4>
-<p>部分项目如 BCC 及其基于 libbpf 的工具都可以与 BTFGen 整合获益。 我们提交了一个 <a title="https://github.com/iovisor/bcc/pull/3889" href="https://github.com/iovisor/bcc/pull/3889">PR</a>，通过使用 BTFGen 使上述工具可以在更多的 Linux 发行版中使用。</p>
-<h4 id="删除重复的文件">删除重复的文件</h4>
-<p>eBPF 程序通常访问很少的内核类型，因此，两个不同的内核版本生成的文件很有可能是相同的，这对于同一 Linux 发行版的小版本内核来说尤其如此。对 BTFGen 的进一步改进是基于此，通过使用符号链接或类似的方法来避免创建重复的文件。</p>
-<p>这也可以直接在 BTFHub 上进行，因为有些源 BTF 文件是重复的，就像<a title="https://github.com/aquasecurity/btfhub/issues/17" href="https://github.com/aquasecurity/btfhub/issues/17">这个</a>问题中所指出的那样，但即使在这种情况下，出现重复文件的机会还是较低。</p>
-<h4 id="在线-api">在线 API</h4>
-<p>BTFHub 仓库体积很大，而且由于新内核的发布，它的规模还在不断增加。Seekret 创建了一个 <a title="https://github.com/seek-ret/btfhub-online" href="https://github.com/seek-ret/btfhub-online">API</a>，使用 BTFGen 和 BTFHub 为用户提供的 eBPF 对象按需生成 “精简版” BTF 文件。</p>
-<h2 id="5-更多信息">5. 更多信息</h2>
-<p>如果你想了解更多关于 eBPF、BTF、CO-RE、BTFHub 和 BTFGen 的信息，以下资料无疑是优秀的参考：</p>
-<ul>
-<li><a title="https://nakryiko.com/posts/bpf-core-reference-guide/" href="https://nakryiko.com/posts/bpf-core-reference-guide/">BPF CO-RE参考指南</a>：从开发者的角度解释了如何使用 CO-RE。</li>
-<li><a title="https://nakryiko.com/posts/bpf-portability-and-co-re/" href="https://nakryiko.com/posts/bpf-portability-and-co-re/">BPF CO-RE (Compile Once - Run Everywhere)</a>：解释了 CO-RE和该机制中涉及的不同组件。</li>
-<li><a title="https://github.com/aquasecurity/btfhub/blob/main/docs/btfgen-internals.md" href="https://github.com/aquasecurity/btfhub/blob/main/docs/btfgen-internals.md">eBPF BTF 生成器：通往真正的可移植 CO-RE eBPF 程序之路</a>：深入探讨 BTFGen 的实现。</li>
-<li><a title="https://www.kernel.org/doc/html/latest/bpf/btf.html" href="https://www.kernel.org/doc/html/latest/bpf/btf.html">BPF类型格式(BTF)</a>：BTF的内核文档。</li>
-</ul>
-<h2 id="6-致谢">6. 致谢</h2>
-<p>功能从已经存在的项目中获得了灵感，并由不同的公司联合实现。</p>
-<p>首先，我们要感谢 Aqua Security 团队在 BTFHub 上所做的出色工作，这是我们的基础项目。</p>
-<p>其次，我们要感谢在这个功能的开发过程中做出贡献的人员。Aqua Security 的 Rafael David Tinoco 和 Elastic 的 Lorenzo Fontana 和 Leonardo Di Donato。</p>
-<p>最后，libbpf 的维护者 Andrii Nakryiko 和 Alexei Starovoitov 以及 bpftool 的维护者 Quentin Monnet，他们为实现该功能提供了大量宝贵的反馈和指导。</p>
-<blockquote>
-<p>原文作者：DavidDi<br />
-原文链接：<a title="https://www.ebpf.top/post/btfgen-one-step-closer-to-truly-portable-ebpf-programs/" href="https://www.ebpf.top/post/btfgen-one-step-closer-to-truly-portable-ebpf-programs/">https://www.ebpf.top/post/btfgen-one-step-closer-to-truly-portable-ebpf-programs/</a><br />
-版权声明：本作品采用知识共享署名-非商业性使用-禁止演绎 4.0 国际许可协议进行许可，非商业转载请注明出处（作者，原文链接），商业转载请联系作者获得授权。</p>
-</blockquote>
 ]]></content:encoded>
         </item>
     </channel>
