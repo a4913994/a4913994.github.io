@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+<link rel="stylesheet" href="/_assets/main.css" />
+
+    <title>限流算法 - 刘宪东的笔记</title>
+  <link rel="stylesheet" href="/_markdown_plugin_assets/highlight.js/atom-one-light.css" /></head>
+  <body>
+    <div class="main">
+      <nav class="navigation">
+        <a href="/">刘宪东的笔记</a>
+      </nav>
+      <article>
+        <header>
+          <h1 class="article-title">限流算法</h1>
+          <div class="article-info">
+            <div>
+              <span>创建时间：<time datetime="1681303122815">2023-04-12 20:38</time></span>
+              <span>更新时间：<time datetime="1681305273411">2023-04-12 21:14</time></span>
+              
+            </div>
+          </div>
+        </header>
+        <div class="article-content markdown-body"><blockquote>
+<p>节流算法是用于控制应用程序或系统消耗资源或处理请求的速率的技术，有助于维护系统的稳定性，保证资源的公平分配，防止系统过载或崩溃。</p>
+</blockquote>
+<h3 id="常见的节流算法">常见的节流算法</h3>
+<ol>
+<li>令牌桶算法:该算法维护一个虚拟的令牌桶，在处理请求时使用这些令牌。令牌以固定的速率生成，如果没有令牌，请求要么被丢弃，要么被延迟，直到新的令牌可用为止。这种方法允许高请求率的短爆发，使总请求率随着时间的推移变得平稳。</li>
+<li>漏桶算法:漏桶算法与令牌桶算法类似，也使用了虚拟桶。但是，它不使用令牌，而是累积传入的请求，并以恒定的速率处理它们。如果桶已满，新的传入请求将被丢弃或延迟。该算法执行严格的、一致的请求率。</li>
+<li>固定窗口速率限制:该算法将时间划分为固定的窗口(例如，每秒、分钟或小时)，并允许每个窗口内的最大请求数量。如果达到限制，新的请求要么被丢弃，要么被延迟，直到下一个窗口开始。这种方法实现起来很简单，但可能会导致在新窗口开始时出现请求爆发。</li>
+<li>滑动窗口速率限制:该算法改进了固定的窗口速率限制，允许在一个滑动窗口时间内(例如，在任何60秒间隔内)的最大请求数量。它减轻了固定窗口速率限制中出现的突发问题，并提供了对请求速率的更流畅的控制。</li>
+<li>自适应速率限制:该算法根据当前系统负载、延迟或其他因素动态调整允许的请求速率。它的实现可能更加复杂，但通过实时适应不断变化的条件提供更好的资源管理。</li>
+<li>指数回退:这是在重试机制中使用的策略，客户端逐渐增加重试之间的等待时间，以减少系统上的请求负载。每次请求失败后，客户端等待的时间呈指数增长，然后再发送另一个请求。这种方法在处理速率限制或瞬态错误时特别有用。</li>
+</ol>
+<h3 id="滑动窗口速率限制算法实现">滑动窗口速率限制算法实现</h3>
+<div><pre class="hljs"><code><span class="hljs-keyword">package</span> main
+
+<span class="hljs-keyword">import</span> (
+    <span class="hljs-string">"fmt"</span>
+    <span class="hljs-string">"sync"</span>
+    <span class="hljs-string">"time"</span>
+)
+
+<span class="hljs-keyword">type</span> RateLimiter <span class="hljs-keyword">struct</span> {
+    sync.Mutex
+    maxRequests  <span class="hljs-keyword">int</span>
+    windowLength time.Duration
+    requests     <span class="hljs-keyword">map</span>[<span class="hljs-keyword">int64</span>]<span class="hljs-keyword">int</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">NewRateLimiter</span><span class="hljs-params">(maxRequests <span class="hljs-keyword">int</span>, windowLength time.Duration)</span> *<span class="hljs-title">RateLimiter</span></span> {
+    <span class="hljs-keyword">return</span> &amp;RateLimiter{
+        maxRequests:  maxRequests,
+        windowLength: windowLength,
+        requests:     <span class="hljs-built_in">make</span>(<span class="hljs-keyword">map</span>[<span class="hljs-keyword">int64</span>]<span class="hljs-keyword">int</span>),
+    }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(r *RateLimiter)</span> <span class="hljs-title">Allow</span><span class="hljs-params">()</span> <span class="hljs-title">bool</span></span> {
+    r.Lock()
+    <span class="hljs-keyword">defer</span> r.Unlock()
+
+    now := time.Now().Unix()
+    earliest := now - <span class="hljs-keyword">int64</span>(r.windowLength.Seconds())
+
+    <span class="hljs-comment">// Clean up expired timestamps</span>
+    <span class="hljs-keyword">for</span> timestamp := <span class="hljs-keyword">range</span> r.requests {
+        <span class="hljs-keyword">if</span> timestamp &lt; earliest {
+            <span class="hljs-built_in">delete</span>(r.requests, timestamp)
+        }
+    }
+
+    <span class="hljs-comment">// Count requests in the current sliding window</span>
+    requestCount := <span class="hljs-number">0</span>
+    <span class="hljs-keyword">for</span> _, count := <span class="hljs-keyword">range</span> r.requests {
+        requestCount += count
+    }
+
+    <span class="hljs-comment">// Check if the request can be allowed</span>
+    <span class="hljs-keyword">if</span> requestCount &lt; r.maxRequests {
+        r.requests[now]++
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>
+    }
+
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    limiter := NewRateLimiter(<span class="hljs-number">5</span>, <span class="hljs-number">10</span>*time.Second)
+
+    <span class="hljs-keyword">for</span> i := <span class="hljs-number">1</span>; i &lt;= <span class="hljs-number">10</span>; i++ {
+        allowed := limiter.Allow()
+        fmt.Printf(<span class="hljs-string">"Request %d: Allowed = %t\n"</span>, i, allowed)
+        time.Sleep(<span class="hljs-number">2</span> * time.Second)
+    }
+}</code></pre></div>
+</div>
+      </article>
+    </div>
+  </body>
+</html>
