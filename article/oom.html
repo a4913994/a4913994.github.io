@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+<link rel="stylesheet" href="/_assets/main.css" />
+
+    <title>OOM - 刘宪东的笔记</title>
+  </head>
+  <body>
+    <div class="main">
+      <nav class="navigation">
+        <a href="/">刘宪东的笔记</a>
+      </nav>
+      <article>
+        <header>
+          <h1 class="article-title">OOM</h1>
+          <div class="article-info">
+            <div>
+              <span>创建时间：<time datetime="1681912603631">2023-04-19 21:56</time></span>
+              <span>更新时间：<time datetime="1681912628402">2023-04-19 21:57</time></span>
+              
+            </div>
+          </div>
+        </header>
+        <div class="article-content markdown-body"><h3 id="学习资料">学习资料</h3>
+<p>要学习 Linux OOM（Out-of-Memory）相关的内容，你需要查看以下源代码文件：</p>
+<ul>
+<li>mm/oom_kill.c: 这个文件包含了 OOM killer 的主要实现代码，包括选择要杀死的进程、计算进程的 OOM 分数等功能。</li>
+<li>include/linux/oom.h: 这个文件包含了 OOM 相关的数据结构定义，例如 struct oom_control，以及 OOM 相关的一些宏定义。</li>
+<li>mm/page_alloc.c: 这个文件包含了内存分配的代码，包括内存分配失败时触发 OOM 的逻辑。</li>
+<li>mm/vmscan.c: 这个文件包含了内核中的内存回收机制，其中也涉及了在内存压力过大时触发 OOM 的部分逻辑。</li>
+<li>include/linux/memcontrol.h 和 mm/memcontrol.c: 这两个文件包含了内存 cgroup（控制组）的实现。OOM killer 也可以在 cgroup 内触发，以便在特定的 cgroup 内释放内存。</li>
+<li>kernel/sysctl.c: 这个文件包含了内核参数（sysctl）的实现，其中包括 OOM 相关的参数，例如调整 OOM killer 的启用或禁用。</li>
+<li>fs/proc/base.c 和 fs/proc/task_mmu.c: 这两个文件包含了 /proc 文件系统中与 OOM 相关的信息的实现，例如 /proc/<pid class="jop-noMdConv">/oom_score 和 /proc/<pid class="jop-noMdConv">/oom_score_adj。<br />
+学习这些文件将帮助你了解 Linux OOM 的实现原理、触发条件、处理过程以及如何调整 OOM 行为。由于 Linux 内核代码较为复杂，建议先阅读概念性的文章和文档以了解 OOM 的基本概念和原理，然后再深入阅读源代码。</pid></pid></li>
+</ul>
+</div>
+      </article>
+    </div>
+  </body>
+</html>

@@ -19,7 +19,7 @@
           <div class="article-info">
             <div>
               <span>创建时间：<time datetime="1681221286773">2023-04-11 21:54</time></span>
-              <span>更新时间：<time datetime="1681222023293">2023-04-11 22:07</time></span>
+              <span>更新时间：<time datetime="1681222959499">2023-04-11 22:22</time></span>
               
             </div>
           </div>
@@ -205,6 +205,88 @@
 在添加新数据点或修改现有数据点时，请确保相应更新相应的索引。这可能需要更新二级索引或基于时间的索引结构，例如时间范围摘要统计信息。</li>
 </ol>
 <p>记住，建立索引是有代价的。虽然它可以显著提高查询性能，但也会增加数据库设计的复杂性，并增加写入操作的开销。必须分析应用程序的查询模式和需求，以确定最合适的索引策略。</p>
+<h2 id="基于文件的删除策略">基于文件的删除策略</h2>
+<p>To execute a delete strategy based on the database file size, you can monitor the file size periodically and trigger the deletion process once it exceeds a specified threshold. Here's how you can implement this strategy in your Golang program:</p>
+<ol>
+<li>Add a new global variable for the maximum allowed file size in bytes at the top of your <code>timeseries.go</code> file:</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-keyword">const</span> maxFileSize <span class="hljs-keyword">int64</span> = <span class="hljs-number">1000000000</span> <span class="hljs-comment">// 1 GB</span></code></pre></div>
+<ol start="2">
+<li>Create a function to check the current database file size:</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">getFileSize</span><span class="hljs-params">(filepath <span class="hljs-keyword">string</span>)</span> <span class="hljs-params">(<span class="hljs-keyword">int64</span>, error)</span></span> {
+    fileInfo, err := os.Stat(filepath)
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>, err
+    }
+    <span class="hljs-keyword">return</span> fileInfo.Size(), <span class="hljs-literal">nil</span>
+}</code></pre></div>
+<ol start="3">
+<li>Implement a function to delete a certain percentage of the oldest data points when the file size exceeds the threshold. The percentage is defined by the deletePercentage parameter:</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">deleteDataPointsByPercentage</span><span class="hljs-params">(db *bolt.DB, bucketName <span class="hljs-keyword">string</span>, deletePercentage <span class="hljs-keyword">float64</span>)</span></span> {
+    <span class="hljs-keyword">if</span> deletePercentage &lt; <span class="hljs-number">0</span> || deletePercentage &gt; <span class="hljs-number">1</span> {
+        log.Println(<span class="hljs-string">"Invalid delete percentage. It must be between 0 and 1."</span>)
+        <span class="hljs-keyword">return</span>
+    }
+
+    err := db.Update(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(tx *bolt.Tx)</span> <span class="hljs-title">error</span></span> {
+        b := tx.Bucket([]<span class="hljs-keyword">byte</span>(bucketName))
+        c := b.Cursor()
+
+        totalDataPoints := <span class="hljs-number">0</span>
+        <span class="hljs-keyword">for</span> k, _ := c.First(); k != <span class="hljs-literal">nil</span>; k, _ = c.Next() {
+            totalDataPoints++
+        }
+
+        deleteCount := <span class="hljs-keyword">int</span>(<span class="hljs-keyword">float64</span>(totalDataPoints) * deletePercentage)
+
+        <span class="hljs-keyword">for</span> i := <span class="hljs-number">0</span>; i &lt; deleteCount; i++ {
+            k, _ := c.First()
+            <span class="hljs-keyword">if</span> k != <span class="hljs-literal">nil</span> {
+                <span class="hljs-keyword">if</span> err := c.Delete(); err != <span class="hljs-literal">nil</span> {
+                    <span class="hljs-keyword">return</span> err
+                }
+            }
+        }
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>
+    })
+
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        log.Fatal(err)
+    }
+}</code></pre></div>
+<ol start="4">
+<li>Monitor the file size periodically in your <code>main</code> function and trigger the deletion when it exceeds the threshold. Use a ticker to check the file size at a specific interval, such as once per hour:</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    db := initDB()
+    <span class="hljs-keyword">defer</span> db.Close()
+
+    bucketName := <span class="hljs-string">"timeseries"</span>
+
+    createBucket(db, bucketName)
+
+    <span class="hljs-comment">// Start the ticker for checking file size and triggering deletion</span>
+    fileSizeTicker := time.NewTicker(<span class="hljs-number">1</span> * time.Hour)
+    <span class="hljs-keyword">go</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> {
+        <span class="hljs-keyword">for</span> <span class="hljs-keyword">range</span> fileSizeTicker.C {
+            fileSize, err := getFileSize(<span class="hljs-string">"timeseries.db"</span>)
+            <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+                log.Println(<span class="hljs-string">"Error checking file size:"</span>, err)
+                <span class="hljs-keyword">continue</span>
+            }
+
+            <span class="hljs-keyword">if</span> fileSize &gt;= maxFileSize {
+                log.Println(<span class="hljs-string">"Database file size exceeded threshold. Deleting oldest data points."</span>)
+                deleteDataPointsByPercentage(db, bucketName, <span class="hljs-number">0.1</span>) <span class="hljs-comment">// Deletes 10% of the oldest data points</span>
+            }
+        }
+    }()
+
+    <span class="hljs-comment">// ... (the rest of your main function)</span>
+}</code></pre></div>
+<p>This implementation checks the database file size periodically and deletes a specified percentage of the oldest data points when the file size exceeds the threshold. Adjust the maxFileSize and deletePercentage variables according to your requirements. To minimize the deletion frequency, increase the file size threshold or decrease the percentage of data points to delete.</p>
 </div>
       </article>
     </div>

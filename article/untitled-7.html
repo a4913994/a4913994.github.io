@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+<link rel="stylesheet" href="/_assets/main.css" />
+
+    <title>内存管理 - 刘宪东的笔记</title>
+  <link rel="stylesheet" href="/_markdown_plugin_assets/highlight.js/atom-one-light.css" /></head>
+  <body>
+    <div class="main">
+      <nav class="navigation">
+        <a href="/">刘宪东的笔记</a>
+      </nav>
+      <article>
+        <header>
+          <h1 class="article-title">内存管理</h1>
+          <div class="article-info">
+            <div>
+              <span>创建时间：<time datetime="1681308085463">2023-04-12 22:01</time></span>
+              <span>更新时间：<time datetime="1681556548316">2023-04-15 19:02</time></span>
+              
+            </div>
+          </div>
+        </header>
+        <div class="article-content markdown-body"><h2 id="从oomout-of-memory开始">从OOM(Out Of Memory)开始</h2>
+<blockquote>
+<p>内存溢出（OOM，Out Of Memory）错误是指当内核在其内部内存池中耗尽内存且无法从其他来源回收内存时发生的情况。它基本上会开始随机终止进程，并在dmesg中生成大量日志。</p>
+</blockquote>
+<h3 id="导致内存溢出oom的原因是什么">导致内存溢出（OOM）的原因是什么？</h3>
+<p>通常，系统在回收内存方面表现得相当懒散，更倾向于让内存留在缓存中，直到真正需要使用。因此，如果没有内存请求，看到内存使用量增长而不减少并不罕见。当有内存请求时，系统可能会选择释放一些无人使用的内存以满足请求，或者将仍在使用的数据放到交换空间中，然后交出现在可用的内存。如果交换空间上的数据再次被需要，它将替换一些其他不再使用的内存。当这种替换过程被认为已经停止取得进展时，就会发生内存溢出（OOM）。</p>
+<p>当内存紧张时，整个进程会被终止，理论上这样做可以释放大量内存。这并不是一个完全理想的解决方案，但它确实（理论上）允许系统继续运行。然而在实践中，用户通常会反感他们的进程被强制终止，这通常也是问题引起关注的时候。</p>
+<h3 id="导致这些内存溢出oom事件的原因是什么">导致这些内存溢出（OOM）事件的原因是什么？</h3>
+<ul>
+<li>内核确实内存不足, 工作负载使用的内存超过了系统的RAM和交换空间
+<ul>
+<li>在<code>/proc/meminfo</code>中，查看<code>SwapFree</code>和<code>MemFree</code>分别是什么？如果两者都非常低（小于总量的1%），那么工作负载可能有问题。（除非涉及到<code>mlock()</code>或<code>HugeTLB</code>，具体请见下文...)
+<ul>
+<li>SwapFree：表示系统中当前可用的交换空间大小，单位是KB</li>
+<li>MemFree：表示系统中当前可用的物理内存大小，单位是KB</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>在32位架构上，内核的低内存耗尽了
+<ul>
+<li>在<code>/proc/meminfo</code>中，<code>LowFree</code>是什么？如果它非常低，但<code>HighFree</code>要高得多，那么你可能面临这种情况。这种工作负载在64位平台或内核上运行可能会有益处。</li>
+</ul>
+</li>
+<li>存在内核数据结构或内存泄漏问题
+<ul>
+<li>在<code>/proc/meminfo</code>文件中，查看<code>SwapFree</code>和<code>MemFree</code>分别是什么？</li>
+<li>在<code>slabinfo</code>中，<code>task_struct</code>对象的数量是多少？系统是否创建了如此多的进程，以至于耗尽了内存？
+<ul>
+<li>这里需要你查看<code>/proc/slabinfo</code>文件，找到<code>task_struct</code>对应的行，其中会显示当前系统中<code>task_struct</code>对象的数量。如果数量过多，可能是系统创建了过多进程，导致内存耗尽</li>
+</ul>
+</li>
+<li>在/proc/slabinfo中，哪些对象占用了最多的空间？如果某种对象占据了系统总内存的绝大部分，那么这个对象可能是问题所在。要查看对象的使用情况，请在命令行上运行以下命令：
+<ul>
+<li><code>awk '{printf "%5d MB %s\n", $3*$4/(1024*1024), $1}' &lt; /proc/slabinfo | sort -n</code></li>
+</ul>
+</li>
+<li>内核没有正确使用其交换空间
+<ul>
+<li>如果应用程序使用<code>mlock()</code>或<code>HugeTLBfs</code>页，则可能无法为该应用程序使用其交换空间。如果发生这种情况，当OOM发生时，<code>SwapFree</code>可能仍然有一个非常大的值。但是，这两个特性不允许系统交换受影响的内存，因此过度使用它们可能耗尽系统内存，使系统没有其他资源</li>
+<li>系统也可能陷入一种类似死锁的状态。将数据写入磁盘本身可能需要为各种I/O数据结构分配内存。如果系统连这些内存都找不到，用于创建空闲内存的函数将受到限制，系统很可能会耗尽内存。可以通过进行一些微调来更早地开始分页，但是如果系统无法足够快地将脏页写出以释放内存，那么我们只能得出结论：工作负载与已安装的内存不匹配，而且没有太多可做的事情。提高<code>/proc/sys/vm/min_free_kbytes</code>中的值会使系统比以前更早地开始回收内存。这使得陷入这种死锁的难度更大。</li>
+</ul>
+</li>
+<li>内核做出了错误的决策，并误读了其统计数据, 在还有大量可用的优质RAM的情况下，系统发生了内存溢出（OOM）</li>
+<li>发生了一些非常病态的情况。实际上，在花费了“相当多”的时间扫描内存寻找可释放内容后，内核决定触发内存溢出（OOM),  如果内核正在快速扫描页面，但是您的I/O设备(交换、文件系统或网络fs)太慢，内核可能会判断没有任何进展，即使有交换空闲，也会触发OOM</li>
+</ul>
+</li>
+</ul>
+<h2 id="走进linux的内存演化路线">走进Linux的内存演化路线</h2>
+<h3 id="发展历程">发展历程</h3>
+<ol>
+<li>
+<p><strong>早期阶段(1991年-2001年):</strong>  在早期的Linux内核版本中，内存管理主要依赖于x86硬件架构的页表机制。在这个阶段，内存管理主要包括内存分配和回收、虚拟内存、页面置换等基本功能。早期的Linux内核使用了经典的Buddy System算法来管理物理内存，该算法可以高效地分配和回收大块物理内存。</p>
+</li>
+<li>
+<p><strong>2.4内核阶段(2001年-2003年):</strong>  随着计算机技术的不断发展，内存容量也越来越大，早期的内存管理方案已经无法满足需求。因此，Linux内核开始引入一系列新的内存管理机制，例如Slab Allocator、NUMA和高速缓存等，以支持更大规模的内存管理。在2.4版本的内核中，Linux内存管理的设计和实现更加高效和灵活。</p>
+</li>
+<li>
+<p><strong>2.6内核阶段(2003年-2011年):</strong>  2.6版本的内核是Linux内存管理的一个重要里程碑，它引入了许多新的特性，例如：内存压缩、大页面、回收和管理虚拟内存、Memory Controller等。此外，2.6内核还加入了可扩展的物理页框架（SPF）和完整性保护（Integrity Protection）等高级特性。</p>
+</li>
+<li>
+<p><strong>3.x和4.x内核阶段(2011年-至今):</strong>  自3.x和4.x内核以来，Linux内存管理的重点已经转移到了能耗优化、虚拟化和NUMA等方面。新的特性包括Transparent Huge Pages、Control Group（Cgroup）等，可以帮助管理员更好地管理系统内存。同时，内核还引入了对无线电源管理、休眠模式和睡眠状态等特性的支持，以更好地满足现代计算机的需求。</p>
+</li>
+</ol>
+<h3 id="linux各版本中涉及的重要特性和改进">Linux各版本中涉及的重要特性和改进</h3>
+<ol>
+<li>
+<p>Linux 0.0.1 (1991年)：最初的Linux版本只支持1MB的物理内存，使用简单的伙伴系统（Buddy System）来管理物理内存。</p>
+</li>
+<li>
+<p>Linux 1.0 (1994年)：支持2GB的物理内存，引入了虚拟内存和页面置换功能。</p>
+</li>
+<li>
+<p>Linux 2.2 (1999年)：引入了高速缓存、共享内存和NUMA支持等特性，以支持更大规模的内存管理。</p>
+</li>
+<li>
+<p>Linux 2.4 (2001年)：引入了Slab Allocator来管理内核对象的内存分配和回收，可以高效地处理小块内存。此外，2.4版本还支持大页面（Huge Pages）和内存压缩（Memory Compression）等特性。</p>
+</li>
+<li>
+<p>Linux 2.6 (2003年)：引入了Memory Controller和Completely Fair Scheduler（CFS）等特性，可以更好地管理和调度系统内存和进程。此外，2.6版本还支持SPF和完整性保护（Integrity Protection）等高级特性。</p>
+</li>
+<li>
+<p>Linux 3.x和4.x (2011年-至今)：引入了Transparent Huge Pages、Control Group（Cgroup）等特性，可以帮助管理员更好地管理系统内存。同时，内核还引入了对无线电源管理、休眠模式和睡眠状态等特性的支持。</p>
+</li>
+</ol>
+<h3 id="源码分析">源码分析</h3>
+<h4 id="linux-001">Linux 0.0.1</h4>
+<p><a title="https://github.com/zavg/linux-0.01.git" href="https://github.com/zavg/linux-0.01.git">Linux 0.0.1</a></p>
+<p>内存管理相关的文件：</p>
+<ol>
+<li><code>include/asm/memory.h</code>: 定义了<code>memcpy</code>函数</li>
+<li><code>mm/memory.c</code>: 主要实现了<code>include/linux/mm.h</code>中<code>get_free_page</code>, <code>put_page</code>和<code>free_page</code>三个内存分配函数</li>
+<li>在这一版的源码中已经出现了<code>HIGH_MEMORY</code>，<code>LOW_MEMORY</code>和<code>vmem_map</code>等概念</li>
+</ol>
+<h3 id="linux-10">Linux 1.0</h3>
+<h3 id="linux-4x">LInux 4.x</h3>
+<div><pre class="hljs"><code>+--------------------------------------+
+|         用户态 (User space)           |
++--------------------------------------+
+|         内核态 (Kernel space)         |
++---------+----------+-----------------+
+| 物理内存 | 页表管理 | 高速缓存 &amp; 缓冲区  |
++---------+----------+-----------------+
+|           硬件层 (Hardware)           |
++--------------------------------------+</code></pre></div>
+<ul>
+<li>用户态 (User space)：用户程序和应用程序运行的区域。</li>
+<li>内核态 (Kernel space)：内核代码和数据结构所在的区域。</li>
+<li>物理内存 (Physical memory)：用于存储内核、用户程序和数据的实际内存。</li>
+<li>页表管理 (Page table management)：用于管理虚拟地址到物理地址的映射关系。</li>
+<li>高速缓存 &amp; 缓冲区 (Cache &amp; Buffer)：用于加速内存访问和数据交换的缓存结构。</li>
+<li>硬件层 (Hardware)：包括物理内存、CPU 和其他硬件设备。</li>
+</ul>
+<h4 id="虚拟内存">虚拟内存</h4>
+<div><pre class="hljs"><code>+-----------------------------+
+|      虚拟地址空间 (VAS)        |
++-------------+---------------+
+|  用户虚拟地址 | 内核虚拟地址    |
++------+------+------+--------+
+| 页全局目录 | 页上级目录 | 页目录 | 页表 |
++------+------+------+--------+
+|       物理地址空间 (PAS)        |
++-----------------------------+</code></pre></div>
+<ul>
+<li>虚拟地址空间 (Virtual Address Space, VAS)：操作系统为每个进程分配的地址空间。</li>
+<li>用户虚拟地址 (User virtual address)：用户程序和应用程序运行的虚拟地址区域。</li>
+<li>内核虚拟地址 (Kernel virtual address)：内核代码和数据结构的虚拟地址区域。</li>
+<li>页全局目录 (Page Global Directory)：最高级别的页表，用于指向页上级目录。</li>
+<li>页上级目录 (Page Upper Directory)：用于指向页目录。</li>
+<li>页目录 (Page Directory)：用于指向页表。</li>
+<li>页表 (Page Table)：用于将虚拟地址映射到物理地址。</li>
+<li>物理地址空间 (Physical Address Space, PAS)：实际内存的地址空间。</li>
+</ul>
+<div><pre class="hljs"><code>+------------------------------------+
+|       虚拟地址空间 (VAS)              |
+|+----------------------------------+|
+||      用户虚拟地址 (UVA)            ||
+||+------------+------------+------+||
+||| 用户栈     | 用户数据    | 用户代码 |||
+||+------------+------------+------+||
+|+----------------------------------+|
+|+----------------------------------+|
+||      内核虚拟地址 (KVA)            ||
+||+------------+------------+------+||
+||| 内核栈     | 内核数据    | 内核代码 |||
+||+------------+------------+------+||
+|+----------------------------------+|
++------------------------------------+
+</code></pre></div>
+</div>
+      </article>
+    </div>
+  </body>
+</html>

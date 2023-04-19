@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+<link rel="stylesheet" href="/_assets/main.css" />
+
+    <title>共享内存 - 刘宪东的笔记</title>
+  </head>
+  <body>
+    <div class="main">
+      <nav class="navigation">
+        <a href="/">刘宪东的笔记</a>
+      </nav>
+      <article>
+        <header>
+          <h1 class="article-title">共享内存</h1>
+          <div class="article-info">
+            <div>
+              <span>创建时间：<time datetime="1681912570149">2023-04-19 21:56</time></span>
+              <span>更新时间：<time datetime="1681912598998">2023-04-19 21:56</time></span>
+              
+            </div>
+          </div>
+        </header>
+        <div class="article-content markdown-body"><h3 id="资料">资料</h3>
+<p>要学习 Linux 共享内存（Shared Memory）相关的内容，可以查看以下源代码文件：</p>
+<ul>
+<li>ipc/shm.c: 这个文件包含了 System V 共享内存实现的主要代码。System V 共享内存是 Linux 中最早的共享内存实现。</li>
+<li>ipc/util.c: 这个文件包含了 IPC（包括共享内存）相关的辅助功能和数据结构。</li>
+<li>include/linux/shm.h: 这个文件包含了 System V 共享内存的一些常量、宏和结构体定义。</li>
+<li>mm/mmap.c: 这个文件包含了内存映射（mmap）的实现代码。内存映射可以用于创建共享内存区域，例如使用 MAP_SHARED 标志。mmap 也是实现 POSIX 共享内存的基础。</li>
+<li>include/linux/mman.h: 这个文件包含了内存映射相关的宏、常量和结构体定义。</li>
+<li>fs/proc/task_mmu.c: 这个文件包含了 /proc 文件系统中与共享内存相关的信息的实现，例如 /proc/<pid class="jop-noMdConv">/maps。</pid></li>
+<li>fs/hugetlbfs/inode.c: 这个文件包含了 hugetlbfs 的实现，hugetlbfs 可以用于创建大页（huge pages）的共享内存区域。<br />
+学习这些文件将帮助你了解 Linux 共享内存的实现原理、操作方式和与其他系统组件的交互。此外，建议先阅读关于共享内存的概念性文章和文档，以便了解基本概念和原理，然后再深入阅读源代码。</li>
+</ul>
+</div>
+      </article>
+    </div>
+  </body>
+</html>

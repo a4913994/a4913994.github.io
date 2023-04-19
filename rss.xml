@@ -4,9 +4,200 @@
         <title></title>
         <link>undefined</link>
         <description>undefined</description>
-        <lastBuildDate>Wed, 12 Apr 2023 13:15:07 GMT</lastBuildDate>
+        <lastBuildDate>Wed, 19 Apr 2023 13:57:49 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>Joplin Pages Publisher</generator>
+        <item>
+            <title><![CDATA[OOM]]></title>
+            <guid>f37eae6d84674ed88bac2e2b754b9934</guid>
+            <pubDate>Wed, 19 Apr 2023 13:56:43 GMT</pubDate>
+            <content:encoded><![CDATA[<h3 id="学习资料">学习资料</h3>
+<p>要学习 Linux OOM（Out-of-Memory）相关的内容，你需要查看以下源代码文件：</p>
+<ul>
+<li>mm/oom_kill.c: 这个文件包含了 OOM killer 的主要实现代码，包括选择要杀死的进程、计算进程的 OOM 分数等功能。</li>
+<li>include/linux/oom.h: 这个文件包含了 OOM 相关的数据结构定义，例如 struct oom_control，以及 OOM 相关的一些宏定义。</li>
+<li>mm/page_alloc.c: 这个文件包含了内存分配的代码，包括内存分配失败时触发 OOM 的逻辑。</li>
+<li>mm/vmscan.c: 这个文件包含了内核中的内存回收机制，其中也涉及了在内存压力过大时触发 OOM 的部分逻辑。</li>
+<li>include/linux/memcontrol.h 和 mm/memcontrol.c: 这两个文件包含了内存 cgroup（控制组）的实现。OOM killer 也可以在 cgroup 内触发，以便在特定的 cgroup 内释放内存。</li>
+<li>kernel/sysctl.c: 这个文件包含了内核参数（sysctl）的实现，其中包括 OOM 相关的参数，例如调整 OOM killer 的启用或禁用。</li>
+<li>fs/proc/base.c 和 fs/proc/task_mmu.c: 这两个文件包含了 /proc 文件系统中与 OOM 相关的信息的实现，例如 /proc/<pid class="jop-noMdConv">/oom_score 和 /proc/<pid class="jop-noMdConv">/oom_score_adj。<br />
+学习这些文件将帮助你了解 Linux OOM 的实现原理、触发条件、处理过程以及如何调整 OOM 行为。由于 Linux 内核代码较为复杂，建议先阅读概念性的文章和文档以了解 OOM 的基本概念和原理，然后再深入阅读源代码。</pid></pid></li>
+</ul>
+]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[共享内存]]></title>
+            <guid>3dcbaa4cae934e679ad1d58e28b6642e</guid>
+            <pubDate>Wed, 19 Apr 2023 13:56:10 GMT</pubDate>
+            <content:encoded><![CDATA[<h3 id="资料">资料</h3>
+<p>要学习 Linux 共享内存（Shared Memory）相关的内容，可以查看以下源代码文件：</p>
+<ul>
+<li>ipc/shm.c: 这个文件包含了 System V 共享内存实现的主要代码。System V 共享内存是 Linux 中最早的共享内存实现。</li>
+<li>ipc/util.c: 这个文件包含了 IPC（包括共享内存）相关的辅助功能和数据结构。</li>
+<li>include/linux/shm.h: 这个文件包含了 System V 共享内存的一些常量、宏和结构体定义。</li>
+<li>mm/mmap.c: 这个文件包含了内存映射（mmap）的实现代码。内存映射可以用于创建共享内存区域，例如使用 MAP_SHARED 标志。mmap 也是实现 POSIX 共享内存的基础。</li>
+<li>include/linux/mman.h: 这个文件包含了内存映射相关的宏、常量和结构体定义。</li>
+<li>fs/proc/task_mmu.c: 这个文件包含了 /proc 文件系统中与共享内存相关的信息的实现，例如 /proc/<pid class="jop-noMdConv">/maps。</pid></li>
+<li>fs/hugetlbfs/inode.c: 这个文件包含了 hugetlbfs 的实现，hugetlbfs 可以用于创建大页（huge pages）的共享内存区域。<br />
+学习这些文件将帮助你了解 Linux 共享内存的实现原理、操作方式和与其他系统组件的交互。此外，建议先阅读关于共享内存的概念性文章和文档，以便了解基本概念和原理，然后再深入阅读源代码。</li>
+</ul>
+]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[内存管理]]></title>
+            <guid>326f6a784a8341049d9e6bb44a734024</guid>
+            <pubDate>Wed, 12 Apr 2023 14:01:25 GMT</pubDate>
+            <content:encoded><![CDATA[<h2 id="从oomout-of-memory开始">从OOM(Out Of Memory)开始</h2>
+<blockquote>
+<p>内存溢出（OOM，Out Of Memory）错误是指当内核在其内部内存池中耗尽内存且无法从其他来源回收内存时发生的情况。它基本上会开始随机终止进程，并在dmesg中生成大量日志。</p>
+</blockquote>
+<h3 id="导致内存溢出oom的原因是什么">导致内存溢出（OOM）的原因是什么？</h3>
+<p>通常，系统在回收内存方面表现得相当懒散，更倾向于让内存留在缓存中，直到真正需要使用。因此，如果没有内存请求，看到内存使用量增长而不减少并不罕见。当有内存请求时，系统可能会选择释放一些无人使用的内存以满足请求，或者将仍在使用的数据放到交换空间中，然后交出现在可用的内存。如果交换空间上的数据再次被需要，它将替换一些其他不再使用的内存。当这种替换过程被认为已经停止取得进展时，就会发生内存溢出（OOM）。</p>
+<p>当内存紧张时，整个进程会被终止，理论上这样做可以释放大量内存。这并不是一个完全理想的解决方案，但它确实（理论上）允许系统继续运行。然而在实践中，用户通常会反感他们的进程被强制终止，这通常也是问题引起关注的时候。</p>
+<h3 id="导致这些内存溢出oom事件的原因是什么">导致这些内存溢出（OOM）事件的原因是什么？</h3>
+<ul>
+<li>内核确实内存不足, 工作负载使用的内存超过了系统的RAM和交换空间
+<ul>
+<li>在<code>/proc/meminfo</code>中，查看<code>SwapFree</code>和<code>MemFree</code>分别是什么？如果两者都非常低（小于总量的1%），那么工作负载可能有问题。（除非涉及到<code>mlock()</code>或<code>HugeTLB</code>，具体请见下文...)
+<ul>
+<li>SwapFree：表示系统中当前可用的交换空间大小，单位是KB</li>
+<li>MemFree：表示系统中当前可用的物理内存大小，单位是KB</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>在32位架构上，内核的低内存耗尽了
+<ul>
+<li>在<code>/proc/meminfo</code>中，<code>LowFree</code>是什么？如果它非常低，但<code>HighFree</code>要高得多，那么你可能面临这种情况。这种工作负载在64位平台或内核上运行可能会有益处。</li>
+</ul>
+</li>
+<li>存在内核数据结构或内存泄漏问题
+<ul>
+<li>在<code>/proc/meminfo</code>文件中，查看<code>SwapFree</code>和<code>MemFree</code>分别是什么？</li>
+<li>在<code>slabinfo</code>中，<code>task_struct</code>对象的数量是多少？系统是否创建了如此多的进程，以至于耗尽了内存？
+<ul>
+<li>这里需要你查看<code>/proc/slabinfo</code>文件，找到<code>task_struct</code>对应的行，其中会显示当前系统中<code>task_struct</code>对象的数量。如果数量过多，可能是系统创建了过多进程，导致内存耗尽</li>
+</ul>
+</li>
+<li>在/proc/slabinfo中，哪些对象占用了最多的空间？如果某种对象占据了系统总内存的绝大部分，那么这个对象可能是问题所在。要查看对象的使用情况，请在命令行上运行以下命令：
+<ul>
+<li><code>awk '{printf "%5d MB %s\n", $3*$4/(1024*1024), $1}' &lt; /proc/slabinfo | sort -n</code></li>
+</ul>
+</li>
+<li>内核没有正确使用其交换空间
+<ul>
+<li>如果应用程序使用<code>mlock()</code>或<code>HugeTLBfs</code>页，则可能无法为该应用程序使用其交换空间。如果发生这种情况，当OOM发生时，<code>SwapFree</code>可能仍然有一个非常大的值。但是，这两个特性不允许系统交换受影响的内存，因此过度使用它们可能耗尽系统内存，使系统没有其他资源</li>
+<li>系统也可能陷入一种类似死锁的状态。将数据写入磁盘本身可能需要为各种I/O数据结构分配内存。如果系统连这些内存都找不到，用于创建空闲内存的函数将受到限制，系统很可能会耗尽内存。可以通过进行一些微调来更早地开始分页，但是如果系统无法足够快地将脏页写出以释放内存，那么我们只能得出结论：工作负载与已安装的内存不匹配，而且没有太多可做的事情。提高<code>/proc/sys/vm/min_free_kbytes</code>中的值会使系统比以前更早地开始回收内存。这使得陷入这种死锁的难度更大。</li>
+</ul>
+</li>
+<li>内核做出了错误的决策，并误读了其统计数据, 在还有大量可用的优质RAM的情况下，系统发生了内存溢出（OOM）</li>
+<li>发生了一些非常病态的情况。实际上，在花费了“相当多”的时间扫描内存寻找可释放内容后，内核决定触发内存溢出（OOM),  如果内核正在快速扫描页面，但是您的I/O设备(交换、文件系统或网络fs)太慢，内核可能会判断没有任何进展，即使有交换空闲，也会触发OOM</li>
+</ul>
+</li>
+</ul>
+<h2 id="走进linux的内存演化路线">走进Linux的内存演化路线</h2>
+<h3 id="发展历程">发展历程</h3>
+<ol>
+<li>
+<p><strong>早期阶段(1991年-2001年):</strong>  在早期的Linux内核版本中，内存管理主要依赖于x86硬件架构的页表机制。在这个阶段，内存管理主要包括内存分配和回收、虚拟内存、页面置换等基本功能。早期的Linux内核使用了经典的Buddy System算法来管理物理内存，该算法可以高效地分配和回收大块物理内存。</p>
+</li>
+<li>
+<p><strong>2.4内核阶段(2001年-2003年):</strong>  随着计算机技术的不断发展，内存容量也越来越大，早期的内存管理方案已经无法满足需求。因此，Linux内核开始引入一系列新的内存管理机制，例如Slab Allocator、NUMA和高速缓存等，以支持更大规模的内存管理。在2.4版本的内核中，Linux内存管理的设计和实现更加高效和灵活。</p>
+</li>
+<li>
+<p><strong>2.6内核阶段(2003年-2011年):</strong>  2.6版本的内核是Linux内存管理的一个重要里程碑，它引入了许多新的特性，例如：内存压缩、大页面、回收和管理虚拟内存、Memory Controller等。此外，2.6内核还加入了可扩展的物理页框架（SPF）和完整性保护（Integrity Protection）等高级特性。</p>
+</li>
+<li>
+<p><strong>3.x和4.x内核阶段(2011年-至今):</strong>  自3.x和4.x内核以来，Linux内存管理的重点已经转移到了能耗优化、虚拟化和NUMA等方面。新的特性包括Transparent Huge Pages、Control Group（Cgroup）等，可以帮助管理员更好地管理系统内存。同时，内核还引入了对无线电源管理、休眠模式和睡眠状态等特性的支持，以更好地满足现代计算机的需求。</p>
+</li>
+</ol>
+<h3 id="linux各版本中涉及的重要特性和改进">Linux各版本中涉及的重要特性和改进</h3>
+<ol>
+<li>
+<p>Linux 0.0.1 (1991年)：最初的Linux版本只支持1MB的物理内存，使用简单的伙伴系统（Buddy System）来管理物理内存。</p>
+</li>
+<li>
+<p>Linux 1.0 (1994年)：支持2GB的物理内存，引入了虚拟内存和页面置换功能。</p>
+</li>
+<li>
+<p>Linux 2.2 (1999年)：引入了高速缓存、共享内存和NUMA支持等特性，以支持更大规模的内存管理。</p>
+</li>
+<li>
+<p>Linux 2.4 (2001年)：引入了Slab Allocator来管理内核对象的内存分配和回收，可以高效地处理小块内存。此外，2.4版本还支持大页面（Huge Pages）和内存压缩（Memory Compression）等特性。</p>
+</li>
+<li>
+<p>Linux 2.6 (2003年)：引入了Memory Controller和Completely Fair Scheduler（CFS）等特性，可以更好地管理和调度系统内存和进程。此外，2.6版本还支持SPF和完整性保护（Integrity Protection）等高级特性。</p>
+</li>
+<li>
+<p>Linux 3.x和4.x (2011年-至今)：引入了Transparent Huge Pages、Control Group（Cgroup）等特性，可以帮助管理员更好地管理系统内存。同时，内核还引入了对无线电源管理、休眠模式和睡眠状态等特性的支持。</p>
+</li>
+</ol>
+<h3 id="源码分析">源码分析</h3>
+<h4 id="linux-001">Linux 0.0.1</h4>
+<p><a title="https://github.com/zavg/linux-0.01.git" href="https://github.com/zavg/linux-0.01.git">Linux 0.0.1</a></p>
+<p>内存管理相关的文件：</p>
+<ol>
+<li><code>include/asm/memory.h</code>: 定义了<code>memcpy</code>函数</li>
+<li><code>mm/memory.c</code>: 主要实现了<code>include/linux/mm.h</code>中<code>get_free_page</code>, <code>put_page</code>和<code>free_page</code>三个内存分配函数</li>
+<li>在这一版的源码中已经出现了<code>HIGH_MEMORY</code>，<code>LOW_MEMORY</code>和<code>vmem_map</code>等概念</li>
+</ol>
+<h3 id="linux-10">Linux 1.0</h3>
+<h3 id="linux-4x">LInux 4.x</h3>
+<div><pre class="hljs"><code>+--------------------------------------+
+|         用户态 (User space)           |
++--------------------------------------+
+|         内核态 (Kernel space)         |
++---------+----------+-----------------+
+| 物理内存 | 页表管理 | 高速缓存 &amp; 缓冲区  |
++---------+----------+-----------------+
+|           硬件层 (Hardware)           |
++--------------------------------------+</code></pre></div>
+<ul>
+<li>用户态 (User space)：用户程序和应用程序运行的区域。</li>
+<li>内核态 (Kernel space)：内核代码和数据结构所在的区域。</li>
+<li>物理内存 (Physical memory)：用于存储内核、用户程序和数据的实际内存。</li>
+<li>页表管理 (Page table management)：用于管理虚拟地址到物理地址的映射关系。</li>
+<li>高速缓存 &amp; 缓冲区 (Cache &amp; Buffer)：用于加速内存访问和数据交换的缓存结构。</li>
+<li>硬件层 (Hardware)：包括物理内存、CPU 和其他硬件设备。</li>
+</ul>
+<h4 id="虚拟内存">虚拟内存</h4>
+<div><pre class="hljs"><code>+-----------------------------+
+|      虚拟地址空间 (VAS)        |
++-------------+---------------+
+|  用户虚拟地址 | 内核虚拟地址    |
++------+------+------+--------+
+| 页全局目录 | 页上级目录 | 页目录 | 页表 |
++------+------+------+--------+
+|       物理地址空间 (PAS)        |
++-----------------------------+</code></pre></div>
+<ul>
+<li>虚拟地址空间 (Virtual Address Space, VAS)：操作系统为每个进程分配的地址空间。</li>
+<li>用户虚拟地址 (User virtual address)：用户程序和应用程序运行的虚拟地址区域。</li>
+<li>内核虚拟地址 (Kernel virtual address)：内核代码和数据结构的虚拟地址区域。</li>
+<li>页全局目录 (Page Global Directory)：最高级别的页表，用于指向页上级目录。</li>
+<li>页上级目录 (Page Upper Directory)：用于指向页目录。</li>
+<li>页目录 (Page Directory)：用于指向页表。</li>
+<li>页表 (Page Table)：用于将虚拟地址映射到物理地址。</li>
+<li>物理地址空间 (Physical Address Space, PAS)：实际内存的地址空间。</li>
+</ul>
+<div><pre class="hljs"><code>+------------------------------------+
+|       虚拟地址空间 (VAS)              |
+|+----------------------------------+|
+||      用户虚拟地址 (UVA)            ||
+||+------------+------------+------+||
+||| 用户栈     | 用户数据    | 用户代码 |||
+||+------------+------------+------+||
+|+----------------------------------+|
+|+----------------------------------+|
+||      内核虚拟地址 (KVA)            ||
+||+------------+------------+------+||
+||| 内核栈     | 内核数据    | 内核代码 |||
+||+------------+------------+------+||
+|+----------------------------------+|
++------------------------------------+
+</code></pre></div>
+]]></content:encoded>
+        </item>
         <item>
             <title><![CDATA[限流算法]]></title>
             <guid>e877991b34564e5788dda7604a0d76af</guid>
@@ -85,6 +276,16 @@
         time.Sleep(<span class="hljs-number">2</span> * time.Second)
     }
 }</code></pre></div>
+<h3 id="参考资料">参考资料</h3>
+<ul>
+<li><a title="https://cloud.google.com/apis/docs/rate-limiting" href="https://cloud.google.com/apis/docs/rate-limiting">Rate limiting, API keys, and quotas (Google Cloud)</a></li>
+<li><a title="https://www.toptal.com/nodejs/introduction-rate-limiting-nodejs" href="https://www.toptal.com/nodejs/introduction-rate-limiting-nodejs">Understanding and Implementing Rate Limiting in Node.js (Toptal)</a></li>
+<li><a title="https://gist.github.com/peteti/6b89b1c6e91e6f9759b9a1a0e3a3df24" href="https://gist.github.com/peteti/6b89b1c6e91e6f9759b9a1a0e3a3df24">Sliding Window Rate Limiter in Golang (GitHub Gist)</a></li>
+<li><a title="https://www.tomhudson.dev/blog/2020/07/building-a-rate-limiter-in-go" href="https://www.tomhudson.dev/blog/2020/07/building-a-rate-limiter-in-go">Building a rate limiter in Go (Tom Hudson's Blog)</a></li>
+<li><a title="https://golangcode.com/rate-limiting-using-go/" href="https://golangcode.com/rate-limiting-using-go/">Rate limiting using the token bucket algorithm (Golang Code)</a></li>
+<li><a title="https://redislabs.com/redis-best-practices/basic-rate-limiting/" href="https://redislabs.com/redis-best-practices/basic-rate-limiting/">Redis-based rate limiting (Redis Labs)</a></li>
+<li><a title="https://www.nginx.com/blog/rate-limiting-nginx/" href="https://www.nginx.com/blog/rate-limiting-nginx/">Rate limiting with Nginx (Nginx)</a></li>
+</ul>
 ]]></content:encoded>
         </item>
         <item>
@@ -272,6 +473,88 @@
 在添加新数据点或修改现有数据点时，请确保相应更新相应的索引。这可能需要更新二级索引或基于时间的索引结构，例如时间范围摘要统计信息。</li>
 </ol>
 <p>记住，建立索引是有代价的。虽然它可以显著提高查询性能，但也会增加数据库设计的复杂性，并增加写入操作的开销。必须分析应用程序的查询模式和需求，以确定最合适的索引策略。</p>
+<h2 id="基于文件的删除策略">基于文件的删除策略</h2>
+<p>To execute a delete strategy based on the database file size, you can monitor the file size periodically and trigger the deletion process once it exceeds a specified threshold. Here's how you can implement this strategy in your Golang program:</p>
+<ol>
+<li>Add a new global variable for the maximum allowed file size in bytes at the top of your <code>timeseries.go</code> file:</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-keyword">const</span> maxFileSize <span class="hljs-keyword">int64</span> = <span class="hljs-number">1000000000</span> <span class="hljs-comment">// 1 GB</span></code></pre></div>
+<ol start="2">
+<li>Create a function to check the current database file size:</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">getFileSize</span><span class="hljs-params">(filepath <span class="hljs-keyword">string</span>)</span> <span class="hljs-params">(<span class="hljs-keyword">int64</span>, error)</span></span> {
+    fileInfo, err := os.Stat(filepath)
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>, err
+    }
+    <span class="hljs-keyword">return</span> fileInfo.Size(), <span class="hljs-literal">nil</span>
+}</code></pre></div>
+<ol start="3">
+<li>Implement a function to delete a certain percentage of the oldest data points when the file size exceeds the threshold. The percentage is defined by the deletePercentage parameter:</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">deleteDataPointsByPercentage</span><span class="hljs-params">(db *bolt.DB, bucketName <span class="hljs-keyword">string</span>, deletePercentage <span class="hljs-keyword">float64</span>)</span></span> {
+    <span class="hljs-keyword">if</span> deletePercentage &lt; <span class="hljs-number">0</span> || deletePercentage &gt; <span class="hljs-number">1</span> {
+        log.Println(<span class="hljs-string">"Invalid delete percentage. It must be between 0 and 1."</span>)
+        <span class="hljs-keyword">return</span>
+    }
+
+    err := db.Update(<span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">(tx *bolt.Tx)</span> <span class="hljs-title">error</span></span> {
+        b := tx.Bucket([]<span class="hljs-keyword">byte</span>(bucketName))
+        c := b.Cursor()
+
+        totalDataPoints := <span class="hljs-number">0</span>
+        <span class="hljs-keyword">for</span> k, _ := c.First(); k != <span class="hljs-literal">nil</span>; k, _ = c.Next() {
+            totalDataPoints++
+        }
+
+        deleteCount := <span class="hljs-keyword">int</span>(<span class="hljs-keyword">float64</span>(totalDataPoints) * deletePercentage)
+
+        <span class="hljs-keyword">for</span> i := <span class="hljs-number">0</span>; i &lt; deleteCount; i++ {
+            k, _ := c.First()
+            <span class="hljs-keyword">if</span> k != <span class="hljs-literal">nil</span> {
+                <span class="hljs-keyword">if</span> err := c.Delete(); err != <span class="hljs-literal">nil</span> {
+                    <span class="hljs-keyword">return</span> err
+                }
+            }
+        }
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">nil</span>
+    })
+
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        log.Fatal(err)
+    }
+}</code></pre></div>
+<ol start="4">
+<li>Monitor the file size periodically in your <code>main</code> function and trigger the deletion when it exceeds the threshold. Use a ticker to check the file size at a specific interval, such as once per hour:</li>
+</ol>
+<div><pre class="hljs"><code><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    db := initDB()
+    <span class="hljs-keyword">defer</span> db.Close()
+
+    bucketName := <span class="hljs-string">"timeseries"</span>
+
+    createBucket(db, bucketName)
+
+    <span class="hljs-comment">// Start the ticker for checking file size and triggering deletion</span>
+    fileSizeTicker := time.NewTicker(<span class="hljs-number">1</span> * time.Hour)
+    <span class="hljs-keyword">go</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> {
+        <span class="hljs-keyword">for</span> <span class="hljs-keyword">range</span> fileSizeTicker.C {
+            fileSize, err := getFileSize(<span class="hljs-string">"timeseries.db"</span>)
+            <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+                log.Println(<span class="hljs-string">"Error checking file size:"</span>, err)
+                <span class="hljs-keyword">continue</span>
+            }
+
+            <span class="hljs-keyword">if</span> fileSize &gt;= maxFileSize {
+                log.Println(<span class="hljs-string">"Database file size exceeded threshold. Deleting oldest data points."</span>)
+                deleteDataPointsByPercentage(db, bucketName, <span class="hljs-number">0.1</span>) <span class="hljs-comment">// Deletes 10% of the oldest data points</span>
+            }
+        }
+    }()
+
+    <span class="hljs-comment">// ... (the rest of your main function)</span>
+}</code></pre></div>
+<p>This implementation checks the database file size periodically and deletes a specified percentage of the oldest data points when the file size exceeds the threshold. Adjust the maxFileSize and deletePercentage variables according to your requirements. To minimize the deletion frequency, increase the file size threshold or decrease the percentage of data points to delete.</p>
 ]]></content:encoded>
         </item>
         <item>
@@ -567,174 +850,6 @@
 <p>本文所做的就是描述，以完整和准确的形式列出该工具的功能、命令和选项。</p>
 <p>这不是一本友好或引人入胜的读物，但它的目的是尽可能快速和无干扰地查找有关功能的信息。</p>
 <p><img src="/_resources/39dbb70411b14b989589918e6e9cc290.png" /></p>
-]]></content:encoded>
-        </item>
-        <item>
-            <title><![CDATA[3. 文档系统 ---- 操作指南]]></title>
-            <guid>3bd5b0fd198c4934bc32b1b464f28a33</guid>
-            <pubDate>Tue, 31 Jan 2023 16:20:44 GMT</pubDate>
-            <content:encoded><![CDATA[<p>操作指南引导读者完成解决现实世界问题所需的步骤。</p>
-<p>它们是实现特定目标的秘诀和指导——例如：如何创建网络表单；如何绘制三维数据集；如何启用 LDAP 身份验证。</p>
-<p>他们完全以目标为导向。</p>
-<p>操作指南与教程完全不同，切勿与它们混淆：</p>
-<ul>
-<li>教程是您决定初学者需要了解的内容。</li>
-<li>操作指南是对只有具有一定经验的用户才能提出的问题的答案。</li>
-</ul>
-<p>在操作指南中，您可以假设一些知识和理解。您可以假设用户已经知道如何做基本的事情和使用基本的工具。</p>
-<p>与教程不同，软件文档中的操作指南往往做得相当好。它们也很有趣且易于编写。</p>
-<h2 id="烹饪类比">烹饪类比</h2>
-<p><img src="/_resources/64b5ff532d70498891941154b75179a0.png" /></p>
-<p>想想一个食谱，准备吃的东西。</p>
-<p>食谱有一个明确、明确的结局。它解决了一个特定的问题。它向某人展示 - 可以假设他们已经具备一些基本知识 - 如何取得成就。</p>
-<p>不能指望以前从未做过饭的人成功地遵循食谱，因此食谱不能代替烹饪课。同时，阅读食谱的人会很生气地发现它试图教授他们已经知道的基础知识，或者包含与成分无关的讨论。</p>
-<h2 id="如何编写好的操作指南">如何编写好的操作指南</h2>
-<h3 id="提供一系列步骤">提供一系列步骤</h3>
-<p>操作指南必须包含一系列步骤，需要按顺序执行（就像教程一样）。您不必从头开始，只需从一个合理的起点开始。操作指南应该是可靠的，但它们不需要像教程那样具有铁一般的可重复性。</p>
-<h3 id="注重结果">注重结果</h3>
-<p>操作指南必须侧重于实现实际目标。其他任何事情都会让人分心。与教程一样，详细的解释在这里是不合适的。</p>
-<h3 id="解决特定问题">解决特定问题</h3>
-<p>操作指南必须解决特定问题：我如何……？</p>
-<p>这是操作指南不同于教程的一种方式：当涉及到操作指南时，可以假设读者知道他们应该实现什么，但还不知道如何实现 - 而在教程中，您有责任决定读者需要了解哪些内容。</p>
-<h3 id="不解释概念">不解释概念</h3>
-<p>操作指南不应解释任何事情。这不是进行此类讨论的场所；他们只会妨碍行动。如果解释很重要，请链接到它们。</p>
-<h3 id="允许一些灵活性">允许一些灵活性</h3>
-<p>操作指南应该允许使用略有不同的方法来做同样的事情。它只需要足够的灵活性，以便用户可以看到它将如何应用于与您描述的示例略有不同的示例，或者了解如何使其适应与您假设的系统或配置略有不同的系统或配置。不要太具体以至于指南除了你心中的确切目的之外没有任何用处。</p>
-<h3 id="把事情留在外面">把事情留在外面</h3>
-<p>实用性比完整性更有价值。教程需要是完整的、端到端的指南；操作指南没有。他们可以在您认为合适的地方开始和结束。他们也不需要提及该提及的所有内容，只是因为它与主题相关。臃肿的操作指南无法帮助用户快速找到他们的解决方案。</p>
-<h3 id="名字很好引导">名字很好引导</h3>
-<p>操作文档的标题应该告诉用户它到底做了什么。 How to create a class-based view 这个标题不错。创建基于类的视图或更糟的是，基于类的视图不是。</p>
-<h3 id="divio-文档中的示例">Divio 文档中的示例</h3>
-<p>看看我们的<a title="https://docs.divio.com/en/latest/how-to/" href="https://docs.divio.com/en/latest/how-to/">操作指南</a>。</p>
-<p>其中每一个都是对一个问题的回答：我如何……？每个标题前面都可以清楚地加上“How to”字样。每一个都是一个秘诀，引导您完成完成特定任务所需的步骤。</p>
-<p>尽管教程和操作指南都是为用户服务的，但是教程是由知道用户需要知道什么的作者主导的，而操作指南是由提出问题的用户引导的。</p>
-<p><img src="/_resources/740543613b8d409e9e9293a2c371cb6a.png" /></p>
-]]></content:encoded>
-        </item>
-        <item>
-            <title><![CDATA[2. 文档系统 ---- 教程]]></title>
-            <guid>0b3fe84173924c459ed57b3b36078e88</guid>
-            <pubDate>Tue, 31 Jan 2023 16:10:58 GMT</pubDate>
-            <content:encoded><![CDATA[<p>教程是指导读者通过一系列步骤完成某种项目的课程。它们是您的项目所需要的，以便向初学者展示他们可以用它取得一些成就。</p>
-<p>他们完全以学习为导向，具体来说，他们以学习如何做而不是学习那个为导向。</p>
-<p>您是老师，您要对学生的行为负责。在您的指导下，学生将执行一系列操作以达到某个目的。</p>
-<p>结局和行动取决于你，但决定它们应该是什么可能是一项艰苦的工作。结束必须是有意义的，但对于一个完全的初学者来说也是可以实现的。</p>
-<p>重要的是完成教程后，学习者能够理解文档的其余部分以及软件本身。</p>
-<p>大多数软件项目都有非常糟糕的——或者根本不存在的——教程。教程将把你的学习者变成用户。糟糕或缺失的教程将阻止您的项目获得新用户。</p>
-<p>在描述四种文档的部分中，这是迄今为止最长的 - 这是因为教程最容易被误解，也最难做好。最好的教学方式是有老师在场，与学生互动。这几乎不可能，我们的书面教程充其量只是一个远非完美的替代品。这就是特别关注它们的更多理由。</p>
-<p>教程需要对初学者有用，易于理解，有意义且极其强大，并保持最新。您可能会发现编写和维护教程所占用的时间和精力与其他三个部分加在一起所占用的时间和精力一样多。</p>
-<h2 id="烹饪类比">烹饪类比</h2>
-<p>考虑一个教孩子做饭的类比。</p>
-<p>你教孩子做什么并不重要。重要的是孩子觉得它很有趣，并获得信心，并想再做一次。</p>
-<p>通过孩子所做的事情，他将学习有关烹饪的重要知识。它将了解在厨房、使用器具和处理食物时的感觉。</p>
-<p>这是因为使用软件就像烹饪一样是一门手艺。它是知识——但它是实践知识，而不是理论知识。</p>
-<p>当我们学习一门新手艺或技能时，我们总是边做边学。</p>
-<h2 id="如何写出好的教程">如何写出好的教程</h2>
-<h3 id="允许用户边做边学">允许用户边做边学</h3>
-<p><strong>一开始，我们只能通过实践来学习任何东西</strong>——这就是我们学习说话或走路的方式。</p>
-<p>在您的软件教程中，您的学习者需要做一些事情。他们在按照您的教程进行操作时所做的不同事情需要涵盖广泛的工具和操作，从一开始最简单的工具和更复杂的工具和操作。</p>
-<h3 id="让用户开始">让用户开始</h3>
-<p>如果您的初学者的第一步是手持婴儿学步，那是完全可以接受的。如果您让初学者做的事情不是有经验的人会做的，或者即使这不是“正确”的方式，这也是完全可以接受的——初学者教程与最佳实践手册不同。</p>
-<p>教程的目的是让您的学习者开始他们的旅程，而不是让他们到达最终目的地。</p>
-<h3 id="确保您的教程有效">确保您的教程有效</h3>
-<p>作为导师，你的工作之一是激发初学者的信心：对软件、对教程、对导师，当然还有对他们自己实现要求的能力的信心。</p>
-<p>有很多因素促成了这一点。友好的语气会有所帮助，语言的一致使用以及材料的逻辑进展也会有所帮助。但最重要的一点是，你要求初学者做的事情必须奏效。学习者需要看到您要求他们采取的行动会产生您所说的效果。</p>
-<p>如果学习者的操作产生错误或意外结果，那么您的教程就失败了——即使这不是您的错。当你的学生和你在一起时，你可以拯救他们；如果他们自己阅读你的文档，你就不能——所以你必须提前防止这种情况发生。毫无疑问，这说起来容易做起来难。</p>
-<h3 id="确保用户立即看到结果">确保用户立即看到结果</h3>
-<p>学习者所做的每一件事都应该完成一些可以理解的事情，无论多么小。如果您的学生在看到结果之前必须在两页纸上做一些奇怪且难以理解的事情，那就太长了。每个动作的效果都应该尽快可见和明显，并且与动作的联系应该清楚。</p>
-<p>教程的每个部分或整个教程的结论必须是有意义的成就。</p>
-<h3 id="让您的教程可重复">让您的教程可重复</h3>
-<p>您的教程必须可靠地可重复。这并不容易实现：人们将使用不同的操作系统、经验水平和工具来实现它。更重要的是，他们使用的任何软件或资源很可能同时发生变化。</p>
-<p>本教程每次都必须适用于所有人。</p>
-<p>不幸的是，教程需要定期和详细的测试以确保它们仍然有效。</p>
-<h3 id="关注具体步骤而不是抽象概念">关注具体步骤，而不是抽象概念</h3>
-<p>教程需要具体，围绕具体的、特定的行动和结果构建。</p>
-<p>引入抽象的诱惑是巨大的；毕竟，大多数计算都是通过这种方式获得其能力的。但是所有的学习都是从具体和具体到一般和抽象的，要求学习者在他们甚至有机会掌握具体之前欣赏抽象层次是糟糕的教学。</p>
-<h3 id="提供最少的必要解释">提供最少的必要解释</h3>
-<p>不要解释学习者为了完成教程不需要知道的任何事情。扩展讨论很重要——只是不在教程中。在教程中，它是一种障碍和干扰。只有最低限度是合适的。相反，链接到文档中其他地方的解释。</p>
-<h3 id="只关注用户需要采取的步骤">只关注用户需要采取的步骤</h3>
-<p>您的教程需要专注于手头的任务。也许您要介绍的命令还有许多其他选项，或者可能有不同的方式来访问某个 API。没关系：现在，您的学习者不需要了解这些就可以取得进步。</p>
-<h3 id="divio-文档中的示例">Divio 文档中的示例</h3>
-<p>看看我们的<a title="https://docs.divio.com/en/latest/introduction/" href="https://docs.divio.com/en/latest/introduction/">教程</a>。</p>
-<p>特别是，请参阅 Django 教程。本教程做出的承诺是：如果您具备学习本教程所需的基本知识，并且按照它的指示进行操作，您最终将得到一个可用的 Django Web 应用程序，其中包含 Postgres 数据库、S3 媒体存储等.为了作为教程工作，它必须履行该承诺。</p>
-<p>请注意，它不会告诉您将学习什么，而只会告诉您将做什么。学习来自于那样做。本教程对您将要执行的操作以及执行顺序负全部责任。</p>
-<p><img src="/_resources/89080eae08bf40d58fc1a1ef6f780f9d.png" /></p>
-]]></content:encoded>
-        </item>
-        <item>
-            <title><![CDATA[1. 文档系统 ---- 介绍]]></title>
-            <guid>a2e5226395d2413dbeec0ff7c99ddcfc</guid>
-            <pubDate>Tue, 31 Jan 2023 15:52:16 GMT</pubDate>
-            <content:encoded><![CDATA[<blockquote>
-<p>为了编写好的软件文档，需要了解一个秘密：没有一种叫做文档的东西，而是有四种。</p>
-</blockquote>
-<p>它们是：<strong>教程</strong>、<strong>操作指南</strong>、<strong>技术参考</strong>和<strong>解释</strong>。它们代表四种不同的目的或功能，所以需要四种不同的创建方法。理解这一点的含义将有助于改进大多数文档。</p>
-<p><img src="/_resources/edacd9c6002b4530bc8bb2197a145e51.png" /></p>
-<center style="font-size:14px;color:#C0C0C0;text-decoration:underline;margin-top:-20px" class="jop-noMdConv">文档系统</center>
-<p>此处概述的文档系统是一个简单、全面且几乎普遍适用的方案。它在广泛的领域和应用中得到了实践证明。</p>
-<p>如果你能将这些原则付诸实践，它会让你的文档变得更好，你的项目、产品或团队会更成功。</p>
-<h2 id="介绍">介绍</h2>
-<h3 id="问题与解决方案">问题与解决方案</h3>
-<h4 id="解决的问题">解决的问题</h4>
-<p>你的产品有多好并不重要，因为如果它的文档不够好，人们就不会使用它。即使他们因为别无选择而不得不使用它，如果没有良好的文档，他们也不会有效地或按照您希望的方式使用它。</p>
-<p>几乎每个人都明白这一点。几乎每个人都知道他们需要好的文档，而且大多数人都试图创建好的文档。大多数人都失败了。</p>
-<p>通常，这不是因为他们不够努力。通常，这是因为他们没有以正确的方式做事。</p>
-<p>这个系统是一种让你的文档变得更好的方法，不是通过更努力地工作，而是通过正确的方式来做。正确的方法是更简单的方法——更容易编写，也更容易维护。</p>
-<h4 id="原理">原理</h4>
-<p>这实际上不是秘密，当然也不应该是秘密：文档需要包括并围绕其四个不同功能构建：<strong>教程、操作指南、技术参考和解释</strong>。他们每个都需要一种独特的写作方式。使用软件的人在不同的时间、不同的情况下需要这四种不同的文档——所以软件通常都需要它们，而且它们都应该集成到您的文档中。</p>
-<table>
-<thead>
-<tr>
-<th style="text-align:left"></th>
-<th style="text-align:left">教程</th>
-<th style="text-align:left">操作指南</th>
-<th style="text-align:left">参考</th>
-<th style="text-align:left">解释</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left">面向</td>
-<td style="text-align:left">学习</td>
-<td style="text-align:left">一个目标</td>
-<td style="text-align:left">信息</td>
-<td style="text-align:left">理解</td>
-</tr>
-<tr>
-<td style="text-align:left">必须</td>
-<td style="text-align:left">让新人开始</td>
-<td style="text-align:left">展示如何解决特定问题</td>
-<td style="text-align:left">描述原理</td>
-<td style="text-align:left">诠释</td>
-</tr>
-<tr>
-<td style="text-align:left">它的形式</td>
-<td style="text-align:left">一堂课</td>
-<td style="text-align:left">一系列步骤</td>
-<td style="text-align:left">尝试描述</td>
-<td style="text-align:left">话语解释</td>
-</tr>
-<tr>
-<td style="text-align:left">比如</td>
-<td style="text-align:left">教小孩做饭</td>
-<td style="text-align:left">烹饪书中的食谱</td>
-<td style="text-align:left">参考百科文章</td>
-<td style="text-align:left">一篇关于烹饪社会史的文章</td>
-</tr>
-</tbody>
-</table>
-<p>这种划分使作者和读者都清楚什么材料，什么样的材料，去哪里。它告诉作者如何写，写什么，写在哪里。它使作者免于浪费大量时间试图将他们想要传达的信息拼凑成有意义的形式，因为这些类型的文档中的每一种都只有一项工作。</p>
-<p>事实上，如果不隐式或明确地识别此方案的象限，则很难维护良好的文档。每种类型的需求都与其他类型的需求不同，因此任何未能保持这种结构的文档尝试都会受到影响，因为它会同时被拉向不同的方向。</p>
-<p>一旦您理解了结构，它就成为分析现有文档以及理解需要做什么来改进它的非常有用的工具。</p>
-<p>在以下各节中，将详细介绍这四个部分中的每一个。</p>
-<h4 id="使文档工作">使文档工作</h4>
-<h4 id="对于作者">对于作者</h4>
-<p>文档维护者必须处理的最令人头疼的问题之一是不清楚他们应该做什么。他们写了又改，但发现很难以令人满意的方式将它们组合在一起。</p>
-<p>这种结构通过明确区分和分离解决了这些问题。他们制作的文档更易于编写和维护，更易于使用和使用。</p>
-<p>该文档不会自行编写 - 但现在可以编写它，而不必为不合适、范围不明确或对应包含的内容或采用的样式产生疑问而苦苦挣扎。写什么、怎么写、放在哪里都变得清晰多了。</p>
-<h4 id="对于读者">对于读者</h4>
-<p>它更好地为用户服务，因为在他们与软件交互的周期的所有不同阶段，他们会找到合适的文档类型，满足当时的需求。</p>
-<p>编写明确和明确地解决四个象限中每一个的文档有助于软件吸引和留住更多用户，他们将更有效地使用它——这是软件创建者最想要的事情之一。</p>
 ]]></content:encoded>
         </item>
     </channel>
