@@ -4,25 +4,210 @@
         <title></title>
         <link>undefined</link>
         <description>undefined</description>
-        <lastBuildDate>Thu, 20 Apr 2023 15:12:23 GMT</lastBuildDate>
+        <lastBuildDate>Thu, 20 Apr 2023 15:13:13 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>Joplin Pages Publisher</generator>
         <item>
             <title><![CDATA[OOM]]></title>
             <guid>f37eae6d84674ed88bac2e2b754b9934</guid>
             <pubDate>Wed, 19 Apr 2023 13:56:43 GMT</pubDate>
-            <content:encoded><![CDATA[<h3 id="学习资料">学习资料</h3>
-<p>要学习 Linux OOM（Out-of-Memory）相关的内容，你需要查看以下源代码文件：</p>
+            <content:encoded><![CDATA[<h3 id="源码文件">源码文件</h3>
 <ul>
-<li>mm/oom_kill.c: 这个文件包含了 OOM killer 的主要实现代码，包括选择要杀死的进程、计算进程的 OOM 分数等功能。</li>
-<li>include/linux/oom.h: 这个文件包含了 OOM 相关的数据结构定义，例如 struct oom_control，以及 OOM 相关的一些宏定义。</li>
-<li>mm/page_alloc.c: 这个文件包含了内存分配的代码，包括内存分配失败时触发 OOM 的逻辑。</li>
-<li>mm/vmscan.c: 这个文件包含了内核中的内存回收机制，其中也涉及了在内存压力过大时触发 OOM 的部分逻辑。</li>
-<li>include/linux/memcontrol.h 和 mm/memcontrol.c: 这两个文件包含了内存 cgroup（控制组）的实现。OOM killer 也可以在 cgroup 内触发，以便在特定的 cgroup 内释放内存。</li>
-<li>kernel/sysctl.c: 这个文件包含了内核参数（sysctl）的实现，其中包括 OOM 相关的参数，例如调整 OOM killer 的启用或禁用。</li>
-<li>fs/proc/base.c 和 fs/proc/task_mmu.c: 这两个文件包含了 /proc 文件系统中与 OOM 相关的信息的实现，例如 /proc/<pid class="jop-noMdConv">/oom_score 和 /proc/<pid class="jop-noMdConv">/oom_score_adj。<br />
-学习这些文件将帮助你了解 Linux OOM 的实现原理、触发条件、处理过程以及如何调整 OOM 行为。由于 Linux 内核代码较为复杂，建议先阅读概念性的文章和文档以了解 OOM 的基本概念和原理，然后再深入阅读源代码。</pid></pid></li>
+<li><code>mm/oom_kill.c</code>: 这个文件包含了 OOM killer 的主要实现代码，包括选择要杀死的进程、计算进程的 OOM 分数等功能。</li>
+<li><code>include/linux/oom.h</code>: 这个文件包含了 OOM 相关的数据结构定义，例如 struct oom_control，以及 OOM 相关的一些宏定义。</li>
+<li><code>mm/page_alloc.c</code>: 这个文件包含了内存分配的代码，包括内存分配失败时触发 OOM 的逻辑。</li>
+<li><code>mm/vmscan.c</code>: 这个文件包含了内核中的内存回收机制，其中也涉及了在内存压力过大时触发 OOM 的部分逻辑。</li>
+<li><code>include/linux/memcontrol.h</code> 和 <code>mm/memcontrol.c</code>: 这两个文件包含了内存 cgroup（控制组）的实现。OOM killer 也可以在 cgroup 内触发，以便在特定的 cgroup 内释放内存。</li>
+<li><code>kernel/sysctl.c</code>: 这个文件包含了内核参数（sysctl）的实现，其中包括 OOM 相关的参数，例如调整 OOM killer 的启用或禁用。</li>
+<li><code>fs/proc/base.c</code> 和 <code>fs/proc/task_mmu.c</code>: 这两个文件包含了 /proc 文件系统中与 OOM 相关的信息的实现，例如 /proc/<pid class="jop-noMdConv">/oom_score 和 /proc/<pid class="jop-noMdConv">/oom_score_adj。</pid></pid></li>
 </ul>
+<h3 id="oom相关的数据结构">OOM相关的数据结构</h3>
+<p>在 Linux 内核中，内存管理是一个相当复杂的过程，涉及多个数据结构。为了简化问题并更好地理解与 OOM（Out-of-Memory）相关的内存结构，我们将关注以下几个主要组件：</p>
+<ol>
+<li>mm_struct：这个结构表示一个进程的内存描述符。它包含了与虚拟内存区域（VMAs）有关的信息以及其他内存管理相关的数据。</li>
+<li>vm_area_struct：这个结构表示一个虚拟内存区域，它在进程地址空间中定义了一个连续的虚拟内存范围。每个 VMA 都与一个 mm_struct 实例相关联。</li>
+<li>page：这个结构表示物理内存中的一个页面。Linux 内核使用 page 结构来跟踪物理内存的使用情况。</li>
+<li>mem_cgroup：内存控制组(memcg)是一种用于将内存资源划分给不同任务的机制。mem_cgroup 结构表示一个内存控制组，其中包含与该组相关的内存使用信息。</li>
+</ol>
+<p>以字符图的形式表示，这些结构可以如下所示：</p>
+<div><pre class="hljs"><code>mm_struct
+├─── VMAs (vm_area_struct)
+│    ├─── Start Address
+│    ├─── End Address
+│    ├─── Flags (e.g., Read, Write, Execute)
+│    └─── Anon/Private <span class="hljs-keyword">or</span> <span class="hljs-keyword">File</span>/Shared pages
+│
+├─── Page Tables
+│    └─── Mapping of Virtual Addresses to Physical Pages
+│
+└─── Other memory management related fields
+     ├─── rss_stat (Resident <span class="hljs-keyword">Set</span> Size <span class="hljs-comment">Statistics)</span>
+     ├─── mmap_sem <span class="hljs-comment">(Semaphore for mmap operations)</span>
+     └─── ...
+
+page
+├─── Physical <span class="hljs-comment">Address</span>
+├─── Flags <span class="hljs-comment">(e.g., Dirty, Accessed)</span>
+├─── Reference <span class="hljs-comment">Counter</span>
+└─── LRU <span class="hljs-comment">(Least Recently Used) List</span>
+
+mem_cgroup
+├─── Memory <span class="hljs-comment">Usage (per cgroup)</span>
+├─── Memory <span class="hljs-comment">Limit (per cgroup)</span>
+├─── Soft <span class="hljs-comment">Limit (per cgroup)</span>
+└─── OOM <span class="hljs-comment">Control (OOM killer settings)</span></code></pre></div>
+<h3 id="oom出现的原因">OOM出现的原因</h3>
+<p>在 Linux 系统中，当可用内存资源不足以满足当前进程的内存需求时，就会触发 Out-of-Memory (OOM) 状态。OOM 的发生可能由多种原因引起，例如内存泄漏、资源竞争或配置错误。以下是一个简化的字符图，说明了导致 OOM 状态的一些关键因素：</p>
+<div><pre class="hljs"><code>┌────────────────────────────┐
+│       System <span class="hljs-keyword">Memory</span>         │
+│ ┌────────────────────────┐ │
+│ │      Free <span class="hljs-keyword">Memory</span>        │ │
+│ └────────────────────────┘ │
+│ ┌────────────────────────┐ │
+│ │   <span class="hljs-keyword">Memory</span> Cgroup 1       │ │
+│ │ ┌─────────────────────┐ │ │
+│ │ │  Process A          │ │ │
+│ │ │  ┌─────────────────┐│ │ │
+│ │ │  │ Allocates <span class="hljs-keyword">more</span>  ││ │ │
+│ │ │  │ <span class="hljs-keyword">memory</span> than     ││ │ │
+│ │ │  │ available or     ││ │ │
+│ │ │  │ reaches limit    ││ │ │
+│ │ │  └─────────────────┘│ │ │
+│ │ └─────────────────────┘ │ │
+│ └────────────────────────┘ │
+│ ┌────────────────────────┐ │
+│ │   <span class="hljs-keyword">Memory</span> Cgroup 2       │ │
+│ │ ┌─────────────────────┐ │ │
+│ │ │  Process B          │ │ │
+│ │ │  ┌─────────────────┐│ │ │
+│ │ │  │ Allocates <span class="hljs-keyword">more</span>  ││ │ │
+│ │ │  │ <span class="hljs-keyword">memory</span> than     ││ │ │
+│ │ │  │ available or     ││ │ │
+│ │ │  │ reaches limit    ││ │ │
+│ │ │  └─────────────────┘│ │ │
+│ │ └─────────────────────┘ │ │
+│ └────────────────────────┘ │
+└────────────────────────────┘
+</code></pre></div>
+<p>在这个示例中，系统内存被划分为多个内存控制组（Memory Cgroup）。当进程 A 或进程 B 尝试分配比其内存控制组可用的更多内存时，就会导致 OOM 状态。</p>
+<p>OOM Killer 是 Linux 内核中的一个组件，当系统检测到内存不足时，它会根据一系列标准（如进程的内存使用、运行时间、优先级等）来选择并终止一个或多个进程，以释放内存资源。</p>
+<p>这个示例仅是为了说明 OOM 的基本概念，实际上可能涉及更多的因素。如果您需要进一步的解释或帮助，请随时提问。</p>
+<h3 id="虚拟内存物理内存和oom的关系">虚拟内存，物理内存和OOM的关系</h3>
+<p>以下图展示了虚拟内存、物理内存和 OOM 之间的关系。在这个示例中，Process A 尝试分配虚拟内存，该内存将映射到物理内存。当物理内存耗尽时，会触发 OOM 状态。</p>
+<div><pre class="hljs"><code>┌────────────────────────────────────┐
+│       Virtual Memory (Process A)    │
+│ ┌────────────────────────────────┐ │
+│ │   Virtual Memory<span class="hljs-built_in"> Area </span>(VMA)    │ │
+│ │  ┌────────────────────────────┐│ │
+│ │  │ Virtual<span class="hljs-built_in"> Address </span>           ││ │
+│ │  └────────────────────────────┘│ │
+│ └────────────────────────────────┘ │
+└────────────────────────────────────┘
+                     │
+                     │
+                     ▼
+┌────────────────────────────┐
+│       <span class="hljs-built_in"> Page </span>Tables          │
+│ ┌────────────────────────┐ │
+│ │  Virtual<span class="hljs-built_in"> Address </span>       │ │
+│ │  └───┬─────────────────┘ │
+│ └──────┴──────────────────┘ │
+└────────────────────────────┘
+                     │
+                     │
+                     ▼
+┌────────────────────────────┐
+│       Physical Memory      │
+│ ┌────────────────────────┐ │
+│ │  Physical<span class="hljs-built_in"> Page </span>1        │ │
+│ └────────────────────────┘ │
+│ ┌────────────────────────┐ │
+│ │  Physical<span class="hljs-built_in"> Page </span>2        │ │
+│ └────────────────────────┘ │
+│          <span class="hljs-built_in">..</span>.               │
+│ ┌────────────────────────┐ │
+│ │  Physical<span class="hljs-built_in"> Page </span>N        │ │
+│ └────────────────────────┘ │
+└────────────────────────────┘
+                     │
+                     │
+                     ▼
+┌────────────────────────────┐
+│           OOM              │
+│ ┌────────────────────────┐ │
+│ │ <span class="hljs-keyword">Not</span> enough physical     │ │
+│ │ memory <span class="hljs-keyword">to</span> fulfill       │ │
+│ │ virtual memory request  │ │
+│ └────────────────────────┘ │
+└────────────────────────────┘</code></pre></div>
+<p>在这个示例中，Process A 的虚拟内存被划分为一个或多个虚拟内存区域（VMA）。虚拟地址属于这些区域。Page Tables 负责将虚拟地址映射到物理内存中的实际页面。当进程尝试分配虚拟内存时，Linux 内核会分配对应的物理页面。然而，当物理内存耗尽以至于无法分配足够的物理页面时，将触发 OOM 状态。这可能导致 OOM Killer 组件选择并终止一个或多个进程，以释放内存资源。</p>
+<p>这个示例仅展示了虚拟内存、物理内存和 OOM 之间关系的基本概念。实际上，Linux 内核使用多级页表来进行映射，并涉及到更多的细节。</p>
+<h3 id="numa-cgroup和oom的关系">NUMA, CGROUP和OOM的关系</h3>
+<p>在 Linux 系统中，CGroup 是一种机制，用于限制进程对系统资源（如 CPU、内存、磁盘等）的访问。在 NUMA 系统中，CGroup 还可以用于管理进程对不同 NUMA 节点上的内存的访问。以下是一个字符图，说明了 NUMA、CGroup 和 OOM 之间的关系：</p>
+<div><pre class="hljs"><code>┌──────────────────────────────────────┐
+│            NUMA Architecture          │
+│ ┌──────────────────────────────────┐ │
+│ │           NUMA <span class="hljs-keyword">Node</span> <span class="hljs-title">1</span>            │ │
+│ │  ┌────────────────────────────┐  │ │
+│ │  │       Physical Memory       │  │ │
+│ │  └────────────────────────────┘  │ │
+│ │  ┌────────────────────────────┐  │ │
+│ │  │        CPU Cores            │  │ │
+│ │  └────────────────────────────┘  │ │
+│ │ ┌─────────────────────────────┐ │ │
+│ │ │       Memory Cgroup <span class="hljs-number">1</span>       │ │ │
+│ │ │ ┌─────────────────────────┐ │ │ │
+│ │ │ │  Process A              │ │ │ │
+│ │ │ │  ┌─────────────────────┐│ │ │ │
+│ │ │ │  │ Allocates more memory││ │ │ │
+│ │ │ │  │ than available <span class="hljs-keyword">or</span>    ││ │ │ │
+│ │ │ │  │ reaches limit        ││ │ │ │
+│ │ │ │  └─────────────────────┘│ │ │ │
+│ │ │ └─────────────────────────┘ │ │ │
+│ │ └─────────────────────────────┘ │ │
+│ └──────────────────────────────────┘ │
+│ ┌──────────────────────────────────┐ │
+│ │           NUMA <span class="hljs-keyword">Node</span> <span class="hljs-title">2</span>            │ │
+│ │  ┌────────────────────────────┐  │ │
+│ │  │       Physical Memory       │  │ │
+│ │  └────────────────────────────┘  │ │
+│ │  ┌────────────────────────────┐  │ │
+│ │  │        CPU Cores            │  │ │
+│ │  └────────────────────────────┘  │ │
+│ │ ┌─────────────────────────────┐ │ │
+│ │ │       Memory Cgroup <span class="hljs-number">2</span>       │ │ │
+│ │ │ ┌─────────────────────────┐ │ │ │
+│ │ │ │  Process B              │ │ │ │
+│ │ │ │  ┌─────────────────────┐│ │ │ │
+│ │ │ │  │ Allocates more memory││ │ │ │
+│ │ │ │  │ than available <span class="hljs-keyword">or</span>    ││ │ │ │
+│ │ │ │  │ reaches limit        ││ │ │ │
+│ │ │ │  └─────────────────────┘│ │ │ │
+│ │ │ └─────────────────────────┘ │ │ │
+│ │ └─────────────────────────────┘ │ │
+└──────────────────────────────────────┘
+                     │
+                     │
+                     ▼
+┌──────────────────────────────────────┐
+│            OOM Condition              │
+│ ┌──────────────────────────────────┐ │
+│ │     Memory Demand Exceeds         │ │
+│ │     Available Memory on a         │
+│ │ Specific NUMA <span class="hljs-keyword">Node</span> <span class="hljs-title">│ │
+│ └──────────────────────────────────┘ │
+└──────────────────────────────────────┘
+│
+│
+▼
+┌──────────────────────────────────────┐
+│ OOM</span> Killer │
+│ ┌──────────────────────────────────┐ │
+│ │ Selects <span class="hljs-keyword">and</span> terminates │ │
+│ │ processes to free up │ │
+│ │ memory on specific NUMA <span class="hljs-keyword">node</span> <span class="hljs-title">│ │
+│ └──────────────────────────────────┘ │
+└──────────────────────────────────────┘</span></code></pre></div>
 ]]></content:encoded>
         </item>
         <item>
@@ -32,15 +217,79 @@
             <content:encoded><![CDATA[<h3 id="资料">资料</h3>
 <p>要学习 Linux 共享内存（Shared Memory）相关的内容，可以查看以下源代码文件：</p>
 <ul>
-<li>ipc/shm.c: 这个文件包含了 System V 共享内存实现的主要代码。System V 共享内存是 Linux 中最早的共享内存实现。</li>
-<li>ipc/util.c: 这个文件包含了 IPC（包括共享内存）相关的辅助功能和数据结构。</li>
-<li>include/linux/shm.h: 这个文件包含了 System V 共享内存的一些常量、宏和结构体定义。</li>
-<li>mm/mmap.c: 这个文件包含了内存映射（mmap）的实现代码。内存映射可以用于创建共享内存区域，例如使用 MAP_SHARED 标志。mmap 也是实现 POSIX 共享内存的基础。</li>
-<li>include/linux/mman.h: 这个文件包含了内存映射相关的宏、常量和结构体定义。</li>
-<li>fs/proc/task_mmu.c: 这个文件包含了 /proc 文件系统中与共享内存相关的信息的实现，例如 /proc/<pid class="jop-noMdConv">/maps。</pid></li>
-<li>fs/hugetlbfs/inode.c: 这个文件包含了 hugetlbfs 的实现，hugetlbfs 可以用于创建大页（huge pages）的共享内存区域。<br />
-学习这些文件将帮助你了解 Linux 共享内存的实现原理、操作方式和与其他系统组件的交互。此外，建议先阅读关于共享内存的概念性文章和文档，以便了解基本概念和原理，然后再深入阅读源代码。</li>
+<li>
+<p>ipc/shm.c: 这个文件包含了 System V 共享内存实现的主要代码。System V 共享内存是 Linux 中最早的共享内存实现。</p>
+</li>
+<li>
+<p>ipc/util.c: 这个文件包含了 IPC（包括共享内存）相关的辅助功能和数据结构。</p>
+</li>
+<li>
+<p>include/linux/shm.h: 这个文件包含了 System V 共享内存的一些常量、宏和结构体定义。</p>
+</li>
+<li>
+<p>include/uapi/linux/shm.h：该文件包含了与 System V 共享内存相关的用户空间 API 定义。</p>
+</li>
+<li>
+<p>mm/mmap.c: 这个文件包含了内存映射（mmap）的实现代码。内存映射可以用于创建共享内存区域，例如使用 MAP_SHARED 标志。mmap 也是实现 POSIX 共享内存的基础。</p>
+</li>
+<li>
+<p>include/linux/mman.h: 这个文件包含了内存映射相关的宏、常量和结构体定义。</p>
+</li>
+<li>
+<p>fs/proc/task_mmu.c: 这个文件包含了 /proc 文件系统中与共享内存相关的信息的实现，例如 /proc/<pid class="jop-noMdConv">/maps。</pid></p>
+</li>
+<li>
+<p>include/linux/shmem_fs.h：该文件包含了与 shmem 文件系统相关的内核空间定义。</p>
+</li>
+<li>
+<p>fs/hugetlbfs/inode.c: 这个文件包含了 hugetlbfs 的实现，hugetlbfs 可以用于创建大页（huge pages）的共享内存区域。</p>
+</li>
 </ul>
+<p>除了 System V 共享内存，Linux 还支持 POSIX 共享内存。要了解 POSIX 共享内存，你可能需要查看以下文件：</p>
+<ul>
+<li>mm/shmem.c：此文件包含shmem文件系统的实现，它为POSIX共享内存提供了基础设施。</li>
+<li>fs/proc_namespace.c：此文件包含/proc文件系统的命名空间实现，其中与POSIX共享内存相关的部分也在这个文件中。</li>
+<li>ipc/shm.c：此文件包含System V共享内存实现，虽然与POSIX共享内存不完全相同，但它们之间存在一定程度的相似性和互操作性。</li>
+</ul>
+<p>学习这些文件将帮助你了解 Linux 共享内存的实现原理、操作方式和与其他系统组件的交互。此外，建议先阅读关于共享内存的概念性文章和文档，以便了解基本概念和原理，然后再深入阅读源代码。</p>
+<h3 id="内存种类">内存种类</h3>
+<p>System V 共享内存和 POSIX 共享内存都是在 Linux 中实现的进程间通信 (IPC) 机制，它们允许多个进程访问同一块物理内存，从而实现数据共享。尽管它们的目标相似，但它们在实现和使用方式上有一些区别：</p>
+<ul>
+<li>接口：System V 共享内存使用了一组特定的系统调用（如 shmget(), shmat(), shmdt() 和 shmctl()），而 POSIX 共享内存则使用了类似文件操作的系统调用（如 shm_open(), shm_unlink(), mmap() 和 munmap()）。</li>
+<li>资源标识：System V 共享内存使用整数键值 (key) 和共享内存标识符 (shmid) 来标识共享内存对象。POSIX 共享内存使用类似于文件路径的名称来标识共享内存对象。</li>
+<li>生命周期：System V 共享内存的生命周期与创建它的进程无关，即使创建它的进程退出，共享内存对象仍然存在，直到系统重启或显式删除。而 POSIX 共享内存的生命周期类似于文件，可以通过引用计数和删除操作来管理。</li>
+<li>文件系统支持：System V 共享内存不需要文件系统支持，而 POSIX 共享内存通常基于 tmpfs 文件系统（或类似于 tmpfs 的文件系统）。</li>
+<li>可移植性：System V 共享内存起源于早期的 UNIX 系统，因此在各种 UNIX 和类 UNIX 系统上的可移植性较好。POSIX 共享内存是基于 POSIX 标准的，因此在遵循 POSIX 标准的系统上具有更好的可移植性。</li>
+</ul>
+<p>适用场景：System V 共享内存在一些较早的应用程序中使用较多，而 POSIX 共享内存较为现代，更符合当前编程实践。</p>
+<p>在选择使用 System V 共享内存还是 POSIX 共享内存时，需要根据实际应用场景和兼容性需求进行权衡。POSIX 共享内存在很多情况下是一个较为现代和灵活的选择。</p>
+<h3 id="区别">区别</h3>
+<p>设备共享内存和匿名共享内存是两种不同的内存类型，它们与 System V 共享内存和 POSIX 共享内存的关系如下：</p>
+<ul>
+<li>
+<p>设备共享内存：设备共享内存通常用于在设备驱动程序和用户空间进程之间共享数据。这种共享内存类型通常与 DMA（直接内存访问）相关，以便硬件设备可以直接访问内存，而无需通过 CPU。设备共享内存的实现与 System V 共享内存和 POSIX 共享内存都不同，它通常依赖于特定的设备驱动程序和内核支持。</p>
+</li>
+<li>
+<p>匿名共享内存：匿名共享内存是一种不需要文件系统支持的共享内存类型。它可以使用 mmap() 系统调用创建，传递 MAP_SHARED 和 MAP_ANONYMOUS 参数。在这种情况下，匿名共享内存更接近于 POSIX 共享内存，因为它们都依赖于 mmap() 系统调用。然而，匿名共享内存没有与文件系统相关联的名称，它的生命周期通常与引用它的进程相关。</p>
+</li>
+</ul>
+<p>总之，设备共享内存与 System V 共享内存和 POSIX 共享内存都不同，而匿名共享内存在使用方法上更接近于 POSIX 共享内存，但不依赖于文件系统支持。</p>
+<h3 id="总结">总结</h3>
+<div><pre class="hljs"><code>共享内存 (Shared Memory)
+|
+|-- System V 共享内存 (System V Shared Memory)
+|
+|-- POSIX 共享内存 (POSIX Shared Memory)
+|   |
+|   |-- 匿名共享内存 (Anonymous Shared Memory)
+|   |
+|   `-- 设备共享内存 (Device Shared Memory)
+|
+`-- 特定硬件/库实现的共享内存 (Hardware/Library-specific Shared Memory)
+    |
+    |-- GPU 共享内存 (e.g., CUDA, OpenCL)
+    |
+    `-- 其他特定实现 (Other specific implementations)</code></pre></div>
 ]]></content:encoded>
         </item>
         <item>

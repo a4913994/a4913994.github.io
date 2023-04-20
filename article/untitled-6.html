@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="/_assets/main.css" />
 
     <title>共享内存 - 刘宪东的笔记</title>
-  </head>
+  <link rel="stylesheet" href="/_markdown_plugin_assets/highlight.js/atom-one-light.css" /></head>
   <body>
     <div class="main">
       <nav class="navigation">
@@ -19,7 +19,7 @@
           <div class="article-info">
             <div>
               <span>创建时间：<time datetime="1681912570149">2023-04-19 21:56</time></span>
-              <span>更新时间：<time datetime="1681912598998">2023-04-19 21:56</time></span>
+              <span>更新时间：<time datetime="1681917170421">2023-04-19 23:12</time></span>
               
             </div>
           </div>
@@ -27,15 +27,79 @@
         <div class="article-content markdown-body"><h3 id="资料">资料</h3>
 <p>要学习 Linux 共享内存（Shared Memory）相关的内容，可以查看以下源代码文件：</p>
 <ul>
-<li>ipc/shm.c: 这个文件包含了 System V 共享内存实现的主要代码。System V 共享内存是 Linux 中最早的共享内存实现。</li>
-<li>ipc/util.c: 这个文件包含了 IPC（包括共享内存）相关的辅助功能和数据结构。</li>
-<li>include/linux/shm.h: 这个文件包含了 System V 共享内存的一些常量、宏和结构体定义。</li>
-<li>mm/mmap.c: 这个文件包含了内存映射（mmap）的实现代码。内存映射可以用于创建共享内存区域，例如使用 MAP_SHARED 标志。mmap 也是实现 POSIX 共享内存的基础。</li>
-<li>include/linux/mman.h: 这个文件包含了内存映射相关的宏、常量和结构体定义。</li>
-<li>fs/proc/task_mmu.c: 这个文件包含了 /proc 文件系统中与共享内存相关的信息的实现，例如 /proc/<pid class="jop-noMdConv">/maps。</pid></li>
-<li>fs/hugetlbfs/inode.c: 这个文件包含了 hugetlbfs 的实现，hugetlbfs 可以用于创建大页（huge pages）的共享内存区域。<br />
-学习这些文件将帮助你了解 Linux 共享内存的实现原理、操作方式和与其他系统组件的交互。此外，建议先阅读关于共享内存的概念性文章和文档，以便了解基本概念和原理，然后再深入阅读源代码。</li>
+<li>
+<p>ipc/shm.c: 这个文件包含了 System V 共享内存实现的主要代码。System V 共享内存是 Linux 中最早的共享内存实现。</p>
+</li>
+<li>
+<p>ipc/util.c: 这个文件包含了 IPC（包括共享内存）相关的辅助功能和数据结构。</p>
+</li>
+<li>
+<p>include/linux/shm.h: 这个文件包含了 System V 共享内存的一些常量、宏和结构体定义。</p>
+</li>
+<li>
+<p>include/uapi/linux/shm.h：该文件包含了与 System V 共享内存相关的用户空间 API 定义。</p>
+</li>
+<li>
+<p>mm/mmap.c: 这个文件包含了内存映射（mmap）的实现代码。内存映射可以用于创建共享内存区域，例如使用 MAP_SHARED 标志。mmap 也是实现 POSIX 共享内存的基础。</p>
+</li>
+<li>
+<p>include/linux/mman.h: 这个文件包含了内存映射相关的宏、常量和结构体定义。</p>
+</li>
+<li>
+<p>fs/proc/task_mmu.c: 这个文件包含了 /proc 文件系统中与共享内存相关的信息的实现，例如 /proc/<pid class="jop-noMdConv">/maps。</pid></p>
+</li>
+<li>
+<p>include/linux/shmem_fs.h：该文件包含了与 shmem 文件系统相关的内核空间定义。</p>
+</li>
+<li>
+<p>fs/hugetlbfs/inode.c: 这个文件包含了 hugetlbfs 的实现，hugetlbfs 可以用于创建大页（huge pages）的共享内存区域。</p>
+</li>
 </ul>
+<p>除了 System V 共享内存，Linux 还支持 POSIX 共享内存。要了解 POSIX 共享内存，你可能需要查看以下文件：</p>
+<ul>
+<li>mm/shmem.c：此文件包含shmem文件系统的实现，它为POSIX共享内存提供了基础设施。</li>
+<li>fs/proc_namespace.c：此文件包含/proc文件系统的命名空间实现，其中与POSIX共享内存相关的部分也在这个文件中。</li>
+<li>ipc/shm.c：此文件包含System V共享内存实现，虽然与POSIX共享内存不完全相同，但它们之间存在一定程度的相似性和互操作性。</li>
+</ul>
+<p>学习这些文件将帮助你了解 Linux 共享内存的实现原理、操作方式和与其他系统组件的交互。此外，建议先阅读关于共享内存的概念性文章和文档，以便了解基本概念和原理，然后再深入阅读源代码。</p>
+<h3 id="内存种类">内存种类</h3>
+<p>System V 共享内存和 POSIX 共享内存都是在 Linux 中实现的进程间通信 (IPC) 机制，它们允许多个进程访问同一块物理内存，从而实现数据共享。尽管它们的目标相似，但它们在实现和使用方式上有一些区别：</p>
+<ul>
+<li>接口：System V 共享内存使用了一组特定的系统调用（如 shmget(), shmat(), shmdt() 和 shmctl()），而 POSIX 共享内存则使用了类似文件操作的系统调用（如 shm_open(), shm_unlink(), mmap() 和 munmap()）。</li>
+<li>资源标识：System V 共享内存使用整数键值 (key) 和共享内存标识符 (shmid) 来标识共享内存对象。POSIX 共享内存使用类似于文件路径的名称来标识共享内存对象。</li>
+<li>生命周期：System V 共享内存的生命周期与创建它的进程无关，即使创建它的进程退出，共享内存对象仍然存在，直到系统重启或显式删除。而 POSIX 共享内存的生命周期类似于文件，可以通过引用计数和删除操作来管理。</li>
+<li>文件系统支持：System V 共享内存不需要文件系统支持，而 POSIX 共享内存通常基于 tmpfs 文件系统（或类似于 tmpfs 的文件系统）。</li>
+<li>可移植性：System V 共享内存起源于早期的 UNIX 系统，因此在各种 UNIX 和类 UNIX 系统上的可移植性较好。POSIX 共享内存是基于 POSIX 标准的，因此在遵循 POSIX 标准的系统上具有更好的可移植性。</li>
+</ul>
+<p>适用场景：System V 共享内存在一些较早的应用程序中使用较多，而 POSIX 共享内存较为现代，更符合当前编程实践。</p>
+<p>在选择使用 System V 共享内存还是 POSIX 共享内存时，需要根据实际应用场景和兼容性需求进行权衡。POSIX 共享内存在很多情况下是一个较为现代和灵活的选择。</p>
+<h3 id="区别">区别</h3>
+<p>设备共享内存和匿名共享内存是两种不同的内存类型，它们与 System V 共享内存和 POSIX 共享内存的关系如下：</p>
+<ul>
+<li>
+<p>设备共享内存：设备共享内存通常用于在设备驱动程序和用户空间进程之间共享数据。这种共享内存类型通常与 DMA（直接内存访问）相关，以便硬件设备可以直接访问内存，而无需通过 CPU。设备共享内存的实现与 System V 共享内存和 POSIX 共享内存都不同，它通常依赖于特定的设备驱动程序和内核支持。</p>
+</li>
+<li>
+<p>匿名共享内存：匿名共享内存是一种不需要文件系统支持的共享内存类型。它可以使用 mmap() 系统调用创建，传递 MAP_SHARED 和 MAP_ANONYMOUS 参数。在这种情况下，匿名共享内存更接近于 POSIX 共享内存，因为它们都依赖于 mmap() 系统调用。然而，匿名共享内存没有与文件系统相关联的名称，它的生命周期通常与引用它的进程相关。</p>
+</li>
+</ul>
+<p>总之，设备共享内存与 System V 共享内存和 POSIX 共享内存都不同，而匿名共享内存在使用方法上更接近于 POSIX 共享内存，但不依赖于文件系统支持。</p>
+<h3 id="总结">总结</h3>
+<div><pre class="hljs"><code>共享内存 (Shared Memory)
+|
+|-- System V 共享内存 (System V Shared Memory)
+|
+|-- POSIX 共享内存 (POSIX Shared Memory)
+|   |
+|   |-- 匿名共享内存 (Anonymous Shared Memory)
+|   |
+|   `-- 设备共享内存 (Device Shared Memory)
+|
+`-- 特定硬件/库实现的共享内存 (Hardware/Library-specific Shared Memory)
+    |
+    |-- GPU 共享内存 (e.g., CUDA, OpenCL)
+    |
+    `-- 其他特定实现 (Other specific implementations)</code></pre></div>
 </div>
       </article>
     </div>
