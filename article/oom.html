@@ -19,7 +19,7 @@
           <div class="article-info">
             <div>
               <span>创建时间：<time datetime="1681912603631">2023-04-19 21:56</time></span>
-              <span>更新时间：<time datetime="1682003483267">2023-04-20 23:11</time></span>
+              <span>更新时间：<time datetime="1682004973660">2023-04-20 23:36</time></span>
               
             </div>
           </div>
@@ -221,6 +221,31 @@ mem_cgroup
 │ │ memory on specific NUMA <span class="hljs-keyword">node</span> <span class="hljs-title">│ │
 │ └──────────────────────────────────┘ │
 └──────────────────────────────────────┘</span></code></pre></div>
+<h3 id="模拟oom事件">模拟OOM事件</h3>
+<p>好的，以下是模拟在CGROUP中发生OOM的步骤：</p>
+<ol>
+<li>
+<p>确认系统已启用cgroup v2，如果没有启用，可以在内核编译时配置或者在运行时使用命令行参数启用。</p>
+</li>
+<li>
+<p>创建一个cgroup，例如：<code>sudo mkdir /sys/fs/cgroup/memory/mycgroup</code></p>
+</li>
+<li>
+<p>设置cgroup的限制，例如：<code>echo 100M &gt; /sys/fs/cgroup/memory/mycgroup/memory.limit_in_bytes</code></p>
+</li>
+<li>
+<p>启动一个占用内存的进程并将其加入到cgroup中，例如：<code>sudo cgexec -g memory:mycgroup stress --vm-bytes 200M</code></p>
+</li>
+<li>
+<p>监控cgroup内存使用情况，例如：<code>watch -n 1 "cat /sys/fs/cgroup/memory/mycgroup/memory.usage_in_bytes"</code></p>
+</li>
+<li>
+<p>当进程占用的内存超过cgroup的限制时，就会发生OOM事件。可以通过检查内核日志或者<code>dmesg</code>命令查看具体信息。在cgroup v2中，系统会杀死整个cgroup中的所有进程以释放内存。</p>
+</li>
+<li>
+<p>如果需要更加详细的OOM事件记录和处理，可以使用一些工具，例如<code>systemd-oomd</code>或者<code>oomd</code>。这些工具可以更加精细地控制和记录OOM事件，并提供更多的处理选项。</p>
+</li>
+</ol>
 </div>
       </article>
     </div>
