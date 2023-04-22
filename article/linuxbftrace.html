@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+<link rel="stylesheet" href="/_assets/main.css" />
+
+    <title>Linux下的bftrace - 刘宪东的笔记</title>
+  <link rel="stylesheet" href="/_markdown_plugin_assets/highlight.js/atom-one-light.css" /></head>
+  <body>
+    <div class="main">
+      <nav class="navigation">
+        <a href="/">刘宪东的笔记</a>
+      </nav>
+      <article>
+        <header>
+          <h1 class="article-title">Linux下的bftrace</h1>
+          <div class="article-info">
+            <div>
+              <span>创建时间：<time datetime="1682166977871">2023-04-22 20:36</time></span>
+              <span>更新时间：<time datetime="1682166985758">2023-04-22 20:36</time></span>
+              
+            </div>
+          </div>
+        </header>
+        <div class="article-content markdown-body"><p>Model: GPT-4</p>
+<blockquote>
+<p>1 / 1</p>
+<p>帮我介绍下Linux下的ftrace</p>
+</blockquote>
+<p>1 / 1</p>
+<p>ftrace（Function Tracer）是 Linux 内核中的一个性能分析和调试工具，它可以帮助开发者在内核运行时实时追踪、监控和分析内核函数的执行。ftrace 的主要功能是提供对内核函数调用的低开销跟踪，以便找到性能瓶颈、故障排查以及优化内核性能。</p>
+<p>ftrace 工具的核心是一个名为 tracefs 的文件系统，位于 /sys/kernel/debug/tracing/ 目录下。通过操作这个目录下的文件，可以控制 ftrace 的各种功能。</p>
+<p>ftrace 支持多种跟踪事件和插件，如函数图插件 (function_graph)、调度跟踪插件 (sched_switch) 等。以下是一些 ftrace 主要功能：</p>
+<ol>
+<li>函数跟踪：追踪和记录内核函数的调用和返回，便于查看函数执行顺序和嵌套关系。</li>
+<li>函数图：展示函数调用的层次结构，以便更好地理解函数间的关系。</li>
+<li>事件跟踪：记录内核中特定事件的发生，例如内存管理、调度、文件系统等。</li>
+<li>动态事件：根据用户自定义的事件，实时收集和过滤相关数据。</li>
+<li>实时调试：在内核运行时启用或禁用跟踪功能，无需重新编译或重启内核。</li>
+</ol>
+<p>ftrace 的使用方法举例：</p>
+<ol>
+<li>启用函数跟踪：</li>
+</ol>
+<p>shell</p>
+<div><pre class="hljs"><code><span class="hljs-meta"># </span><span class="language-bash"><span class="hljs-built_in">echo</span> <span class="hljs-keyword">function</span> &gt; /sys/kernel/debug/tracing/current_tracer</span></code></pre></div>
+<ol start="2">
+<li>记录跟踪数据：</li>
+</ol>
+<p>shell</p>
+<div><pre class="hljs"><code><span class="hljs-meta"># </span><span class="language-bash">cat /sys/kernel/debug/tracing/trace</span></code></pre></div>
+<ol start="3">
+<li>关闭函数跟踪：</li>
+</ol>
+<p>shell</p>
+<div><pre class="hljs"><code><span class="hljs-meta"># </span><span class="language-bash"><span class="hljs-built_in">echo</span> nop &gt; /sys/kernel/debug/tracing/current_tracer</span></code></pre></div>
+<p>总之，ftrace 是一个功能强大的 Linux 内核性能分析和调试工具，能够帮助开发者深入了解内核的运行机制、定位问题和优化性能。</p>
+<blockquote>
+<p>1 / 1</p>
+<p>ftrace可以同时追踪多个函数吗</p>
+</blockquote>
+<p>1 / 1</p>
+<p>是的，ftrace 可以同时追踪多个函数。要实现这个功能，您可以使用 set_ftrace_filter 文件来指定您想要追踪的函数列表。这个文件位于 /sys/kernel/debug/tracing/ 目录下。</p>
+<p>以下是同时追踪多个函数的操作步骤：</p>
+<ol>
+<li>启用函数跟踪：</li>
+</ol>
+<p>shell</p>
+<div><pre class="hljs"><code><span class="hljs-meta"># </span><span class="language-bash"><span class="hljs-built_in">echo</span> <span class="hljs-keyword">function</span> &gt; /sys/kernel/debug/tracing/current_tracer</span></code></pre></div>
+<ol start="2">
+<li>清空默认的函数过滤器（如果有的话）：</li>
+</ol>
+<p>shell</p>
+<div><pre class="hljs"><code><span class="hljs-meta"># </span><span class="language-bash"><span class="hljs-built_in">echo</span> &gt; /sys/kernel/debug/tracing/set_ftrace_filter</span></code></pre></div>
+<ol start="3">
+<li>添加要追踪的函数，例如同时追踪 do_fork 和 vfs_read 函数：</li>
+</ol>
+<p>shell</p>
+<div><pre class="hljs"><code><span class="hljs-meta"># </span><span class="language-bash"><span class="hljs-built_in">echo</span> do_fork &gt; /sys/kernel/debug/tracing/set_ftrace_filter</span>
+<span class="hljs-meta"># </span><span class="language-bash"><span class="hljs-built_in">echo</span> vfs_read &gt;&gt; /sys/kernel/debug/tracing/set_ftrace_filter</span></code></pre></div>
+<p>注意，使用 "&gt;&gt;" 而不是 "&gt;" 是因为我们需要将新函数添加到列表中，而不是覆盖已有的函数列表。</p>
+<ol start="4">
+<li>确认已添加的函数：</li>
+</ol>
+<p>shell</p>
+<div><pre class="hljs"><code><span class="hljs-meta"># </span><span class="language-bash">cat /sys/kernel/debug/tracing/set_ftrace_filter</span></code></pre></div>
+<ol start="5">
+<li>查看跟踪结果：</li>
+</ol>
+<p>shell</p>
+<div><pre class="hljs"><code><span class="hljs-meta"># </span><span class="language-bash">cat /sys/kernel/debug/tracing/trace</span></code></pre></div>
+<ol start="6">
+<li>结束跟踪时，关闭函数跟踪：</li>
+</ol>
+<p>shell</p>
+<div><pre class="hljs"><code><span class="hljs-meta"># </span><span class="language-bash"><span class="hljs-built_in">echo</span> nop &gt; /sys/kernel/debug/tracing/current_tracer</span></code></pre></div>
+<p>通过这些步骤，您可以实现对多个内核函数的同时追踪。</p>
+<blockquote>
+<p>1 / 1</p>
+<p>追踪结果只能通过/sys/kernel/debug/tracing/trace来查看吗</p>
+</blockquote>
+<p>1 / 1</p>
+<p>通过查看 <code>/sys/kernel/debug/tracing/trace</code> 文件是 ftrace 的标准方式来查看追踪结果，但您也可以使用其他方法。以下是几种在 Linux 系统中查看 ftrace 追踪结果的方法：</p>
+<ol>
+<li>使用 <code>cat</code> 或 <code>less</code> 命令直接查看 trace 文件：</li>
+</ol>
+<p>shell</p>
+<div><pre class="hljs"><code><span class="hljs-meta"># </span><span class="language-bash">cat /sys/kernel/debug/tracing/trace</span></code></pre></div>
+<p>或</p>
+<p>shell</p>
+<div><pre class="hljs"><code><span class="hljs-meta"># </span><span class="language-bash">less /sys/kernel/debug/tracing/trace</span></code></pre></div>
+<ol start="2">
+<li>使用 <code>trace-cmd</code> 工具来记录和查看 ftrace 数据。<code>trace-cmd</code> 是一个用于操作 ftrace 的用户空间工具，可以方便地记录、查看和处理 ftrace 数据。首先，您需要安装 <code>trace-cmd</code> 工具。然后，您可以使用如下命令：</li>
+</ol>
+<p>arduino</p>
+<div><pre class="hljs"><code><span class="hljs-meta"># trace-cmd record -e sched_switch -e irq_handler_entry -o trace.dat</span></code></pre></div>
+<p>上述命令会将指定事件的追踪结果记录到 trace.dat 文件中。接下来，使用下面的命令查看追踪结果：</p>
+<p>arduino</p>
+<div><pre class="hljs"><code><span class="hljs-meta"># trace-cmd report trace.dat</span></code></pre></div>
+<ol start="3">
+<li>使用 <code>perf</code> 工具来记录和查看 ftrace 数据。<code>perf</code> 是一个通用的 Linux 性能分析工具，它也支持 ftrace 事件。例如，要使用 <code>perf</code> 记录调度事件，您可以执行以下命令：</li>
+</ol>
+<p>shell</p>
+<div><pre class="hljs"><code><span class="hljs-meta"># </span><span class="language-bash">perf record -e <span class="hljs-built_in">sched</span>:sched_switch -a</span></code></pre></div>
+<p>然后，使用 <code>perf report</code> 命令查看追踪结果：</p>
+<p>arduino</p>
+<div><pre class="hljs"><code><span class="hljs-meta"># perf report</span></code></pre></div>
+<p>总之，虽然查看 <code>/sys/kernel/debug/tracing/trace</code> 文件是查看 ftrace 追踪结果的直接方法，但您还可以选择其他方法，如使用 <code>trace-cmd</code> 或 <code>perf</code> 工具来查看和分析追踪数据。这些工具提供了更丰富的功能和更方便的操作方式。</p>
+<blockquote>
+<p>1 / 1</p>
+<p>perf可以采集所有的追踪事件吗</p>
+</blockquote>
+<p>1 / 1</p>
+<p><code>perf</code> 是一个通用的 Linux 性能分析工具，它可以采集多种内核和用户空间的追踪事件。<code>perf</code> 支持采集诸如 CPU 性能计数器事件、内核跟踪点 (tracepoints) 事件、硬件和软件事件等。然而，<code>perf</code> 并不直接支持所有 ftrace 事件和功能。尽管 <code>perf</code> 可以采集许多 ftrace 支持的事件，但它们的底层实现和工作原理有所不同。</p>
+<p><code>perf</code> 支持以下几类事件：</p>
+<ol>
+<li>硬件事件：如 CPU 缓存命中、分支预测错误等。</li>
+<li>软件事件：如 CPU 时钟周期、任务切换、页面错误等。</li>
+<li>内核跟踪点 (tracepoints)：这些事件是在内核源代码中特定位置预定义的跟踪点，可以用于监控内核子系统（如调度、内存管理、文件系统等）的运行情况。</li>
+<li>动态探针 (kprobes) 和用户空间动态探针 (uprobes)：允许在内核和用户空间代码中的任意位置插入探针，以监控特定函数或指令的执行情况。</li>
+</ol>
+<p>尽管 <code>perf</code> 和 ftrace 在事件采集和性能分析方面有很多相似之处，但它们的设计目标和关注点略有不同。ftrace 更侧重于内核函数调用的跟踪和分析，而 <code>perf</code> 更侧重于全面的性能分析，包括硬件和软件事件以及用户空间程序的性能分析。</p>
+<p>总之，<code>perf</code> 可以采集许多追踪事件，包括一些 ftrace 支持的事件，但它们并不是完全等价的。在实际使用中，您可以根据需要选择合适的工具来完成性能分析和调试任务。</p>
+<blockquote>
+<p>1 / 1</p>
+<p>我可以写个Golang程序将这两者结合在一起吗</p>
+</blockquote>
+<p>1 / 1</p>
+<p>当然可以。您可以编写一个 Golang 程序，利用 Golang 的系统调用和文件操作功能，结合 <code>perf</code> 和 ftrace 工具来实现混合的性能分析和调试功能。以下是一个简单的示例，展示了如何在 Golang 程序中使用 <code>perf</code> 和 ftrace 功能：</p>
+<ol>
+<li>首先，安装必要的依赖包。例如，您可以使用 <code>github.com/iovisor/gobpf</code> 包，它提供了一个 Golang 接口来操作 <code>perf</code> 事件和 eBPF 程序。要安装该包，请运行以下命令：</li>
+</ol>
+<p>arduino</p>
+<div><pre class="hljs"><code>go get -u github.com/iovisor/gobpf</code></pre></div>
+<ol start="2">
+<li>编写 Golang 程序。以下是一个简单的示例，它同时使用 ftrace 和 <code>perf</code> 工具来跟踪内核函数调用和硬件事件：</li>
+</ol>
+<p>go</p>
+<div><pre class="hljs"><code><span class="hljs-keyword">package</span> main
+
+<span class="hljs-keyword">import</span> (
+    <span class="hljs-string">"fmt"</span>
+    <span class="hljs-string">"io/ioutil"</span>
+    <span class="hljs-string">"os"</span>
+    <span class="hljs-string">"os/exec"</span>
+    <span class="hljs-string">"time"</span>
+
+    bpf <span class="hljs-string">"github.com/iovisor/gobpf/pkg/bpflib"</span>
+)
+
+<span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-comment">// 使用 ftrace 跟踪内核函数 'do_fork'</span>
+    ftraceFunction := <span class="hljs-string">"do_fork"</span>
+    ftraceFile := <span class="hljs-string">"/sys/kernel/debug/tracing/set_ftrace_filter"</span>
+
+    err := ioutil.WriteFile(ftraceFile, []<span class="hljs-keyword">byte</span>(ftraceFunction), <span class="hljs-number">0644</span>)
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        fmt.Println(<span class="hljs-string">"Error writing ftrace filter:"</span>, err)
+        <span class="hljs-keyword">return</span>
+    }
+
+    err = ioutil.WriteFile(<span class="hljs-string">"/sys/kernel/debug/tracing/current_tracer"</span>, []<span class="hljs-keyword">byte</span>(<span class="hljs-string">"function"</span>), <span class="hljs-number">0644</span>)
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        fmt.Println(<span class="hljs-string">"Error setting ftrace tracer:"</span>, err)
+        <span class="hljs-keyword">return</span>
+    }
+
+    <span class="hljs-comment">// 使用 perf 记录 CPU 缓存引用事件</span>
+    perfCmd := exec.Command(<span class="hljs-string">"perf"</span>, <span class="hljs-string">"record"</span>, <span class="hljs-string">"-e"</span>, <span class="hljs-string">"cache-references"</span>, <span class="hljs-string">"-a"</span>, <span class="hljs-string">"--"</span>, <span class="hljs-string">"sleep"</span>, <span class="hljs-string">"5"</span>)
+
+    err = perfCmd.Start()
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        fmt.Println(<span class="hljs-string">"Error starting perf record:"</span>, err)
+        <span class="hljs-keyword">return</span>
+    }
+
+    <span class="hljs-comment">// 保持 ftrace 和 perf 同时运行 5 秒钟</span>
+    time.Sleep(<span class="hljs-number">5</span> * time.Second)
+
+    <span class="hljs-comment">// 关闭 ftrace</span>
+    err = ioutil.WriteFile(<span class="hljs-string">"/sys/kernel/debug/tracing/current_tracer"</span>, []<span class="hljs-keyword">byte</span>(<span class="hljs-string">"nop"</span>), <span class="hljs-number">0644</span>)
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        fmt.Println(<span class="hljs-string">"Error disabling ftrace tracer:"</span>, err)
+        <span class="hljs-keyword">return</span>
+    }
+
+    <span class="hljs-comment">// 等待 perf 结束</span>
+    err = perfCmd.Wait()
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        fmt.Println(<span class="hljs-string">"Error waiting for perf record:"</span>, err)
+        <span class="hljs-keyword">return</span>
+    }
+
+    <span class="hljs-comment">// 读取并显示 ftrace 数据</span>
+    ftraceData, err := ioutil.ReadFile(<span class="hljs-string">"/sys/kernel/debug/tracing/trace"</span>)
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        fmt.Println(<span class="hljs-string">"Error reading ftrace data:"</span>, err)
+        <span class="hljs-keyword">return</span>
+    }
+    fmt.Println(<span class="hljs-string">"Ftrace data:\n"</span>, <span class="hljs-keyword">string</span>(ftraceData))
+
+    <span class="hljs-comment">// 显示 perf 数据</span>
+    perfReport := exec.Command(<span class="hljs-string">"perf"</span>, <span class="hljs-string">"report"</span>)
+    perfReport.Stdout = os.Stdout
+    perfReport.Stderr = os.Stderr
+
+    err = perfReport.Run()
+    <span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> {
+        fmt.Println(<span class="hljs-string">"Error running perf report:"</span>, err)
+        <span class="hljs-keyword">return</span>
+    }
+}</code></pre></div>
+<p>这个示例程序使用 ftrace 跟踪 <code>do_fork</code> 函数的调用，并使用 <code>perf</code> 工具记录 CPU 缓存引用事件</p>
+<blockquote>
+<p>1 / 1</p>
+<p>这里面没有使用gobpf吗</p>
+</blockquote>
+<p>1 / 1</p>
+<p>抱歉，我犯了一个错误。在我给出的示例代码中，没有使用 <code>gobpf</code> 包。<code>gobpf</code> 主要用于与 eBPF（Extended Berkeley Packet Filter）程序交互，而在前面的示例中，我们仅使用了 ftrace 和 perf 工具。</p>
+<p>如果您希望在 Golang 程序中使用 <code>gobpf</code>，可以参考以下示例，这个示例将展示如何使用 <code>gobpf</code> 来加载一个简单的 eBPF 程序，并使用 <code>perf</code> 工具来处</p>
+<blockquote>
+<p>1 / 1</p>
+<p>如何让ebpf在linux3.10上运行</p>
+</blockquote>
+<p>1 / 1</p>
+<p>eBPF（Extended Berkeley Packet Filter）在较旧的 Linux 内核版本（如 3.10）上的支持是有限的。eBPF 需要较新的内核版本（4.x 及更高版本）才能完全发挥其强大功能。在 Linux 3.10 内核上，您只能使用有限的经典 BPF 功能，而无法使用 eBPF 提供的许多高级特性。</p>
+<p>如果您的应用程序需要 eBPF 功能，并且您受限于使用 Linux 3.10 内核，您可以考虑以下几种方法：</p>
+<ol>
+<li>升级内核：尽量升级到较</li>
+</ol>
+<blockquote>
+<p>1 / 1</p>
+<p>经典BPF如何在Linux3.10上使用</p>
+</blockquote>
+<p>1 / 1</p>
+<p>在 Linux 3.10 内核上，您可以使用经典 BPF (Berkeley Packet Filter) 功能来进行网络数据包过滤和捕获。经典 BPF 主要用于与 <code>tcpdump</code> 和 <code>libpcap</code> 等工具一起使用，它们可以过滤、捕获和分析网络数据包。</p>
+<p>以下是在 Linux 3.10 上使用经典 BPF 的一些方法：</p>
+<ol>
+<li>使用 <code>tcpdump</code> 工具：</li>
+</ol>
+<p><code>tcpdump</code> 是一个常用的网络数据包捕获和分析工具，它内置了对经典 BPF 的支持。在命令行中，您可以使用 <code>tcpdump</code> 并指定 BPF 过滤器表达式来捕获感兴趣的数据包。例如，要捕获所有目标端口为 80 的 TCP 数据包，您可以执行以下命令：</p>
+<p>arduino</p>
+<div><pre class="hljs"><code><span class="hljs-meta"># tcpdump -i eth0 <span class="hljs-string">"tcp port 80"</span></span></code></pre></div>
+<p>在这里，`-i eth0</p>
+<blockquote>
+<p>1 / 1</p>
+<p>经典BPF只能捕捉网络信息吗</p>
+</blockquote>
+<p>1 / 1</p>
+<p>经典 BPF（Berkeley Packet Filter）最初是为了高效捕获和过滤网络数据包而设计的。因此，它的主要应用场景是网络数据包捕获和分析。然而，经典 BPF 不仅仅局限于网络领域。随着时间的推移，BPF 已经演变成一个更通用的内核虚拟机，可以用于其他类型的内核事件处理。</p>
+<p>尽管如此，在 Linux 3.10 内核上，经典 BPF 的功能相对有限，主要用于网络数据包捕获。在这个内核版本上，您无法使用 eBPF（Extended Berkeley Packet Filter）提供的许多高级功能，例如跟踪内核函数、系统调用、用户空间程序等。</p>
+<p>总之，在 Linux 3.10 内核上，经典 BPF 的功能主要集中在网络数据包捕获和分析方面。要实现更高级的功能，您需要升级到支持 eBPF 的较新内核版本（4.x 及更高版本）。</p>
+</div>
+      </article>
+    </div>
+  </body>
+</html>
