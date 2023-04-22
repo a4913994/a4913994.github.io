@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+<link rel="stylesheet" href="/_assets/main.css" />
+
+    <title>OOM的架构图 - 刘宪东的笔记</title>
+  <link rel="stylesheet" href="/_markdown_plugin_assets/highlight.js/atom-one-light.css" /></head>
+  <body>
+    <div class="main">
+      <nav class="navigation">
+        <a href="/">刘宪东的笔记</a>
+      </nav>
+      <article>
+        <header>
+          <h1 class="article-title">OOM的架构图</h1>
+          <div class="article-info">
+            <div>
+              <span>创建时间：<time datetime="1682166893345">2023-04-22 20:34</time></span>
+              <span>更新时间：<time datetime="1682166900351">2023-04-22 20:35</time></span>
+              
+            </div>
+          </div>
+        </header>
+        <div class="article-content markdown-body"><p>Model: Default (GPT-3.5)</p>
+<blockquote>
+<p>1 / 1</p>
+<p>我希望你充当 Linux内核专家。我会向您提供有关我的技术问题所需的所有信息，而您的职责是解决我的问题。</p>
+</blockquote>
+<p>1 / 1</p>
+<p>好的，我会尽力帮助您解决关于 Linux 内核的技术问题。请提供关于您所遇到问题的详细信息，包括错误信息、系统环境、您尝试过的解决方案等。这将有助于我更准确地判断问题并提供有效的解决方案。</p>
+<blockquote>
+<p>1 / 1</p>
+<p>用char字符图，画出OOM相关的内存结构</p>
+</blockquote>
+<p>1 / 1</p>
+<p>在 Linux 内核中，内存管理是一个相当复杂的过程，涉及多个数据结构。为了简化问题并更好地理解与 OOM（Out-of-Memory）相关的内存结构，我们将关注以下几个主要组件：</p>
+<ol>
+<li>mm_struct：这个结构表示一个进程的内存描述符。它包含了与虚拟内存区域（VMAs）有关的信息以及其他内存管理相关的数据。</li>
+<li>vm_area_struct：这个结构表示一个虚拟内存区域，它在进程地址空间中定义了一个连续的虚拟内存范围。每个 VMA 都与一个 mm_struct 实例相关联。</li>
+<li>page：这个结构表示物理内存中的一个页面。Linux 内核使用 page 结构来跟踪物理内存的使用情况。</li>
+<li>mem_cgroup：内存控制组(memcg)是一种用于将内存资源划分给不同任务的机制。mem_cgroup 结构表示一个内存控制组，其中包含与该组相关的内存使用信息。</li>
+</ol>
+<p>以字符图的形式表示，这些结构可以如下所示：</p>
+<p>scss</p>
+<div><pre class="hljs"><code>mm_struct
+├─── VMAs (vm_area_struct)
+│    ├─── Start <span class="hljs-selector-tag">Address</span>
+│    ├─── End <span class="hljs-selector-tag">Address</span>
+│    ├─── Flags (e.g., Read, Write, Execute)
+│    └─── Anon/Private or File/Shared pages
+│
+├─── Page Tables
+│    └─── Mapping of Virtual Addresses to Physical Pages
+│
+└─── Other memory management related fields
+     ├─── rss_stat (Resident Set Size Statistics)
+     ├─── mmap_sem (Semaphore for mmap operations)
+     └─── ...
+
+page
+├─── Physical <span class="hljs-selector-tag">Address</span>
+├─── Flags (e.g., Dirty, Accessed)
+├─── Reference Counter
+└─── LRU (Least Recently Used) List
+
+mem_cgroup
+├─── Memory Usage (per cgroup)
+├─── Memory Limit (per cgroup)
+├─── Soft Limit (per cgroup)
+└─── OOM Control (OOM killer settings)</code></pre></div>
+<p>请注意，这里仅展示了与 OOM 相关的部分内存结构，Linux 内核的内存管理涉及到更多的数据结构和细节。如果您对这些概念有更多的问题，请随时提问。</p>
+<blockquote>
+<p>1 / 1</p>
+<p>帮我画出为什么会出现OOM的char图</p>
+</blockquote>
+<p>1 / 1</p>
+<p>在 Linux 系统中，当可用内存资源不足以满足当前进程的内存需求时，就会触发 Out-of-Memory (OOM) 状态。OOM 的发生可能由多种原因引起，例如内存泄漏、资源竞争或配置错误。以下是一个简化的字符图，说明了导致 OOM 状态的一些关键因素：</p>
+<p>arduino</p>
+<div><pre class="hljs"><code>┌────────────────────────────┐
+│       System Memory         │
+│ ┌────────────────────────┐ │
+│ │      Free Memory        │ │
+│ └────────────────────────┘ │
+│ ┌────────────────────────┐ │
+│ │   Memory Cgroup <span class="hljs-number">1</span>       │ │
+│ │ ┌─────────────────────┐ │ │
+│ │ │  <span class="hljs-built_in">Process</span> A          │ │ │
+│ │ │  ┌─────────────────┐│ │ │
+│ │ │  │ Allocates more  ││ │ │
+│ │ │  │ memory than     ││ │ │
+│ │ │  │ available <span class="hljs-keyword">or</span>     ││ │ │
+│ │ │  │ reaches limit    ││ │ │
+│ │ │  └─────────────────┘│ │ │
+│ │ └─────────────────────┘ │ │
+│ └────────────────────────┘ │
+│ ┌────────────────────────┐ │
+│ │   Memory Cgroup <span class="hljs-number">2</span>       │ │
+│ │ ┌─────────────────────┐ │ │
+│ │ │  <span class="hljs-built_in">Process</span> B          │ │ │
+│ │ │  ┌─────────────────┐│ │ │
+│ │ │  │ Allocates more  ││ │ │
+│ │ │  │ memory than     ││ │ │
+│ │ │  │ available <span class="hljs-keyword">or</span>     ││ │ │
+│ │ │  │ reaches limit    ││ │ │
+│ │ │  └─────────────────┘│ │ │
+│ │ └─────────────────────┘ │ │
+│ └────────────────────────┘ │
+└────────────────────────────┘</code></pre></div>
+<p>在这个示例中，系统内存被划分为多个内存控制组（Memory Cgroup）。当进程 A 或进程 B 尝试分配比其内存控制组可用的更多内存时，就会导致 OOM 状态。</p>
+<p>OOM Killer 是 Linux 内核中的一个组件，当系统检测到内存不足时，它会根据一系列标准（如进程的内存使用、运行时间、优先级等）来选择并终止一个或多个进程，以释放内存资源。</p>
+<p>这个示例仅是为了说明 OOM 的基本概念，实际上可能涉及更多的因素。如果您需要进一步的解释或帮助，请随时提问。</p>
+<blockquote>
+<p>1 / 1</p>
+<p>请将虚拟内存和物理内存的概念也画上去</p>
+</blockquote>
+<p>1 / 1</p>
+<p>虚拟内存和物理内存是内存管理中的两个核心概念。虚拟内存为每个进程提供了一个独立的、连续的地址空间，从而简化了内存管理。物理内存是实际的 RAM 资源，它被划分为大小固定的页面（通常为 4KB）。以下是一个字符图，展示了虚拟内存、物理内存以及它们之间的映射关系：</p>
+<p>css</p>
+<div><pre class="hljs"><code>┌────────────────────────────────────┐
+│       Virtual Memory (Process <span class="hljs-selector-tag">A</span>)    │
+│ ┌────────────────────────────────┐ │
+│ │   Virtual Memory Area (VMA) <span class="hljs-number">1</span>   │ │
+│ │  ┌────────────────────────────┐│ │
+│ │  │ Virtual <span class="hljs-selector-tag">Address</span> <span class="hljs-number">1</span>          ││ │
+│ │  └────────────────────────────┘│ │
+│ └────────────────────────────────┘ │
+│ ┌────────────────────────────────┐ │
+│ │   Virtual Memory Area (VMA) <span class="hljs-number">2</span>   │ │
+│ │  ┌────────────────────────────┐│ │
+│ │  │ Virtual <span class="hljs-selector-tag">Address</span> <span class="hljs-number">2</span>          ││ │
+│ │  └────────────────────────────┘│ │
+│ └────────────────────────────────┘ │
+└────────────────────────────────────┘
+                     │
+                     │
+                     ▼
+┌────────────────────────────┐
+│        Page Tables          │
+│ ┌────────────────────────┐ │
+│ │  Virtual <span class="hljs-selector-tag">Address</span> <span class="hljs-number">1</span>      │ │
+│ │  └───┬─────────────────┘ │
+│ │      │                   │
+│ │  Virtual <span class="hljs-selector-tag">Address</span> <span class="hljs-number">2</span>      │ │
+│ │  └───┬─────────────────┘ │
+│ └──────┴──────────────────┘ │
+└────────────────────────────┘
+                     │
+                     │
+                     ▼
+┌────────────────────────────┐
+│       Physical Memory      │
+│ ┌────────────────────────┐ │
+│ │  Physical Page <span class="hljs-number">1</span>        │ │
+│ └────────────────────────┘ │
+│ ┌────────────────────────┐ │
+│ │  Physical Page <span class="hljs-number">2</span>        │ │
+│ └────────────────────────┘ │
+└────────────────────────────┘</code></pre></div>
+<p>在这个示例中，Process A 的虚拟内存被划分为两个虚拟内存区域（VMA 1 和 VMA 2）。虚拟地址 1 和虚拟地址 2 分别属于这两个区域。Page Tables 负责将虚拟地址映射到物理内存中的实际页面。在这种情况下，虚拟地址 1 和虚拟地址 2 分别映射到物理页面 1 和物理页面 2。</p>
+<p>请注意，这个示例仅展示了虚拟内存和物理内存之间映射关系的基本概念。实际上，Linux 内核使用多级页表来进行映射，并涉及到更多的细节。如果您需要进一步的解释</p>
+<blockquote>
+<p>1 / 1</p>
+<p>请将虚拟内存，物理内存和OOM的关系画出来</p>
+</blockquote>
+<p>1 / 1</p>
+<p>以下字符图展示了虚拟内存、物理内存和 OOM 之间的关系。在这个示例中，Process A 尝试分配虚拟内存，该内存将映射到物理内存。当物理内存耗尽时，会触发 OOM 状态。</p>
+<p>css</p>
+<div><pre class="hljs"><code>┌────────────────────────────────────┐
+│       Virtual Memory (Process <span class="hljs-selector-tag">A</span>)    │
+│ ┌────────────────────────────────┐ │
+│ │   Virtual Memory Area (VMA)    │ │
+│ │  ┌────────────────────────────┐│ │
+│ │  │ Virtual <span class="hljs-selector-tag">Address</span>            ││ │
+│ │  └────────────────────────────┘│ │
+│ └────────────────────────────────┘ │
+└────────────────────────────────────┘
+                     │
+                     │
+                     ▼
+┌────────────────────────────┐
+│        Page Tables          │
+│ ┌────────────────────────┐ │
+│ │  Virtual <span class="hljs-selector-tag">Address</span>        │ │
+│ │  └───┬─────────────────┘ │
+│ └──────┴──────────────────┘ │
+└────────────────────────────┘
+                     │
+                     │
+                     ▼
+┌────────────────────────────┐
+│       Physical Memory      │
+│ ┌────────────────────────┐ │
+│ │  Physical Page <span class="hljs-number">1</span>        │ │
+│ └────────────────────────┘ │
+│ ┌────────────────────────┐ │
+│ │  Physical Page <span class="hljs-number">2</span>        │ │
+│ └────────────────────────┘ │
+│          ...               │
+│ ┌────────────────────────┐ │
+│ │  Physical Page N        │ │
+│ └────────────────────────┘ │
+└────────────────────────────┘
+                     │
+                     │
+                     ▼
+┌────────────────────────────┐
+│           OOM              │
+│ ┌────────────────────────┐ │
+│ │ Not enough physical     │ │
+│ │ memory <span class="hljs-selector-tag">to</span> fulfill       │ │
+│ │ virtual memory request  │ │
+│ └────────────────────────┘ │
+└────────────────────────────┘</code></pre></div>
+<p>在这个示例中，Process A 的虚拟内存被划分为一个或多个虚拟内存区域（VMA）。虚拟地址属于这些区域。Page Tables 负责将虚拟地址映射到物理内存中的实际页面。当进程尝试分配虚拟内存时，Linux 内核会分配对应的物理页面。然而，当物理内存耗尽以至于无法分配足够的物理页面时，将触发 OOM 状态。这可能导致 OOM Killer 组件选择并终止一个或多个进程，以释放内存资源。</p>
+<p>这个示例仅展示了虚拟内存、物理内存和 OOM 之间关系的基本概念。实际上，Linux 内核使用多级页表来进行映射，并涉及到更多的细节。如果您需要进一步的解释或帮助，请随时提问。</p>
+<blockquote>
+<p>1 / 1</p>
+<p>请将NUMA和OOM的关系画出来</p>
+</blockquote>
+<p>The previous model used in this conversation is unavailable. We've switched you to the latest default model</p>
+<p>1 / 1</p>
+<p>NUMA（非统一内存访问）是一种内存架构，其中物理内存被划分为多个 NUMA 节点。每个 NUMA 节点都具有自己的物理内存和 CPU。NUMA 通过减少内存访问延迟来提高系统性能，但也会增加一些管理内存的复杂性。以下是一个字符图，说明了 NUMA 和 OOM 之间的关系：</p>
+<p>sql</p>
+<div><pre class="hljs"><code>┌──────────────────────────────────────┐
+│            NUMA Architecture          │
+│ ┌──────────────────────────────────┐ │
+│ │           NUMA Node <span class="hljs-number">1</span>            │ │
+│ │  ┌────────────────────────────┐  │ │
+│ │  │       Physical Memory       │  │ │
+│ │  └────────────────────────────┘  │ │
+│ │  ┌────────────────────────────┐  │ │
+│ │  │        CPU Cores            │  │ │
+│ │  └────────────────────────────┘  │ │
+│ └──────────────────────────────────┘ │
+│ ┌──────────────────────────────────┐ │
+│ │           NUMA Node <span class="hljs-number">2</span>            │ │
+│ │  ┌────────────────────────────┐  │ │
+│ │  │       Physical Memory       │  │ │
+│ │  └────────────────────────────┘  │ │
+│ │  ┌────────────────────────────┐  │ │
+│ │  │        CPU Cores            │  │ │
+│ │  └────────────────────────────┘  │ │
+│ └──────────────────────────────────┘ │
+└──────────────────────────────────────┘
+                     │
+                     │
+                     ▼
+┌──────────────────────────────────────┐
+│            OOM <span class="hljs-keyword">Condition</span>              │
+│ ┌──────────────────────────────────┐ │
+│ │     Memory Demand Exceeds         │ │
+│ │     Available Memory <span class="hljs-keyword">on</span> a         │ │
+│ │     <span class="hljs-keyword">Specific</span> NUMA Node            │ │
+│ └──────────────────────────────────┘ │
+└──────────────────────────────────────┘</code></pre></div>
+<p>在这个示例中，物理内存被划分为两个 NUMA 节点，每个节点具有自己的 CPU 和物理内存。当进程在一个 NUMA 节点上分配大量内存时，可能会导致该节点的物理内存耗尽，从而触发 OOM 状态。由于 NUMA 架构中内存访问具有本地性，因此在内存不足的情况下，如果可以从其他 NUMA 节点中获取内存，则可能会有更好的性能。然而，这也增加了管理内存的复杂性。</p>
+<p>请注意，这个示例仅展示了 NUMA 和 OOM 之间关系的基本概念。实际上，NUMA 和 OOM 的关系可能会更加复杂，并涉及到更多的细节。如果您需要进一步的解释或帮助，请随时提问。</p>
+<blockquote>
+<p>1 / 1</p>
+<p>请将NUMA, CGroup和OOM的关系画出来</p>
+</blockquote>
+<p>1 / 1</p>
+<p>在 Linux 系统中，CGroup 是一种机制，用于限制进程对系统资源（如 CPU、内存、磁盘等）的访问。在 NUMA 系统中，CGroup 还可以用于管理进程对不同 NUMA 节点上的内存的访问。以下是一个字符图，说明了 NUMA、CGroup 和 OOM 之间的关系：</p>
+<p>arduino</p>
+<div><pre class="hljs"><code>┌──────────────────────────────────────┐
+│            NUMA Architecture          │
+│ ┌──────────────────────────────────┐ │
+│ │           NUMA Node <span class="hljs-number">1</span>            │ │
+│ │  ┌────────────────────────────┐  │ │
+│ │  │       Physical Memory       │  │ │
+│ │  └────────────────────────────┘  │ │
+│ │  ┌────────────────────────────┐  │ │
+│ │  │        CPU Cores            │  │ │
+│ │  └────────────────────────────┘  │ │
+│ │ ┌─────────────────────────────┐ │ │
+│ │ │       Memory Cgroup <span class="hljs-number">1</span>       │ │ │
+│ │ │ ┌─────────────────────────┐ │ │ │
+│ │ │ │  <span class="hljs-built_in">Process</span> A              │ │ │ │
+│ │ │ │  ┌─────────────────────┐│ │ │ │
+│ │ │ │  │ Allocates more memory││ │ │ │
+│ │ │ │  │ than available <span class="hljs-keyword">or</span>    ││ │ │ │
+│ │ │ │  │ reaches limit        ││ │ │ │
+│ │ │ │  └─────────────────────┘│ │ │ │
+│ │ │ └─────────────────────────┘ │ │ │
+│ │ └─────────────────────────────┘ │ │
+│ └──────────────────────────────────┘ │
+│ ┌──────────────────────────────────┐ │
+│ │           NUMA Node <span class="hljs-number">2</span>            │ │
+│ │  ┌────────────────────────────┐  │ │
+│ │  │       Physical Memory       │  │ │
+│ │  └────────────────────────────┘  │ │
+│ │  ┌────────────────────────────┐  │ │
+│ │  │        CPU Cores            │  │ │
+│ │  └────────────────────────────┘  │ │
+│ │ ┌─────────────────────────────┐ │ │
+│ │ │       Memory Cgroup <span class="hljs-number">2</span>       │ │ │
+│ │ │ ┌─────────────────────────┐ │ │ │
+│ │ │ │  <span class="hljs-built_in">Process</span> B              │ │ │ │
+│ │ │ │  ┌─────────────────────┐│ │ │ │
+│ │ │ │  │ Allocates more memory││ │ │ │
+│ │ │ │  │ than available <span class="hljs-keyword">or</span>    ││ │ │ │
+│ │ │ │  │ reaches limit        ││ │ │ │
+│ │ │ │  └─────────────────────┘│ │ │ │
+│ │ │ └─────────────────────────┘ │ │ │
+│ │ └─────────────────────────────┘ │ │
+└──────────────────────────────────────┘
+                     │
+                     │
+                     ▼
+┌──────────────────────────────────────┐
+│            OOM Condition              │
+│ ┌──────────────────────────────────┐ │
+│ │     Memory Demand Exceeds         │ │
+│ │     Available Memory on a         │</code></pre></div>
+<blockquote>
+<p>1 / 1</p>
+<p>继续</p>
+</blockquote>
+<p>1 / 1</p>
+<p>│ │ Specific NUMA Node │ │ │ └──────────────────────────────────┘ │ └──────────────────────────────────────┘ │ │ ▼ ┌──────────────────────────────────────┐ │ OOM Killer │ │ ┌──────────────────────────────────┐ │ │ │ Selects and terminates │ │ │ │ processes to free up │ │ │ │ memory on specific NUMA node │ │ │ └──────────────────────────────────┘ │ └──────────────────────────────────────┘</p>
+<p>objectivec</p>
+<div><pre class="hljs"><code>在这个示例中，物理内存被划分为两个 NUMA 节点，并使用 <span class="hljs-built_in">CGroup</span> 机制将进程分组。每个进程组都有一个内存限制。当进程组中的某个进程尝试分配大量内存时，可能会导致该 NUMA 节点的物理内存耗尽，从而触发 OOM 状态。OOM Killer 组件会选择并终止一个或多个进程，以释放内存资源。在 NUMA 系统中，OOM Killer 可能会选择终止特定 NUMA 节点上的进程，以便在其他节点上分配更多的内存。
+
+请注意，这个示例仅展示了 NUMA、<span class="hljs-built_in">CGroup</span> 和 OOM 之间关系的基本概念。实际上，这些组件之间的关系可能会更加复杂，并涉及到更多的细节。如果您需要进一步的解释或帮助，请随时提问。</code></pre></div>
+<blockquote>
+<p>1 / 1</p>
+<p>请帮我画出oom的kill过程</p>
+</blockquote>
+<p>1 / 1</p>
+<p>当系统进入 OOM 状态时，Linux 内核会尝试释放一些内存资源，以避免系统崩溃。如果释放内存资源无法解决问题，则内核会选择并终止一个或多个进程，以释放更多的内存资源。以下是一个简单的字符图，说明了 OOM Killer 组件选择进程的过程：</p>
+<p>bash</p>
+<div><pre class="hljs"><code>┌──────────────────────────────────────┐
+│            OOM Killer                 │
+│ ┌──────────────────────────────────┐ │
+│ │   Determines <span class="hljs-built_in">which</span> processes      │ │
+│ │   to <span class="hljs-built_in">kill</span> based on OOM score      │ │
+│ └──────────────────────────────────┘ │
+│ ┌──────────────────────────────────┐ │
+│ │        OOM Score Formula         │ │
+│ │  ┌───────────────────────────┐   │ │
+│ │  │   process_score = base_score│   │ │
+│ │  │        + adjustment        │   │ │
+│ │  └───────────────────────────┘   │ │
+│ └──────────────────────────────────┘ │
+│ ┌──────────────────────────────────┐ │
+│ │       Base OOM Score             │ │
+│ │  ┌───────────────────────────┐   │ │
+│ │  │         Priority          │   │ │
+│ │  └───────────────────────────┘   │ │
+│ └──────────────────────────────────┘ │
+│ ┌──────────────────────────────────┐ │
+│ │       Adjustment Factors         │ │
+│ │  ┌───────────────────────────┐   │ │
+│ │  │        Memory Usage       │   │ │
+│ │  ├───────────────────────────┤   │ │
+│ │  │     Age of Process        │   │ │
+│ │  ├───────────────────────────┤   │ │
+│ │  │      CPU Time Usage       │   │ │
+│ │  ├───────────────────────────┤   │ │
+│ │  │    Filesystem Pressure    │   │ │
+│ │  ├───────────────────────────┤   │ │
+│ │  │   Swapping/Paging Usage   │   │ │
+│ │  └───────────────────────────┘   │ │
+│ └──────────────────────────────────┘ │
+└──────────────────────────────────────┘</code></pre></div>
+<p>在这个示例中，OOM Killer 组件会根据 OOM Score Formula 确定每个进程的 OOM 得分。该得分基于进程的基本得分（例如，进程优先级）和一些调整因素（例如，进程的内存使用情况、CPU 时间使用情况等）。OOM Killer 组件会根据进程的 OOM 得分选择并终止一个或多个进程，以释放更多的内存资源。</p>
+<p>请注意，这个示例仅展示了 OOM Killer 组件选择进程的基本概念。实际上，OOM Killer 组件的实现可能会更加复杂，并涉及到更多的细节。如果您需要进一步的解释或帮助，请随时提问。</p>
+<blockquote>
+<p>1 / 1</p>
+<p>OOM Score Formula是什么</p>
+</blockquote>
+<p>1 / 1</p>
+<p>OOM Score Formula是一种用于计算每个进程的OOM得分的公式。这个公式基于许多因素，包括进程的内存使用、优先级、CPU使用等等，用于确定在发生OOM时应该终止哪些进程。</p>
+<p>下面是一个常用的OOM Score Formula：</p>
+<p>makefile</p>
+<div><pre class="hljs"><code>process_score = base_score + adjustment</code></pre></div>
+<p>其中，<code>base_score</code> 是一个基本得分，通常基于进程的优先级。例如，较高优先级的进程可能会获得更高的基本得分。<code>adjustment</code> 是一些调整因素的总和，例如：</p>
+<ul>
+<li>内存使用：进程使用的内存越多，其得分就越高。</li>
+<li>进程年龄：较旧的进程可能会获得较高的得分。</li>
+<li>CPU 时间使用：进程使用的 CPU 时间越多，其得分就越高。</li>
+<li>文件系统压力：在文件系统压力高时，进程可能会获得较高的得分。</li>
+<li>交换/分页使用：使用交换/分页的进程可能会获得较高的得分。</li>
+</ul>
+<p>每个调整因素都可能会影响进程的OOM得分，但它们的影响因素会根据具体情况而异。例如，在内存非常紧缺的情况下，内存使用可能是最重要的因素。</p>
+<p>请注意，OOM Score Formula 的实现可能因操作系统版本和内核版本而异。如果您需要进一步的解释或帮助，请随时提问。</p>
+<blockquote>
+<p>1 / 1</p>
+<p>请画出OOM Score Formula的执行流程</p>
+</blockquote>
+<p>1 / 1</p>
+<p>OOM Score Formula 的执行流程通常由 Linux 内核中的 OOM Killer 组件处理。以下是一个简单的字符图，说明了 OOM Score Formula 的执行流程：</p>
+<p>arduino</p>
+<div><pre class="hljs"><code>┌──────────────────────────────────────┐
+│            OOM Killer                 │
+│ ┌──────────────────────────────────┐ │
+│ │      Calculates OOM Score        │ │
+│ │      <span class="hljs-keyword">for</span> each process <span class="hljs-keyword">using</span>      │ │
+│ │      OOM Score Formula           │ │
+│ └──────────────────────────────────┘ │
+│ ┌──────────────────────────────────┐ │
+│ │      OOM Score Formula           │ │
+│ │  ┌───────────────────────────┐   │ │
+│ │  │   process_score = base_score│   │ │
+│ │  │        + adjustment        │   │ │
+│ │  └───────────────────────────┘   │ │
+│ └──────────────────────────────────┘ │
+│ ┌──────────────────────────────────┐ │
+│ │      Base Score Calculation     │ │
+│ │  ┌───────────────────────────┐   │ │
+│ │  │         Priority          │   │ │
+│ │  └───────────────────────────┘   │ │
+│ └──────────────────────────────────┘ │
+│ ┌──────────────────────────────────┐ │
+│ │       Adjustment Factors         │ │
+│ │  ┌───────────────────────────┐   │ │
+│ │  │        Memory Usage       │   │ │
+│ │  ├───────────────────────────┤   │ │
+│ │  │     Age of <span class="hljs-built_in">Process</span>        │   │ │
+│ │  ├───────────────────────────┤   │ │
+│ │  │      CPU Time Usage       │   │ │
+│ │  ├───────────────────────────┤   │ │
+│ │  │    Filesystem Pressure    │   │ │
+│ │  ├───────────────────────────┤   │ │
+│ │  │   Swapping/Paging Usage   │   │ │
+│ │  └───────────────────────────┘   │ │
+│ └──────────────────────────────────┘ │
+└──────────────────────────────────────┘</code></pre></div>
+<p>在这个示例中，OOM Killer 组件为每个进程计算 OOM 得分。这个得分是通过将进程的基本得分（例如进程优先级）与调整因素相加而得出的。调整因素可以是任何可能影响进程 OOM 得分的因素，例如内存使用、CPU 时间使用、文件系统压力等等。</p>
+<p>请注意，OOM Score Formula 的实现可能因操作系统版本和内核版本而异。如果您需要进一步的解释或帮助，请随时提问。</p>
+<blockquote>
+<p>1 / 1</p>
+<p>请画出Linux 4.x版本的OOM Score Formula执行流程, 最好是流程图的方式</p>
+</blockquote>
+<p>1 / 1</p>
+<p>以下是一个流程图，展示了 Linux 4.x 版本中 OOM Score Formula 的执行流程：</p>
+<p>sql</p>
+<pre><code>         ```sql
+</code></pre>
+<p>+--------------------+<br />
+|                    |<br />
+| OOM Killer         |<br />
+|                    |<br />
++----------+---------+<br />
+|<br />
+|<br />
+|<br />
++-----------v-----------+<br />
+|                       |<br />
+| Calculate OOM Score   |<br />
+| for each process      |<br />
+| using OOM Score       |<br />
+| Formula               |<br />
+|                       |<br />
++-----------+-----------+<br />
+|<br />
+|<br />
+|<br />
++-----------v-----------+<br />
+|                       |<br />
+| Calculate Base Score  |<br />
+| for each process      |<br />
+| based on process      |<br />
+| priority              |<br />
+|                       |<br />
++-----------+-----------+<br />
+|<br />
+|<br />
+|<br />
++-----------v-----------+<br />
+|                       |<br />
+| Calculate Adjustment  |<br />
+| Factor for each       |<br />
+| process               |<br />
+|                       |<br />
++-----------+-----------+<br />
+|<br />
+|<br />
+|<br />
++-----------v-----------+<br />
+|                       |<br />
+| Sum Base Score and    |<br />
+| Adjustment Factor to  |<br />
+| calculate OOM Score   |<br />
+| for each process      |<br />
+|                       |<br />
++-----------+-----------+<br />
+|<br />
+|<br />
+|<br />
++-----------v-----------+<br />
+|                       |<br />
+| Select and kill       |<br />
+| process with highest  |<br />
+| OOM Score until       |<br />
+| enough memory freed   |<br />
+|                       |<br />
++-----------------------+</p>
+<div><pre class="hljs"><code>
+在这个示例中，OOM Killer 组件首先计算每个进程的 OOM 得分，然后选择并终止得分最高的进程，以释放内存资源。OOM 得分计算由三个步骤组成：
+
+<span class="hljs-number">1.</span>  计算基本得分：为每个进程计算一个基本得分，基于进程的优先级。
+<span class="hljs-number">2.</span>  计算调整因素：为每个进程计算一组调整因素，例如进程的内存使用情况、CPU 时间使用情况等。
+<span class="hljs-number">3.</span>  计算 OOM 得分：将进程的基本得分与调整因素相加，得出 OOM 得分。
+
+完成 OOM 得分计算后，OOM Killer 组件会选择并终止一个或多个进程，以释放内存资源。它会选择 OOM 得分最高的进程进行终止，直到释放足够的内存资源。
+
+请注意，这个示例仅展示了 OOM Killer 组件选择进程的基本概念。实际上，OOM Killer 组件的实现可能会更加复杂，并涉及到更多的细节。如果您需要进一步的解释或帮助，请随时提问。
+
+&gt; <span class="hljs-number">1</span> / <span class="hljs-number">1</span>
+&gt; 
+&gt; 可以将得分的因素都画出来嘛
+
+<span class="hljs-number">1</span> / <span class="hljs-number">1</span>
+
+当 Linux 内核的 OOM Killer 组件计算进程的 OOM 得分时，它会考虑多个因素，例如进程的内存使用、CPU 时间使用、文件系统压力等等。以下是一个简单的字符图，说明了 OOM Killer 组件计算 OOM 得分时考虑的因素：
+
+arduino
+
+```arduino
+┌──────────────────────────────────────┐
+│            OOM Killer                 │
+│ ┌──────────────────────────────────┐ │
+│ │   Determines OOM Score <span class="hljs-keyword">for</span> <span class="hljs-keyword">each</span>   │ │
+│ │   process based <span class="hljs-keyword">on</span> multiple       │ │
+│ │   factors <span class="hljs-keyword">using</span> OOM Score Formula │ │
+│ └──────────────────────────────────┘ │
+│ ┌──────────────────────────────────┐ │
+│ │      OOM Score Formula           │ │
+│ │  ┌───────────────────────────┐   │ │
+│ │  │   process_score = base_score│   │ │
+│ │  │        + adjustment        │   │ │
+│ │  └───────────────────────────┘   │ │
+│ └──────────────────────────────────┘ │
+│ ┌──────────────────────────────────┐ │
+│ │       Base Score Calculation     │ │
+│ │  ┌───────────────────────────┐   │ │
+│ │  │         Priority          │   │ │
+│ │  └───────────────────────────┘   │ │
+│ └──────────────────────────────────┘ │
+│ ┌──────────────────────────────────┐ │
+│ │       Adjustment Factors         │ │
+│ │  ┌───────────────────────────┐   │ │
+│ │  │        Memory <span class="hljs-keyword">Usage</span>       │   │ │
+│ │  ├───────────────────────────┤   │ │
+│ │  │     Age <span class="hljs-keyword">of</span> Process        │   │ │
+│ │  ├───────────────────────────┤   │ │
+│ │  │      CPU <span class="hljs-type">Time</span> <span class="hljs-keyword">Usage</span>       │   │ │
+│ │  ├───────────────────────────┤   │ │
+│ │  │    Filesystem Pressure    │   │ │
+│ │  ├───────────────────────────┤   │ │
+│ │  │   Swapping/Paging <span class="hljs-keyword">Usage</span>   │   │ │
+│ │  └───────────────────────────┘   │ │
+│ └──────────────────────────────────┘ │
+└──────────────────────────────────────┘</code></pre></div>
+<p>在这个示例中，OOM Killer 组件使用 OOM Score Formula 计算进程的 OOM 得分。这个得分由一个基本得分和一些调整因素相加而成。调整因素包括：</p>
+<ul>
+<li>内存使用：进程使用的内存越多，其得分就越高。</li>
+<li>进程年龄：较旧的进程可能会获得较高的得分。</li>
+<li>CPU 时间使用：进程使用的 CPU 时间越多，其得分就越高。</li>
+<li>文件系统压力：在文件系统压力高时，进程可能会获得较高的得分。</li>
+<li>交换/分页使用：使用交换/分页的进程可能会获得较高的得分。</li>
+</ul>
+<p>请注意，OOM Killer 组件计算 OOM 得分时使用的因素和权重可能因操作系统版本</p>
+<blockquote>
+<p>1 / 1</p>
+<p>请画出OOM Score Formula的计算公式</p>
+</blockquote>
+<p>1 / 1</p>
+<p>OOM Score Formula 是一种用于计算每个进程的 OOM 得分的公式。以下是一个简单的字符图，展示了 OOM Score Formula 的计算公式：</p>
+<p>makefile</p>
+<div><pre class="hljs"><code>process_score = base_score + adjustment</code></pre></div>
+<p>在这个示例中，<code>process_score</code> 是一个进程的 OOM 得分，<code>base_score</code> 是一个基本得分，通常基于进程的优先级。例如，较高优先级的进程可能会获得更高的基本得分。<code>adjustment</code> 是一些调整因素的总和，例如：</p>
+<ul>
+<li>内存使用：进程使用的内存越多，其得分就越高。</li>
+<li>进程年龄：较旧的进程可能会获得较高的得分。</li>
+<li>CPU 时间使用：进程使用的 CPU 时间越多，其得分就越高。</li>
+<li>文件系统压力：在文件系统压力高时，进程可能会获得较高的得分。</li>
+<li>交换/分页使用：使用交换/分页的进程可能会获得较高的得分。</li>
+</ul>
+<p>每个调整因素都可能会影响进程的 OOM 得分，但它们的影响因素会根据具体情况而异。例如，在内存非常紧缺的情况下，内存使用可能是最重要的因素。</p>
+<p>请注意，OOM Score Formula 的实现可能因操作系统版本和内核版本而异。如果您需要进一步的解释或帮助，请随时提问。</p>
+<blockquote>
+<p>1 / 1</p>
+<p>请把公式列的更详细些</p>
+</blockquote>
+<p>1 / 1</p>
+<p>OOM Score Formula 的公式由两个部分组成：基本得分和调整因素。以下是一个更详细的公式：</p>
+<p>makefile</p>
+<div><pre class="hljs"><code>process_score = base_score + adjustment
+
+<span class="hljs-section">where:</span>
+
+base_score = -1000 + (process_priority * (1000 / max_priority))
+
+<span class="hljs-section">and:</span>
+
+adjustment = memory_factor + age_factor + cpu_factor + fs_factor + swap_factor</code></pre></div>
+<p>在这个公式中，<code>process_score</code> 是进程的 OOM 得分。<code>base_score</code> 是基于进程的优先级计算出的基本得分，<code>adjustment</code> 是多个调整因素的总和。每个调整因素都是通过计算一个因素得分并将其添加到 <code>adjustment</code> 中得出的。</p>
+<p>其中，<code>process_priority</code> 是进程的优先级，<code>max_priority</code> 是系统中最高的优先级。<code>memory_factor</code> 表示内存使用因素的得分，<code>age_factor</code> 表示进程年龄因素的得分，<code>cpu_factor</code> 表示 CPU 时间使用因素的得分，<code>fs_factor</code> 表示文件系统压力因素的得分，<code>swap_factor</code> 表示交换/分页使用因素的得分。</p>
+<p>请注意，不同的 Linux 内核版本可能会使用不同的 OOM Score Formula 实现。此外，每个因素的得分和权重可能因操作系统版本和内核版本而异。如果您需要进一步的解释或帮助，请随时提问。</p>
+<blockquote>
+<p>1 / 1</p>
+<p>请将factor的因素也画出来</p>
+</blockquote>
+<p>1 / 1</p>
+<p>当 Linux 内核的 OOM Killer 组件计算进程的 OOM 得分时，它会考虑多个因素。以下是一个简单的字符图，说明了 OOM Killer 组件计算 OOM 得分时考虑的因素以及对应的因素得分计算公式：</p>
+<p>scss</p>
+<div><pre class="hljs"><code>┌──────────────────────────────────────┐
+│           OOM Score Factors           │
+│  ┌──────────────────────────────┐    │
+│  │     Memory Usage Factor      │    │
+│  │  (higher usage -&gt; higher score)│    │
+│  │  memory_factor = mem_used /    │    │
+│  │  mem_total * 1000             │    │
+│  └──────────────────────────────┘    │
+│  ┌──────────────────────────────┐    │
+│  │      Age of Process Factor   │    │
+│  │ (older process -&gt; higher score)│    │
+│  │  age_factor = (<span class="hljs-number">1.0</span> -         │    │
+│  │  (now - start_time) /         │    │
+│  │  (now - oldest_start_time))) │    │
+│  └──────────────────────────────┘    │
+│  ┌──────────────────────────────┐    │
+│  │      CPU <span class="hljs-selector-tag">Time</span> Usage Factor   │    │
+│  │ (more CPU time -&gt; higher score)│    │
+│  │  cpu_factor = cpu_usage /     │    │
+│  │  total_cpu * 1000             │    │
+│  └──────────────────────────────┘    │
+│  ┌──────────────────────────────┐    │
+│  │     Filesystem Pressure      │    │
+│  │ (higher pressure -&gt; higher score)│ │
+│  │  fs_factor = (<span class="hljs-number">1.0</span> -           │    │
+│  │  (fs_pressure / <span class="hljs-number">100</span>))         │    │
+│  └──────────────────────────────┘    │
+│  ┌──────────────────────────────┐    │
+│  │     Swapping/Paging Usage    │    │
+│  │ (more swap usage -&gt; higher score) │
+│  │  swap_factor = swap_used /    │    │
+│  │  swap_total * 1000            │    │
+│  └──────────────────────────────┘    │
+└──────────────────────────────────────┘</code></pre></div>
+<p>在这个示例中，每个因素都有一个得分计算公式，以计算它对进程的 OOM 得分的贡献。例如，<code>memory_factor</code> 表示进程的内存使用情况的得分，可以通过计算 <code>mem_used / mem_total * 1000</code> 来计算。其中，<code>mem_used</code> 表示进程当前使用的内存量，<code>mem_total</code> 表示系统中可用的内存总量。</p>
+<p>请注意，不同的操作系统版本和内核版本可能会使用不同的因素和权重计算 OOM 得分。此外，对于某些因素，如文件系统压力和交换/分页使用，计算公式可能会更加复杂。如果您需要进一步的解释或帮助，请随时提问。</p>
+</div>
+      </article>
+    </div>
+  </body>
+</html>

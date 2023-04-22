@@ -19,7 +19,7 @@
           <div class="article-info">
             <div>
               <span>创建时间：<time datetime="1681912603631">2023-04-19 21:56</time></span>
-              <span>更新时间：<time datetime="1682004973660">2023-04-20 23:36</time></span>
+              <span>更新时间：<time datetime="1682083343804">2023-04-21 21:22</time></span>
               
             </div>
           </div>
@@ -246,6 +246,12 @@ mem_cgroup
 <p>如果需要更加详细的OOM事件记录和处理，可以使用一些工具，例如<code>systemd-oomd</code>或者<code>oomd</code>。这些工具可以更加精细地控制和记录OOM事件，并提供更多的处理选项。</p>
 </li>
 </ol>
+<h3 id="swap分区">Swap分区</h3>
+<div><pre class="hljs"><code>   +----------------+              +----------------+              +----------------+              +----------------+
+   |   Physical     |  Read/Write  |   Swap Space   |  Read/Write  | Virtual Memory |  Read/Write  |  Physical Memory|  Read/Write
+   |    Devices     |-------------&gt;|                |-------------&gt;|                |-------------&gt;|                |
+   +----------------+              +----------------+              +----------------+              +----------------+
+</code></pre></div>
 </div>
       </article>
     </div>
