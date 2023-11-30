@@ -4,9 +4,38 @@
         <title></title>
         <link>undefined</link>
         <description>undefined</description>
-        <lastBuildDate>Thu, 30 Nov 2023 13:55:44 GMT</lastBuildDate>
+        <lastBuildDate>Thu, 30 Nov 2023 13:56:31 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>Joplin Pages Publisher</generator>
+        <item>
+            <title><![CDATA[Linux 6.6使用EEVDF调度器替代CFS调度器]]></title>
+            <guid>d6ab34cfebe04eeb8f8eb46cc3e38c6d</guid>
+            <pubDate>Thu, 30 Nov 2023 13:44:49 GMT</pubDate>
+            <content:encoded><![CDATA[<blockquote>
+<p>前言：2023年10月30日发布的 Linux 6.6使用“最早合格虚拟期限优先”（Earliest Eligible Virtual Deadline First, EEVDF）替代完全公平调度算法（<a title="https://kernelnewbies.org/Linux_6.6#New_task_scheduler:_EEVDF%EF%BC%89%E3%80%82%E6%9C%AC%E6%96%87%E6%98%AF%E8%8B%B1%E6%96%87%E6%96%87%E6%A1%A3%E2%80%9CAn" href="https://kernelnewbies.org/Linux_6.6#New_task_scheduler:_EEVDF%EF%BC%89%E3%80%82%E6%9C%AC%E6%96%87%E6%98%AF%E8%8B%B1%E6%96%87%E6%96%87%E6%A1%A3%E2%80%9CAn">https://kernelnewbies.org/Linux_6.6#New_task_scheduler:_EEVDF）。本文是英文文档“An</a> EEVDF CPU scheduler for Linux”（<a title="https://lwn.net/Articles/925371/%EF%BC%89%E7%9A%84%E4%B8%AD%E6%96%87%E7%BF%BB%E8%AF%91%E3%80%82" href="https://lwn.net/Articles/925371/%EF%BC%89%E7%9A%84%E4%B8%AD%E6%96%87%E7%BF%BB%E8%AF%91%E3%80%82">https://lwn.net/Articles/925371/）的中文翻译。</a></p>
+</blockquote>
+<p>内核的完全公平调度器（Completely Fair Scheduler, CFS）负责管理大多数Linux系统上运行的大多数进程的CPU时间分配。CFS在2007年的2.6.23版本中合并，并且从那以后经过多次持续调整，相当好地处理了这项工作。然而CFS不完美，在某些情况下它处理得不如应该的那样好。彼得·齐尔斯特拉（Peter Zijlstra）发布的EEVDF调度器提供了改进CFS的可能性，同时降低了对通常脆弱的启发式的依赖。</p>
+<h2 id="cfs和调度约束">CFS和调度约束</h2>
+<p>从其名称中可以理解，CFS的关键设计目标之一是公平性，即确保系统中的每个进程都能获得公平的CPU时间份额。这个目标是这样实现的：跟踪每个进程接收的时间，运行那些获得的CPU时间比其他进程少的进程，每个进程的运行时间按其“nice”优先级缩放。换句话说，CFS的核心是一个加权公平排队调度器。</p>
+<p>事实证明，公平性足以解决许多CPU调度问题。然而，除了CPU时间的公平分配之外，调度器还受到许多限制。例如，它应该最大限度地提高系统内存缓存的收益，这需要最大限度地减少进程在CPU之间的迁移。但与此同时，如果有工作要做，它应该让所有CPU保持忙碌。电源管理也是一个复杂的问题，有时系统吞吐量的最佳决策必须让位于保护电池寿命。混合系统（并非所有CPU是相同的）增加了更多的复杂性。等等。</p>
+<p>一个需要改进的地方是处理延迟要求。一些进程可能不需要大量的CPU时间，但当它们确实需要时间时，它们需要快速获得。其他进程可能需要更多的CPU时间，但如果需要，它们可以等待。CFS没有给进程提供表达延迟要求的方法；nice值（优先级）可用于给进程更多的CPU时间，但这不是一回事。实时调度类可用于对延迟敏感的工作，但在实时类中运行是一种特权操作，实时进程会严重影响系统其余部分的运行。</p>
+<p>目前缺乏的是一种方法，可以确保某些进程能够快速访问CPU，而不必让这些进程获得超过其公平份额的CPU时间。latency-nice补丁已经流传了一段时间，作为解决这个问题的尝试；它们允许具有严格延迟要求的CFS进程在想要运行时跳过CPU队列。这些补丁似乎有效，但齐尔斯特拉认为可能有一个更好的方法来解决这个问题。</p>
+<h2 id="引入eevdf">引入EEVDF</h2>
+<p>“最早合格虚拟期限优先”（Earliest Eligible Virtual Deadline First, EEVDF）调度算法并不新鲜；扬·斯托伊卡（Ion Stoica）和侯赛因·阿卜杜勒-瓦哈卜（Hussein Abdel-Wahab）在1995年的这篇论文“<a title="https://citeseerx.ist.psu.edu/document?repid=rep1&amp;type=pdf&amp;doi=805acf7726282721504c8f00575d91ebfd750564" href="https://citeseerx.ist.psu.edu/document?repid=rep1&amp;type=pdf&amp;doi=805acf7726282721504c8f00575d91ebfd750564">Earliest Eligible Virtual Deadline First : A Flexible and Accurate Mechanism for Proportional Share Resource Allocation</a>”中对此进行了描述。它的名字表明它类似于内核的限期调度器使用的最早期限优先算法，但是和这个调度器不同，EEVDF不是实时调度器，所以它的工作方式不同。理解EEVDF需要掌握一些相对简单的概念。</p>
+<p>与CFS一样，EEVDF试图在争夺CPU时间的进程之间公平地分配可用的CPU时间。例如，如果有5个进程试图在单个CPU上运行，那么每个进程应获得20%的可用时间。给定进程的nice值可用于调整其公平时间的计算；nice值较低（因此优先级较高）的进程有权以牺牲nice值较高的进程为代价获得更多的CPU时间。就此而言，这里并没有什么新东西。</p>
+<p>想象一下，在一秒钟的时间段内，在我们的5进程场景中，每个进程都应该获得 200毫秒的CPU时间。由于多种原因，事情永远不会完全如此；一些进程会获得过多的时间，而另一些进程则会被缩短。对于每个进程，EEVDF计算进程应该获得的时间和实际获得的时间之间的差值；该差值称为“滞后”（lag）。具有正滞后值的进程没有得到公平的份额，应比具有负滞后值的进程更快地被调度。</p>
+<p>事实上，如果一个进程计算出来的滞后大于或等于零，那么它就被认为是“合格的”；任何具有负滞后的进程都没有资格运行。对于任何不合格的进程，将来总会有一个时间点，它有权获得的时间赶上它实际获得的时间，并且它将再次变得合格；这个时间点被认为是“合格时间”。</p>
+<p>因此，计算滞后是EEVDF调度器的关键部分，补丁集的大部分内容都致力于正确地找到这个值。即使在没有完整的EEVDF算法的情况下，进程的滞后也可以用来将其公平地放置在运行队列中；具有较高滞后的进程应该首先运行，以试图平衡整个系统的滞后值。</p>
+<p>另一个起作用的因素是“虚拟期限”，即进程应该收到其应得CPU时间的最早时间。这个期限是通过将进程的分配时间片加到其合格时间来计算的。一个具有10毫秒时间片的进程，合格时间为未来的20毫秒，那么虚拟期限为未来的30毫秒。</p>
+<p>EEVDF的核心，正如其名称所示，是它将会优先运行具有最早的虚拟期限的进程。因此调度选择是由公平性（用于计算合格时间的滞后值）和每个进程目前应得的时间量共同驱动的。</p>
+<h2 id="解决延迟问题">解决延迟问题</h2>
+<p>有了这个框架，对延迟敏感的进程的更快访问就自然实现。当调度器计算每个进程的时间片时，它会考虑该进程分配的latency-nice值；latency-nice值较低（因此延迟要求较严格）的进程将获得较短的时间片。对延迟相对不敏感的进程将获得较长的时间片。请注意，给任何两个具有相同的nice值的进程的CPU时间量将是相同的，但低延迟进程将获得更多的短时间片。</p>
+<p>请记住，虚拟期限是通过将时间片加到合格时间来计算的。这将导致时间片较短的进程具有较近的虚拟期限，因此将先执行。对延迟敏感的进程通常不需要大量的CPU时间，能够快速响应事件，而没有延迟要求的进程将获得更长的时间片，这有助于提高吞吐量。不需要复杂的调度器启发式算法来获得这个结果。</p>
+<p>然而学术论文和在Linux内核中表现良好的实现之间还有很大的距离。齐尔斯特拉才刚开始在他的EEVDF调度器上运行基准测试；他最初的结论是“有很多成功和失败，但没有表明完全失败”。他说一些结果似乎表明EEVDF调度比CFS更一致，并且有很多延迟优势。</p>
+<p>虽然这显然是一个合理的起点，但齐尔斯特拉承认，仍有许多工作要做。但是，他说，“如果我们能做到这一点，我们就可以删除一大堆令人讨厌的启发式代码”，用定义更好的策略取代它。这不是一个小的变化，他补充说：“它完全重新设计了基础调度器、放置、抢占、选择——一切。它们唯一的共同点是它们都是基于虚拟时间的调度器。”</p>
+<p>毫无疑问，这样的根本性改变不太可能被仓促地纳入内核。令人欣慰的是，目前的补丁将EEVDF作为CFS的替代方案，这将使更广泛的测试成为可能，而无需实际替换当前的调度器。CPU调度器必须在内核支持的各种系统上为几乎所有可想象的工作负载做正确的事情；这为即使是很小的变化也可能导致不受欢迎的退化留下了很大的空间——而这不是。因此在考虑用EEVDF替换CFS之前必须进行大量的测试；对于何时可能发生，没有虚拟的或其他的期限。</p>
+]]></content:encoded>
+        </item>
         <item>
             <title><![CDATA[Linux下的bftrace]]></title>
             <guid>d1622a9f31bd4039a4ddfa26a7c0ec39</guid>
@@ -1904,42 +1933,6 @@ mem_cgroup
 </ul>
 <p>请继续关注更多信息。同时，请随时查看我们在 <a title="https://www.redhat.com/en/events/red-hat-kubecon-cloudnativecon-na-2022" href="https://www.redhat.com/en/events/red-hat-kubecon-cloudnativecon-na-2022">KubeCon NA 2022</a> 上完成和展示的一些进展。</p>
 <p><a title="https://www.redhat.com/architect/cloud-provisioning-scale" href="https://www.redhat.com/architect/cloud-provisioning-scale">原文连接</a></p>
-]]></content:encoded>
-        </item>
-        <item>
-            <title><![CDATA[6. 文档系统 ---- 关于结构]]></title>
-            <guid>02ed0149cb0a4c5b865364a20e2fd29d</guid>
-            <pubDate>Tue, 31 Jan 2023 16:31:31 GMT</pubDate>
-            <content:encoded><![CDATA[<h2 id="为什么这不明显">为什么这不明显？</h2>
-<p>这种结构很清晰，也很有效，但它不那么明显是有原因的，那就是文档的每个象限的特征与方案中相邻象限的特征重叠的方式。</p>
-<p><img src="/_resources/c0b13b70118040068123301e5f90ba40.png" /></p>
-<p>每个象限都与其相邻的两个象限相似：</p>
-<ul>
-<li>教程和操作指南都与描述实际步骤有关</li>
-<li>操作指南和技术参考都是我们在工作、编码时所需要的</li>
-<li>参考指南和解释都涉及理论知识</li>
-<li>教程和解释在我们学习时最有用，而不是实际工作</li>
-</ul>
-<h2 id="崩溃的趋势">崩溃的趋势</h2>
-<p>鉴于这些重叠，不同类型的文档相互混淆和混合也就不足为奇了。事实上，这些不同类型的文档相互之间有一种自然的引力，而且很难抗拒。它的作用是破坏结构，这就是为什么这么多文档看起来像这样：</p>
-<p><img src="/_resources/4beabf32276340ae978dd4ea8e7f4daf.png" /></p>
-<h2 id="系统的采用">系统的采用</h2>
-<p>虽然很少能找到充分使用它的清晰示例，但大量文档以不同的方式识别这四个功能中的每一个。</p>
-<p>该计划在重大项目中的良好示例包括：</p>
-<ul>
-<li><a title="https://docs.divio.com/" href="https://docs.divio.com/">Divio Developer Handbook</a></li>
-<li><a title="https://docs.djangoproject.com/en/3.0/#how-the-documentation-is-organized" href="https://docs.djangoproject.com/en/3.0/#how-the-documentation-is-organized">Django’s documentation</a></li>
-<li><a title="http://docs.django-cms.org/" href="http://docs.django-cms.org/">django CMS’s documentation</a></li>
-</ul>
-<p>即使在非常少的文档中也可以使用该系统，例如 <a title="https://docs.coreport.ch/" href="https://docs.coreport.ch/">CoReport（一个开源 COVID-19 报告项目）</a>。在这里，应用该系统为未来的文档创建了一个框架，有助于确保新材料符合要求。</p>
-<p>有时文档非常少，以至于并非所有象限都准备好呈现，例如 <a title="https://github.com/flavours/getting-started-with-spring-boot/blob/master/README.md" href="https://github.com/flavours/getting-started-with-spring-boot/blob/master/README.md">Java 和 Spring-boot 入门</a>，它只包括教程、操作方法和参考资料。</p>
-<p>尽管在每种情况下，无论多么微小甚至不完整，系统都受到尊重，各部分及其目的之间的明确区分将立即使作者和用户受益，并有助于指导材料在未来发展时的扩展。</p>
-<h2 id="关于分析及其应用">关于分析及其应用</h2>
-<p>本文中对文档的分析基于多年编写和维护文档的经验，并花费了大量时间考虑如何改进它。</p>
-<p>它还基于来自各种学科的合理原则。例如，它的教程概念具有教学基础；它设定了一位导师和一位学习者，并将使用软件视为一门手艺，其中对一般原则的抽象理解来自于处理细节的具体步骤。</p>
-<p>该系统定期在会谈和互动研讨会上展示。该分析已应用于众多项目，包括大型内部文档集，并在非常广泛的技术主题中多次获得可用性和可维护性的好处。</p>
-<h2 id="参考">参考</h2>
-<p><a title="https://documentation.divio.com/adoption/" href="https://documentation.divio.com/adoption/">https://documentation.divio.com/adoption/</a></p>
 ]]></content:encoded>
         </item>
     </channel>
