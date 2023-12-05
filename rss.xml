@@ -4,9 +4,41 @@
         <title></title>
         <link>undefined</link>
         <description>undefined</description>
-        <lastBuildDate>Mon, 04 Dec 2023 14:01:12 GMT</lastBuildDate>
+        <lastBuildDate>Tue, 05 Dec 2023 13:33:14 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>Joplin Pages Publisher</generator>
+        <item>
+            <title><![CDATA[ELF规范]]></title>
+            <guid>33898564e098406da28a6b274d3b674c</guid>
+            <pubDate>Tue, 05 Dec 2023 13:06:51 GMT</pubDate>
+            <content:encoded><![CDATA[<p><img src="/_resources/1ef902b20d6145f1a4ed153071938142.png" /></p>
+<p><img src="/_resources/1bdff060c4894b759e025cd764b1dc6e.png" /></p>
+<p><img src="/_resources/dc79238fed784ef2a50a35c323815e80.png" /></p>
+<p><img src="/_resources/f0a27582a5c04a058fecd96c25061eec.png" /></p>
+<p><img src="/_resources/665220f1e0da4532994d466b19ed0c0f.png" /></p>
+<p><img src="/_resources/f3f24d1a1f2f4db79979ab118abf3c54.png" /></p>
+<p><img src="/_resources/1ebbdc80586846a0a2ee55008eeeb37f.png" /></p>
+<p><img src="/_resources/e5453d6201114fedaa33f2ec641e3908.png" /></p>
+<p><img src="/_resources/8f572557960c412bbddf4fc67562def0.png" /></p>
+<p><img src="/_resources/e737869d91c54bd69f9145130dfb7fc4.png" /></p>
+<p><img src="/_resources/62a65b352e5a49cb9916278cd246721c.png" /></p>
+<p><img src="/_resources/884ad096ff8b4ee19f8ebceec4e19767.png" /></p>
+<p><img src="/_resources/6f73c76835744a7eac9259ac340f3c6b.png" /></p>
+<p><img src="/_resources/3ac5a301ed1f46d4967c18fd21a83631.png" /></p>
+<p><img src="/_resources/47198bfd059e43cb9f8890353d05f2bc.png" /></p>
+<p><img src="/_resources/b6882dd8b87f48488501ab0ca4253e8d.png" /></p>
+<p><img src="/_resources/290c04bea6f14ab9a34c48f99154c3ec.png" /></p>
+<p><img src="/_resources/beafe47f0ca9493184b43e24a4d24ade.png" /></p>
+<p><img src="/_resources/c03f5807f1c345ceadc64c9c39d112b4.png" /></p>
+<p><img src="/_resources/0aa386d35a184ef09ed9c2f5e5b379ac.png" /></p>
+<p><img src="/_resources/f315ac1595514e06aa5864c9f1626e9c.png" /></p>
+<p><img src="/_resources/1bd1b7e6f4b44475965ff6174ebb4f2e.png" /></p>
+<p><img src="/_resources/84890a9469584db1b191bd290b765003.png" /></p>
+<p><img src="/_resources/5eb27e9fbad240ab9757ae76a93e531f.png" /></p>
+<p><img src="/_resources/dc04758a9e244faaa66e3b689e39aae3.png" /></p>
+<p><img src="/_resources/4c26232830694dcf8ba64c8001e7152b.png" /></p>
+]]></content:encoded>
+        </item>
         <item>
             <title><![CDATA[ELF骨架]]></title>
             <guid>ac89e501fff94711a5e716fb62f0cf5f</guid>
@@ -1761,68 +1793,6 @@ mem_cgroup
     <span class="hljs-comment">// ... (the rest of your main function)</span>
 }</code></pre></div>
 <p>This implementation checks the database file size periodically and deletes a specified percentage of the oldest data points when the file size exceeds the threshold. Adjust the maxFileSize and deletePercentage variables according to your requirements. To minimize the deletion frequency, increase the file size threshold or decrease the percentage of data points to delete.</p>
-]]></content:encoded>
-        </item>
-        <item>
-            <title><![CDATA[如何设计嵌入式时间序列数据库]]></title>
-            <guid>e51232f5bfe94e348d8ed41115243834</guid>
-            <pubDate>Tue, 11 Apr 2023 13:48:29 GMT</pubDate>
-            <content:encoded><![CDATA[<p>在Golang程序中设计嵌入式时间序列数据库涉及一系列步骤，从选择合适的存储引擎到实现数据管理策略。下面是一个高级指南，帮助您在Golang中设计和实现嵌入式时间序列数据库:</p>
-<ul>
-<li>
-<p>选择存储引擎: 对于嵌入式时间序列数据库，可以考虑使用嵌入式键值存储引擎，如BoltDB、Badger或LevelDB。这些引擎轻量级、快速且易于集成到Golang应用程序中。</p>
-</li>
-<li>
-<p>定义数据模型: 设计一个有效地表示时间序列数据的数据模型。使用<code>structs</code>或<code>protobuf</code>这样的结构来定义数据模式。考虑使用时间戳作为键，使用序列化的数据点作为值，以实现高效的存储和检索。</p>
-</li>
-<li>
-<p>设置存储引擎:</p>
-<ul>
-<li>将选择的存储引擎库导入到Golang程序中。</li>
-<li>配置和初始化存储引擎，创建数据库实例。</li>
-<li>实现打开、关闭和管理数据库连接的方法。</li>
-</ul>
-</li>
-<li>
-<p>实现数据存储和检索:</p>
-<ul>
-<li>创建从存储引擎写入和读取数据点的方法。</li>
-<li>使用编码技术(如协议缓冲区、JSON或MessagePack)序列化和反序列化数据点。</li>
-<li>使用批写和压缩优化存储和写性能。</li>
-</ul>
-</li>
-<li>
-<p>设计索引和分区:</p>
-<ul>
-<li>通过根据数据点的时间戳将数据点分组到桶中，实现基于时间的分区。</li>
-<li>创建索引以实现高效的数据检索和查询。</li>
-<li>利用存储引擎的内置索引功能或实现自定义索引解决方案。</li>
-</ul>
-</li>
-<li>
-<p>实现查询功能:</p>
-<ul>
-<li>设计一个简单的查询API或语言来与时间序列数据交互。</li>
-<li>实现过滤、聚合和基于时间的操作的查询功能。</li>
-<li>使用缓存、物化视图或预计算聚合优化查询性能。</li>
-</ul>
-</li>
-<li>
-<p>数据管理策略:</p>
-<ul>
-<li>实现数据保留策略，自动删除旧数据点或downsample数据，节省存储空间。</li>
-<li>使用数据压缩技术可以减小存储空间大小并提高性能。</li>
-</ul>
-</li>
-<li>
-<p>测试和基准测试:</p>
-<ul>
-<li>为所有主要功能编写测试，以确保嵌入式时间序列数据库的正确性和可靠性。</li>
-<li>对时间序列数据库的性能进行基准测试，以确定潜在的瓶颈和需要改进的领域。</li>
-</ul>
-</li>
-</ul>
-<p>通过执行这些步骤，您可以在Golang程序中设计和实现高效的嵌入式时间序列数据库。确保持续监控、优化和维护数据库，以确保其可靠性和性能</p>
 ]]></content:encoded>
         </item>
     </channel>
